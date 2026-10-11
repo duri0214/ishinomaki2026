@@ -68,3 +68,18 @@ export async function softDeleteUserByClerkId(
     .set({ deletedAt: sql`now()`, avatarUrl: null })
     .where(eq(users.clerkUserId, clerkUserId));
 }
+
+/**
+ * ログイン中の Clerk ユーザーに対応する users の行を返す。無ければ作る（初回の投稿・いいね時）。
+ * 既に行があるときは Clerk に問い合わせない。退会済みなら null。
+ */
+export async function ensureUserFor(
+  db: Db,
+  clerkUserId: string,
+  fetchProfile: () => Promise<Omit<ClerkProfile, "clerkUserId">>,
+): Promise<{ id: string } | null> {
+  const existing = await findUserByClerkId(db, clerkUserId);
+  if (existing) return existing.deletedAt ? null : { id: existing.id };
+  const profile = await fetchProfile();
+  return upsertUser(db, { clerkUserId, ...profile });
+}

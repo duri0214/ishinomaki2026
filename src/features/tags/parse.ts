@@ -132,3 +132,24 @@ export function segmentBody(text: string): BodySegment[] {
   if (pos < text.length) segments.push({ type: "text", text: text.slice(pos) });
   return segments;
 }
+
+/**
+ * キャレット位置で入力中のハッシュタグ（`#` から数えて、キャレットまでがタグ文字だけの箇所）を返す。
+ * 投稿フォームの入力補助で使う。`#` が見つからない、または直前の文字が不適切なら null。
+ */
+export function activeHashtagAt(
+  text: string,
+  caret: number,
+): { start: number; query: string } | null {
+  let i = Math.min(Math.max(caret, 0), text.length);
+  while (i > 0) {
+    const cp = lastCodePoint(text, i);
+    if (!cp || !TAG_CHAR.test(cp)) break;
+    i -= cp.length;
+  }
+  if (i === 0) return null;
+  const hash = text[i - 1];
+  if (!hash || !HASH.has(hash)) return null;
+  if (!isBoundary(lastCodePoint(text, i - 1))) return null;
+  return { start: i - 1, query: text.slice(i, Math.min(caret, text.length)) };
+}

@@ -2,8 +2,9 @@ import { and, asc, count, desc, eq, gte, isNull, max, sql } from "drizzle-orm";
 import type { Db } from "@/db/connect";
 import { posts, postTags, type Tag, tags } from "@/db/schema";
 
-export const TOP_TAG_COUNT = 20;
-export const TOP_TAG_WINDOW_DAYS = 7;
+import { TOP_TAG_COUNT, TOP_TAG_WINDOW_DAYS } from "./constants";
+
+export { TOP_TAG_COUNT, TOP_TAG_WINDOW_DAYS };
 
 export async function getTagByNormalizedName(
   db: Db,

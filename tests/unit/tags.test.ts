@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { normalizeTagName } from "@/features/tags/normalize";
 import {
+  activeHashtagAt,
   MAX_TAG_LENGTH,
   MAX_TAGS_PER_POST,
   parseHashtags,
@@ -182,5 +183,24 @@ describe("segmentBody", () => {
       { type: "text", text: "こんにちは" },
     ]);
     expect(segmentBody("")).toEqual([]);
+  });
+});
+
+describe("activeHashtagAt", () => {
+  const at = (text: string, caret = text.length) =>
+    activeHashtagAt(text, caret);
+  it("入力中のタグの開始位置と、ここまでに入力した文字を返す", () => {
+    expect(at("こんにちは #ラ")).toEqual({ start: 6, query: "ラ" });
+    expect(at("#")).toEqual({ start: 0, query: "" });
+    expect(at("a ＃Li")).toEqual({ start: 2, query: "Li" });
+  });
+  it("キャレットがタグの途中にあれば、そこまでを返す", () => {
+    expect(at("#ライブ好き", 3)).toEqual({ start: 0, query: "ライ" });
+  });
+  it("空白などでタグが終わった後や、直前が文字の # は対象外", () => {
+    expect(at("#ライブ ")).toBeNull();
+    expect(at("abc#tag")).toBeNull();
+    expect(at("普通の文")).toBeNull();
+    expect(at("")).toBeNull();
   });
 });
