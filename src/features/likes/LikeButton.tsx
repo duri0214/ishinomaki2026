@@ -1,8 +1,8 @@
 "use client";
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { useAuthDialog } from "@/features/auth/AuthDialog";
 import { useViewer } from "@/features/auth/viewer";
 import type { TimelinePost } from "@/features/timeline/queries";
 import { patchPostInCaches } from "@/features/timeline/useTimeline";
@@ -10,9 +10,11 @@ import { setLikeAction } from "./actions";
 
 export function LikeButton({ post }: { post: TimelinePost }) {
   const queryClient = useQueryClient();
-  const router = useRouter();
+  const openAuth = useAuthDialog();
   const viewer = useViewer();
   const [message, setMessage] = useState<string | null>(null);
+  const askToSignIn = () =>
+    openAuth({ reason: "いいねするにはアカウントが必要です" });
   const mutationKey = ["like", post.id];
 
   const mutation = useMutation({
@@ -35,7 +37,7 @@ export function LikeButton({ post }: { post: TimelinePost }) {
     onSuccess: (result) => {
       if (!result.ok) {
         setMessage(result.message);
-        if (result.code === "unauthorized") router.push("/sign-in");
+        if (result.code === "unauthorized") askToSignIn();
         queryClient.invalidateQueries({ queryKey: ["timeline"] });
         return;
       }
@@ -57,8 +59,7 @@ export function LikeButton({ post }: { post: TimelinePost }) {
 
   const onClick = () => {
     if (!viewer.signedIn) {
-      if (viewer.authEnabled) router.push("/sign-in");
-      else setMessage("ログインが設定されていないため、いいねできません");
+      askToSignIn();
       return;
     }
     mutation.mutate(!post.likedByMe);
@@ -71,11 +72,21 @@ export function LikeButton({ post }: { post: TimelinePost }) {
         onClick={onClick}
         aria-pressed={post.likedByMe}
         aria-label={post.likedByMe ? "いいねを取り消す" : "いいね"}
-        className={`inline-flex items-center gap-1 rounded-full px-2 py-1 text-sm transition-colors hover:bg-rose-50 ${
-          post.likedByMe ? "text-rose-600" : "text-slate-500"
+        className={`inline-flex items-center gap-1.5 rounded-full px-2 py-1 text-sm transition-colors hover:bg-[#fbeef3] ${
+          post.likedByMe ? "text-[#d6457a]" : "text-[#a79bb8]"
         }`}
       >
-        <span aria-hidden>{post.likedByMe ? "♥" : "♡"}</span>
+        <svg
+          aria-hidden
+          viewBox="0 0 24 24"
+          className="size-6"
+          fill={post.likedByMe ? "currentColor" : "none"}
+          stroke="currentColor"
+          strokeWidth="1.6"
+          strokeLinejoin="round"
+        >
+          <path d="M12 20.5s-7.5-4.6-7.5-10.2A4.3 4.3 0 0 1 12 7.6a4.3 4.3 0 0 1 7.5 2.7c0 5.6-7.5 10.2-7.5 10.2Z" />
+        </svg>
         <span data-testid="like-count">{post.likeCount}</span>
       </button>
       {message && (

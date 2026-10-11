@@ -1,4 +1,6 @@
+import { sql } from "drizzle-orm";
 import {
+  foreignKey,
   index,
   jsonb,
   pgEnum,
@@ -8,6 +10,7 @@ import {
   text,
   timestamp,
   unique,
+  uniqueIndex,
   uuid,
 } from "drizzle-orm/pg-core";
 
@@ -32,15 +35,52 @@ export const islands = pgTable("islands", {
   createdAt: timestamptz("created_at").notNull().defaultNow(),
 });
 
-export const users = pgTable("users", {
-  id: uuid("id").primaryKey().defaultRandom(),
-  clerkUserId: text("clerk_user_id").notNull().unique(),
-  displayName: text("display_name").notNull(),
-  avatarUrl: text("avatar_url"),
-  createdAt: timestamptz("created_at").notNull().defaultNow(),
-  updatedAt: timestamptz("updated_at").notNull().defaultNow(),
-  deletedAt: timestamptz("deleted_at"),
-});
+export const users = pgTable(
+  "users",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    /** 入力どおりの表記で保存する。一意性は大文字・小文字を区別せずに判定する */
+    username: text("username").notNull(),
+    /** scrypt のハッシュ（features/auth/password.ts）。'!' はどのパスワードとも一致しない */
+    passwordHash: text("password_hash").notNull(),
+    displayName: text("display_name").notNull(),
+    avatarUrl: text("avatar_url"),
+    createdAt: timestamptz("created_at").notNull().defaultNow(),
+    updatedAt: timestamptz("updated_at").notNull().defaultNow(),
+    deletedAt: timestamptz("deleted_at"),
+  },
+  (t) => [uniqueIndex("users_username_lower_uq").on(sql`lower(${t.username})`)],
+);
+
+export const sessions = pgTable(
+  "sessions",
+  {
+    /** Cookie のトークンの SHA-256（hex）。トークンそのものは保存しない */
+    id: text("id").primaryKey(),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    createdAt: timestamptz("created_at").notNull().defaultNow(),
+    expiresAt: timestamptz("expires_at").notNull(),
+  },
+  (t) => [index("sessions_user_idx").on(t.userId)],
+);
+
+/** 失敗したログインの記録（試行回数の制限に使う） */
+export const loginAttempts = pgTable(
+  "login_attempts",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    usernameLower: text("username_lower").notNull(),
+    createdAt: timestamptz("created_at").notNull().defaultNow(),
+  },
+  (t) => [
+    index("login_attempts_username_created_idx").on(
+      t.usernameLower,
+      t.createdAt,
+    ),
+  ],
+);
 
 export const tags = pgTable(
   "tags",
@@ -59,6 +99,8 @@ export const tags = pgTable(
   },
   (t) => [
     unique("tags_island_normalized_name_uq").on(t.islandId, t.normalizedName),
+    // user_favorite_members の複合外部キーの参照先
+    unique("tags_id_island_uq").on(t.id, t.islandId),
   ],
 );
 
@@ -119,6 +161,51 @@ export const likes = pgTable(
   (t) => [
     primaryKey({ columns: [t.userId, t.postId] }),
     index("likes_post_idx").on(t.postId),
+  ],
+);
+
+/** 推しグループ（島） */
+export const userFavoriteIslands = pgTable(
+  "user_favorite_islands",
+  {
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    islandId: uuid("island_id")
+      .notNull()
+      .references(() => islands.id, { onDelete: "cascade" }),
+    createdAt: timestamptz("created_at").notNull().defaultNow(),
+  },
+  (t) => [primaryKey({ columns: [t.userId, t.islandId] })],
+);
+
+/**
+ * 推しメンバー。複合外部キーで「推しグループの島に属するタグ」であることを保証する。
+ * 推しグループから外すと、その島の推しメンバーも消える。kind = 'member' かはアプリ側で確かめる。
+ */
+export const userFavoriteMembers = pgTable(
+  "user_favorite_members",
+  {
+    userId: uuid("user_id").notNull(),
+    islandId: uuid("island_id").notNull(),
+    tagId: uuid("tag_id").notNull(),
+    createdAt: timestamptz("created_at").notNull().defaultNow(),
+  },
+  (t) => [
+    primaryKey({ columns: [t.userId, t.tagId] }),
+    foreignKey({
+      name: "user_favorite_members_island_fk",
+      columns: [t.userId, t.islandId],
+      foreignColumns: [
+        userFavoriteIslands.userId,
+        userFavoriteIslands.islandId,
+      ],
+    }).onDelete("cascade"),
+    foreignKey({
+      name: "user_favorite_members_tag_fk",
+      columns: [t.tagId, t.islandId],
+      foreignColumns: [tags.id, tags.islandId],
+    }).onDelete("cascade"),
   ],
 );
 

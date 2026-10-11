@@ -5,7 +5,8 @@ import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { ActionResult } from "@/lib/action";
 
-const viewer = { authEnabled: true, signedIn: true };
+const viewer = { signedIn: true };
+const openAuth = vi.fn();
 const createPostAction = vi.fn();
 
 vi.mock("next/link", () => ({
@@ -16,6 +17,9 @@ vi.mock("next/link", () => ({
     href: string;
     children: React.ReactNode;
   }) => <a href={href}>{children}</a>,
+}));
+vi.mock("@/features/auth/AuthDialog", () => ({
+  useAuthDialog: () => openAuth,
 }));
 vi.mock("@/features/auth/viewer", () => ({ useViewer: () => viewer }));
 vi.mock("@/features/posts/actions", () => ({
@@ -47,7 +51,7 @@ const textbox = () =>
 
 beforeEach(() => {
   viewer.signedIn = true;
-  viewer.authEnabled = true;
+  openAuth.mockReset();
   createPostAction.mockReset();
   fetchMock.mockReset();
   fetchMock.mockImplementation(async () => ({
@@ -63,20 +67,17 @@ afterEach(() => {
 });
 
 describe("Composer", () => {
-  it("未ログインなら、フォームの代わりにログインへの案内を出す", () => {
+  it("未ログインなら、フォームの代わりに案内を出し、押すと登録・ログインのモーダルを開く", async () => {
     viewer.signedIn = false;
+    const user = userEvent.setup();
     renderComposer();
     expect(screen.queryByRole("textbox")).toBeNull();
-    expect(
-      screen.getByRole("link", { name: "ログイン" }).getAttribute("href"),
-    ).toBe("/sign-in");
-  });
-
-  it("ログインが未設定なら、閲覧のみである旨を出す", () => {
-    viewer.signedIn = false;
-    viewer.authEnabled = false;
-    renderComposer();
-    expect(screen.getByText(/閲覧のみ/)).toBeTruthy();
+    await user.click(
+      screen.getByRole("button", { name: "ログイン・新規登録" }),
+    );
+    expect(openAuth).toHaveBeenCalledWith({
+      reason: "投稿するにはアカウントが必要です",
+    });
   });
 
   it("文字数を数え、280文字を超えると投稿できない", async () => {
@@ -179,6 +180,10 @@ describe("Composer", () => {
       "ログインが必要です",
     );
     expect(textbox().value).toBe("消えないでね");
+    expect(openAuth).toHaveBeenCalledWith({
+      mode: "signin",
+      reason: "ログインし直してください",
+    });
   });
 
   it("通信が失敗しても、本文を残してメッセージを出す", async () => {

@@ -1,8 +1,8 @@
 "use client";
 
 import { useQueryClient } from "@tanstack/react-query";
-import Link from "next/link";
 import { useRef, useState } from "react";
+import { useAuthDialog } from "@/features/auth/AuthDialog";
 import { useViewer } from "@/features/auth/viewer";
 import { codePointLength } from "@/features/tags/normalize";
 import { activeHashtagAt } from "@/features/tags/parse";
@@ -20,6 +20,7 @@ export function Composer({
   initialText?: string;
 }) {
   const viewer = useViewer();
+  const openAuth = useAuthDialog();
   const queryClient = useQueryClient();
   const [text, setText] = useState(initialText);
   const [caret, setCaret] = useState(0);
@@ -41,17 +42,17 @@ export function Composer({
 
   if (!viewer.signedIn) {
     return (
-      <div className="border-b border-slate-200 bg-white px-3 py-2 text-sm text-slate-600">
-        {viewer.authEnabled ? (
-          <>
-            <Link href="/sign-in" className="font-bold text-sky-700 underline">
-              ログイン
-            </Link>
-            すると投稿やいいねができます
-          </>
-        ) : (
-          "ログインが設定されていないため、投稿できません（閲覧のみ）"
-        )}
+      <div className="mx-4 mb-2 rounded-2xl bg-[#f6f0fa] px-4 py-2.5 text-sm text-[#6a5c7d]">
+        <button
+          type="button"
+          onClick={() =>
+            openAuth({ reason: "投稿するにはアカウントが必要です" })
+          }
+          className="font-bold text-[#8e6bb0] underline"
+        >
+          ログイン・新規登録
+        </button>
+        すると投稿やいいねができます
       </div>
     );
   }
@@ -87,6 +88,10 @@ export function Composer({
         await queryClient.invalidateQueries({ queryKey: ["timeline"] });
       } else {
         setError(result.message);
+        // セッションが切れていたら、ログインへ誘導する（本文は残す）
+        if (result.code === "unauthorized") {
+          openAuth({ mode: "signin", reason: "ログインし直してください" });
+        }
       }
     } catch {
       setError("投稿できませんでした。通信状況を確認してください");
@@ -129,13 +134,13 @@ export function Composer({
 
   return (
     <form
-      className="relative border-b border-slate-200 bg-white px-3 py-2"
+      className="relative mx-4 mb-2 rounded-[28px] border border-[#ece4ef] bg-white p-3 shadow-[0_10px_28px_-16px_rgba(111,78,142,0.35)]"
       onSubmit={(e) => {
         e.preventDefault();
         submit();
       }}
     >
-      <div className="mx-auto max-w-2xl">
+      <div>
         <textarea
           ref={textareaRef}
           value={text}
@@ -143,7 +148,7 @@ export function Composer({
           maxLength={MAX_POST_LENGTH * 2}
           placeholder="いまどうしてる？ #タグ をつけて投稿しよう"
           aria-label="投稿の本文"
-          className="w-full resize-none rounded-lg border border-slate-300 p-2 text-[15px] outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500"
+          className="w-full resize-none rounded-2xl bg-[#faf6fb] p-3 text-[15px] leading-6 text-[#4b3d63] outline-none placeholder:text-[#b3a8c4] focus:ring-2 focus:ring-[#c9a5e0]"
           onChange={(e) => {
             setText(e.target.value);
             setCaret(e.target.selectionStart);
@@ -156,14 +161,14 @@ export function Composer({
         {items.length > 0 && (
           <ul
             aria-label="タグの候補"
-            className="absolute z-20 mt-1 max-h-48 w-64 overflow-auto rounded-lg border border-slate-200 bg-white py-1 text-sm shadow-lg"
+            className="absolute z-20 mt-1 max-h-48 w-64 overflow-auto rounded-2xl border border-[#ece4ef] bg-white py-1 text-sm shadow-lg"
           >
             {items.map((item, i) => (
               <li key={item.normalizedName}>
                 <button
                   type="button"
                   className={`flex w-full items-center gap-2 px-3 py-1 text-left ${
-                    i === highlight ? "bg-sky-50" : ""
+                    i === highlight ? "bg-[#f6f0fa]" : ""
                   }`}
                   // クリックでテキストエリアのフォーカスが外れないようにする
                   onMouseDown={(e) => e.preventDefault()}
@@ -182,7 +187,7 @@ export function Composer({
         )}
         <div className="mt-1 flex items-center gap-3 text-xs">
           <span
-            className={overLimit ? "font-bold text-rose-600" : "text-slate-500"}
+            className={overLimit ? "font-bold text-rose-600" : "text-[#a79bb8]"}
             aria-live="polite"
           >
             {length}/{MAX_POST_LENGTH}
@@ -195,7 +200,7 @@ export function Composer({
           <button
             type="submit"
             disabled={pending || overLimit || text.trim() === ""}
-            className="ml-auto rounded-full bg-sky-600 px-4 py-1 text-sm font-bold text-white hover:bg-sky-700 disabled:bg-slate-300"
+            className="ml-auto rounded-full bg-[#8e6bb0] px-5 py-1.5 text-sm font-bold text-white hover:bg-[#7b5a9d] disabled:bg-[#d9cfe4]"
           >
             {pending ? "投稿中…" : "投稿"}
           </button>

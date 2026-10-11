@@ -30,6 +30,10 @@ describe("スキーマ", () => {
         "posts",
         "tags",
         "users",
+        "sessions",
+        "login_attempts",
+        "user_favorite_islands",
+        "user_favorite_members",
       ]),
     );
   });
@@ -73,7 +77,7 @@ describe("スキーマ", () => {
   it("時刻はミリ秒精度で保存され、Dateを往復しても同じ値になる", async () => {
     const [u] = await conn.db
       .insert(users)
-      .values({ clerkUserId: "u1", displayName: "u1" })
+      .values({ username: "u1", passwordHash: "!", displayName: "u1" })
       .returning();
     const [isl] = await conn.db.select().from(islands).limit(1);
     const [p] = await conn.db

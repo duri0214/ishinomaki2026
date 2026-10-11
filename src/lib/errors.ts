@@ -3,7 +3,11 @@ export type AppErrorCode =
   | "validation"
   | "island_not_found"
   | "post_not_found"
-  | "forbidden";
+  | "user_not_found"
+  | "forbidden"
+  | "username_taken"
+  | "invalid_credentials"
+  | "too_many_attempts";
 
 /** 画面に出してよい、想定内のエラー */
 export class AppError extends Error {

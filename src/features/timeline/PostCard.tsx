@@ -17,12 +17,27 @@ const dateFormat = new Intl.DateTimeFormat("ja-JP", {
   minute: "2-digit",
 });
 
+/** アイコンの色。表示名から決めるので、同じ人はいつも同じ色になる */
+const AVATARS = [
+  "from-[#c9a5e0] to-[#8f6ab3]",
+  "from-[#f0b6c8] to-[#c97b9b]",
+  "from-[#f3c7a6] to-[#d58f6a]",
+  "from-[#a9c4ec] to-[#6f8fc9]",
+  "from-[#b4d9c4] to-[#6fa88a]",
+] as const;
+
+function avatarClass(name: string): string {
+  let hash = 0;
+  for (const ch of name) hash = (hash * 31 + (ch.codePointAt(0) ?? 0)) >>> 0;
+  return AVATARS[hash % AVATARS.length] ?? AVATARS[0];
+}
+
 export function PostCard({
   post,
   showIsland,
 }: {
   post: TimelinePost;
-  /** 全島タイムラインでは、どの島の投稿か分かるバッジを付ける */
+  /** 全島タイムラインでは、どの島の投稿か分かるように島名を添える */
   showIsland: boolean;
 }) {
   const queryClient = useQueryClient();
@@ -50,43 +65,73 @@ export function PostCard({
 
   return (
     <article
-      className="rounded-xl border border-slate-200 bg-white p-3 shadow-sm"
+      className="rounded-[28px] border border-[#ece4ef] bg-white p-4 shadow-[0_10px_28px_-16px_rgba(111,78,142,0.35)]"
       data-testid="post-card"
     >
-      <header className="mb-1 flex items-center gap-2 text-sm">
+      <header className="flex items-center gap-2.5">
         <span
           aria-hidden
-          className="flex size-7 shrink-0 items-center justify-center rounded-full bg-sky-100 text-xs font-bold text-sky-800"
+          className={`flex size-9 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br font-serif text-base font-bold text-white ${avatarClass(post.author.displayName)}`}
         >
           {Array.from(post.author.displayName)[0]}
         </span>
-        <span className="font-bold">{post.author.displayName}</span>
-        {showIsland && (
-          <Link
-            href={`/i/${post.island.slug}`}
-            className="rounded-full bg-emerald-100 px-2 py-0.5 text-xs text-emerald-800 hover:bg-emerald-200"
-          >
-            {post.island.name}
-          </Link>
-        )}
-        <time
-          dateTime={post.createdAt}
-          className="ml-auto text-xs text-slate-500"
-        >
-          {dateFormat.format(new Date(post.createdAt))}
-        </time>
+        <div className="min-w-0">
+          <p className="truncate text-sm font-bold leading-tight text-[#3f3158]">
+            {post.author.username ? (
+              <Link
+                href={`/u/${post.author.username}`}
+                className="hover:text-[#8e6bb0] hover:underline"
+              >
+                {post.author.displayName}
+              </Link>
+            ) : (
+              post.author.displayName
+            )}
+          </p>
+          <p className="truncate text-[11px] leading-tight text-[#a79bb8]">
+            {showIsland && (
+              <>
+                <Link
+                  href={`/i/${post.island.slug}`}
+                  className="hover:text-[#8e6bb0] hover:underline"
+                >
+                  {post.island.name}
+                </Link>
+                {" · "}
+              </>
+            )}
+            <time dateTime={post.createdAt}>
+              {dateFormat.format(new Date(post.createdAt))}
+            </time>
+          </p>
+        </div>
       </header>
-      <PostBody body={post.body} islandSlug={post.island.slug} />
-      <footer className="mt-1 flex items-center gap-2">
+      <div className="mt-2">
+        <PostBody body={post.body} islandSlug={post.island.slug} />
+      </div>
+      <footer className="mt-3 flex items-center gap-2">
         <LikeButton post={post} />
         {post.isMine && (
           <button
             type="button"
             onClick={onDelete}
             disabled={deleting}
-            className="ml-auto rounded px-2 py-1 text-xs text-slate-500 hover:bg-slate-100 hover:text-rose-600 disabled:opacity-50"
+            aria-label="削除"
+            title="削除"
+            className="ml-auto flex size-8 items-center justify-center rounded-full text-[#a79bb8] hover:bg-[#f6f0fa] hover:text-[#c4456f] disabled:opacity-50"
           >
-            削除
+            <svg
+              aria-hidden
+              viewBox="0 0 24 24"
+              className="size-5"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="1.6"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <path d="M4 7h16M9 7V4.5h6V7M6.5 7l1 13h9l1-13M10 11v6M14 11v6" />
+            </svg>
           </button>
         )}
       </footer>

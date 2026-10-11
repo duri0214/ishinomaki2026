@@ -273,7 +273,17 @@ export function MapCanvas({
             />
           </pattern>
         </defs>
-        <rect width="100%" height="100%" fill="url(#waves)" />
+        {/* 海（島の外）をクリックしたら、選択中のグループ（家）を外して島に戻る */}
+        {/* biome-ignore lint/a11y/noStaticElementInteractions: 海のクリックはマウス専用の補助操作。全画面のボタンにするとキーボード操作の邪魔になるため非公開 */}
+        <rect
+          width="100%"
+          height="100%"
+          fill="url(#waves)"
+          data-testid="map-sea"
+          onClick={() => {
+            if (focus.kind === "house") onNavigate(`/i/${focus.slug}`);
+          }}
+        />
         <g transform={`translate(${camera.x} ${camera.y}) scale(${camera.k})`}>
           <MapScene
             islands={islands}

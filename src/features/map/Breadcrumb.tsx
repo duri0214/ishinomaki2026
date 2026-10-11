@@ -18,19 +18,22 @@ export function Breadcrumb({
     <nav aria-label="現在地" className="min-w-0 text-sm">
       <ol className="flex min-w-0 items-center gap-1 whitespace-nowrap">
         <li>
-          <Link href="/" className="rounded px-1 hover:bg-slate-100">
+          <Link
+            href="/"
+            className="rounded px-1 text-[#6a5c7d] hover:bg-[#f3ecf7]"
+          >
             🌊 世界
           </Link>
         </li>
         {island && (
           <>
-            <li aria-hidden className="text-slate-400">
+            <li aria-hidden className="text-[#c5bad6]">
               ›
             </li>
             <li className="min-w-0 truncate">
               <Link
                 href={`/i/${island.slug}`}
-                className="rounded px-1 hover:bg-slate-100"
+                className="rounded px-1 text-[#6a5c7d] hover:bg-[#f3ecf7]"
               >
                 {island.name}
               </Link>
@@ -39,10 +42,13 @@ export function Breadcrumb({
         )}
         {island && tag && (
           <>
-            <li aria-hidden className="text-slate-400">
+            <li aria-hidden className="text-[#c5bad6]">
               ›
             </li>
-            <li className="min-w-0 truncate font-bold" aria-current="page">
+            <li
+              className="min-w-0 truncate font-bold text-[#8e6bb0]"
+              aria-current="page"
+            >
               #{tag}
             </li>
           </>

@@ -6,6 +6,7 @@ import type {
   tags,
   users,
 } from "../src/db/schema";
+import { UNUSABLE_PASSWORD_HASH } from "../src/features/auth/password";
 import { normalizeTagName } from "../src/features/tags/normalize";
 import { parseHashtags } from "../src/features/tags/parse";
 
@@ -150,7 +151,9 @@ export function generateSeed(now: Date): SeedData {
   for (let i = 0; i < USER_NAMES.length; i++) {
     data.users.push({
       id: rnd.uuid(),
-      clerkUserId: `${SEED_USER_PREFIX}${i + 1}`,
+      // ログインできないダミーユーザー（seed_ はユーザー登録では使えない接頭辞）
+      username: `${SEED_USER_PREFIX}${i + 1}`,
+      passwordHash: UNUSABLE_PASSWORD_HASH,
       displayName: USER_NAMES[i] as string,
       createdAt: createdBase,
       updatedAt: createdBase,
