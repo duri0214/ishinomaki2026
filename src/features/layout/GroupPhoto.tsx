@@ -34,13 +34,13 @@ export function GroupPhoto({ islands }: { islands: PhotoIsland[] }) {
 
   const src = `/photos/${slug ?? "world"}.jpg`;
   return (
-    <figure className="relative h-28 shrink-0 overflow-hidden bg-[#efe6f4] lg:h-auto lg:max-h-[27dvh] lg:aspect-[2/1]">
+    <figure className="relative h-28 w-full shrink-0 min-[551px]:aspect-[2/1] min-[551px]:h-auto min-[551px]:max-h-[27dvh] overflow-hidden bg-[#efe6f4]">
       <Photo key={src} src={src} alt={`${title}の集合写真`} />
-      <figcaption className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/60 to-transparent px-4 pb-2.5 pt-8 text-white">
+      <figcaption className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/60 to-transparent px-2 pb-1.5 pt-6 text-white md:px-4 md:pb-2.5 md:pt-8">
         {subtitle && (
           <p className="text-xs font-medium opacity-90">{subtitle}</p>
         )}
-        <p className="font-serif text-lg font-bold">{title}</p>
+        <p className="truncate font-serif text-sm font-bold md:text-lg">{title}</p>
       </figcaption>
     </figure>
   );

@@ -50,15 +50,15 @@ export default async function MainLayout({
         authEnabled={isClerkConfigured()}
         initialSignedIn={clerkUserId !== null}
       >
-        <div className="flex h-dvh flex-col lg:grid lg:grid-cols-[4.5rem_7fr_3fr]">
+        <div className="flex h-dvh flex-col min-[551px]:grid min-[551px]:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] min-[551px]:grid-rows-[auto_minmax(0,1fr)] md:grid-cols-[minmax(0,7fr)_minmax(0,3fr)] lg:grid-cols-[4.5rem_minmax(0,7fr)_minmax(0,3fr)] lg:grid-rows-1">
           <Toolbar islands={islandNames} />
           <section
             aria-label="マップ"
-            className="h-[38dvh] min-h-[220px] shrink-0 lg:h-auto lg:min-h-0"
+            className="h-[38dvh] min-h-[220px] min-w-0 shrink-0 min-[551px]:h-auto min-[551px]:min-h-0 min-[551px]:shrink"
           >
             <MapCanvas islands={islands} />
           </section>
-          <aside className="flex min-h-0 flex-1 flex-col bg-[#fffcf8]">
+          <aside className="flex min-h-0 min-w-0 flex-1 flex-col bg-[#fffcf8]">
             <GroupPhoto islands={photoIslands} />
             <div className="flex shrink-0 items-center gap-2 px-4 pb-1 pt-3">
               <div className="min-w-0 flex-1">

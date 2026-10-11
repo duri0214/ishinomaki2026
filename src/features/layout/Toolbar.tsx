@@ -38,7 +38,7 @@ export function Toolbar({
   islands: { slug: string; name: string }[];
 }) {
   return (
-    <header className="flex shrink-0 items-center gap-2 bg-[#2b2140] px-3 py-2 lg:flex-col lg:px-0 lg:py-4">
+    <header className="flex min-[551px]:col-span-2 shrink-0 items-center gap-2 bg-[#2b2140] px-3 py-2 lg:col-span-1 lg:flex-col lg:px-0 lg:py-4">
       <Link
         href="/"
         aria-label="世界地図へ"
