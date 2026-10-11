@@ -1,0 +1,159 @@
+"""デザイン用画像.zip から、マップ用の WebP と manifest.json を作る"""
+import io, json, os, sys, zipfile
+import numpy as np
+from PIL import Image
+
+ISLAND_SIZE = 690  # layout.ts の ISLAND_RADIUS * 2
+MAX_PX = {"house": 512, "tree": 448, "stage": 512, "castle": 768, "penlight": 256}
+
+# 島の土台（モード共通）
+BASES = {
+    "base-01": "cool/島土台/base-01.png",
+    "base-02": "cool/島土台/base-02.png",
+    "base-03": "cool/島土台/base-03.png",
+    "base-04": "kawaii/島土台/base-02.png",
+    "base-05": "kawaii/島土台/base-03.png",
+    "base-06": "kawaii/島土台/Empty Art Nouveau Floating Island-7.png",
+    "base-07": "kawaii/島土台/Empty pastel terraced floating island-13.png",
+}
+
+# モードごとのスプライト（ステージ＝小さい城、城＝大きい城）
+SPRITES = {
+    "cool": {
+        "house-member": ["cool/家/house-01-member.png"],
+        "house-cafe": ["cool/家/house-02-cafe.png"],
+        "house-music": ["cool/家/house-03-music.png"],
+        "house-shop": ["cool/家/house-04-shop.png"],
+        "house-cottage": ["cool/家/house-05-cottage.png"],
+        "tree": [f"cool/桜/sakura-0{i}.png" for i in range(1, 6)],
+        "penlight": [
+            "cool/ペンライト/penlight-03-cool.png",
+            "cool/ペンライト/penlight-04-cool.png",
+            "cool/ペンライト/penlight-05-universal.png",
+        ],
+        "stage": [f"cool/ステージ/small/castle-0{i}.png" for i in range(1, 4)],
+        "castle": [f"cool/ステージ/large/castle-0{i}.png" for i in range(1, 4)],
+    },
+    "kawaii": {
+        "house-member": ["kawaii/家/house-01-member.png"],
+        "house-cafe": ["kawaii/家/house-02-cafe.png"],
+        "house-music": ["kawaii/家/house-03-music.png"],
+        "house-shop": ["kawaii/家/house-04-shop.png"],
+        "house-cottage": ["kawaii/家/house-05-cottage.png"],
+        "tree": [
+            "kawaii/桜/Cozy Apricot Sakura Tree Sprite-14.png",
+            "kawaii/桜/Crystal sakura tree sprite-16.png",
+            "kawaii/桜/Lavender Gothic Sakura Tree Sprite-12.png",
+            "kawaii/桜/Mint-Pearl Sakura Tree Sprite-15.png",
+            "kawaii/桜/Rose quartz sakura tree sprite-11.png",
+            "kawaii/桜/sakura-04.png",
+        ],
+        "penlight": [
+            "kawaii/ペンライト/Blush Art Nouveau Concert Penlight-5.png",
+            "kawaii/ペンライト/Crystal blue concert penlight-8.png",
+            "kawaii/ペンライト/Peach and gold concert penlight-10.png",
+            "kawaii/ペンライト/penlight-01-kawaii.png",
+            "kawaii/ペンライト/penlight-02-kawaii.png",
+        ],
+        "stage": [f"kawaii/ステージ/small/castle-0{i}.png" for i in range(1, 4)],
+        "castle": [f"kawaii/ステージ/large/castle-0{i}.png" for i in range(1, 4)],
+    },
+}
+
+
+def open_zip(path) -> tuple[zipfile.ZipFile, dict]:
+    """zip を開き、(zip, {正しいファイル名: ZipInfo}) を返す（cp437 → utf-8 に直す）"""
+    zf = zipfile.ZipFile(path)          # zip を開く
+    names = {}                          # {ファイル名: ZipInfo}
+    for info in zf.infolist():          # zip の中のファイルを1つずつ見る
+        name = info.filename
+        if not info.flag_bits & 0x800:  # UTF-8 フラグがない ＝ 名前が文字化けしている
+            name = name.encode("cp437").decode("utf-8")  # 正しい日本語に戻す
+        names[name] = info
+    return zf, names
+
+def load(zf, names, rel) -> Image.Image:
+    """'デザイン用画像/' + rel を RGBA で読む"""
+    info = names["デザイン用画像/" + rel]      # 正しい名前から ZipInfo を探す
+    data = zf.read(info)                       # zip から中身（bytes）を取り出す
+    return Image.open(io.BytesIO(data)).convert("RGBA")  # 画像として開く（透明度つき）
+
+
+def crop_and_anchor(img) -> tuple[Image.Image, list[float]]:
+    """透明な余白を切り取り（alpha>8, 余白4px）、接地点（alpha>128 の下中央, 0〜1）を返す"""
+    # 1) 切り取り: 少しでも見えている部分（alpha>8）を囲む四角形
+    a = np.array(img.getchannel("A"))       # 透明度だけを数値の表にする（0=透明, 255=不透明）
+    ys, xs = np.where(a > 8)                # 見えている画素の y 座標と x 座標
+    pad = 4
+    x0 = max(0, xs.min() - pad)
+    y0 = max(0, ys.min() - pad)
+    x1 = min(img.width, xs.max() + 1 + pad)
+    y1 = min(img.height, ys.max() + 1 + pad)
+    cropped = img.crop((x0, y0, x1, y1))
+
+    # 2) 接地点: しっかり見えている部分（alpha>128）の下端の中央
+    ca = np.array(cropped.getchannel("A"))
+    oys, oxs = np.where(ca > 128)
+    cx = (oxs.min() + oxs.max()) / 2        # 左右の中央
+    bottom = oys.max() + 1                  # 下端
+    anchor = [round(float(cx / cropped.width), 4), round(float(bottom / cropped.height), 4)]
+    return cropped, anchor
+
+
+def resize_max(img, limit) -> Image.Image:
+    """長い辺が limit を超えるときだけ LANCZOS で縮小する"""
+    scale = limit / max(img.size)          # 長い辺を limit にする倍率
+    if scale >= 1:
+        return img                          # すでに小さいので、そのまま
+    size = (round(img.width * scale), round(img.height * scale))
+    return img.resize(size, Image.LANCZOS)  # LANCZOS ＝ 縮小してもきれいな方式
+
+
+def main():
+    zip_path, repo = sys.argv[1], sys.argv[2]
+    manifest = {"islandSize": ISLAND_SIZE, "bases": {}, "modes": {}}
+    zf, names = open_zip(zip_path)
+    public = os.path.join(repo, "public", "map")
+
+    # 1) 土台: 切り取らずに、そのまま WebP で保存する（配置の座標がキャンバス基準のため）
+    os.makedirs(os.path.join(public, "base"), exist_ok=True)
+    for name, rel in BASES.items():
+        img = load(zf, names, rel)
+        img.save(os.path.join(public, "base", f"{name}.webp"), "WEBP", quality=82, method=4)
+        manifest["bases"][name] = {
+            "src": f"/map/base/{name}.webp",
+            "width": img.width,
+            "height": img.height,
+        }
+        print("base", name)
+
+    # 2) スプライト: 余白を切り取り、縮小して保存する
+    for mode, roles in SPRITES.items():
+        os.makedirs(os.path.join(public, mode), exist_ok=True)
+        manifest["modes"][mode] = {}
+        for role, rels in roles.items():
+            key = "house" if role.startswith("house") else role  # MAX_PX のキー
+            variants = []
+            for i, rel in enumerate(rels, start=1):
+                sprite, anchor = crop_and_anchor(load(zf, names, rel))
+                sprite = resize_max(sprite, MAX_PX[key])
+                file = f"{role}-{i:02d}.webp"
+                sprite.save(os.path.join(public, mode, file), "WEBP", quality=82, method=4)
+                variants.append({
+                    "src": f"/map/{mode}/{file}",
+                    "width": sprite.width,
+                    "height": sprite.height,
+                    "anchor": anchor,
+                })
+                print(mode, file)
+            manifest["modes"][mode][role] = variants
+
+    # 3) manifest.json を保存する（TypeScript から import して使う）
+    out_dir = os.path.join(repo, "src", "features", "map", "generated")
+    os.makedirs(out_dir, exist_ok=True)
+    with open(os.path.join(out_dir, "manifest.json"), "w", encoding="utf-8") as f:
+        json.dump(manifest, f, ensure_ascii=False, indent=2)
+    print("done")
+
+if __name__ == "__main__":
+    main()

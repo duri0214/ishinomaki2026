@@ -1,0 +1,451 @@
+{
+  "islandSize": 690,
+  "bases": {
+    "base-01": {
+      "src": "/map/base/base-01.webp",
+      "width": 1254,
+      "height": 1254
+    },
+    "base-02": {
+      "src": "/map/base/base-02.webp",
+      "width": 1254,
+      "height": 1254
+    },
+    "base-03": {
+      "src": "/map/base/base-03.webp",
+      "width": 1254,
+      "height": 1254
+    },
+    "base-04": {
+      "src": "/map/base/base-04.webp",
+      "width": 1254,
+      "height": 1254
+    },
+    "base-05": {
+      "src": "/map/base/base-05.webp",
+      "width": 1254,
+      "height": 1254
+    },
+    "base-06": {
+      "src": "/map/base/base-06.webp",
+      "width": 1254,
+      "height": 1254
+    },
+    "base-07": {
+      "src": "/map/base/base-07.webp",
+      "width": 1254,
+      "height": 1254
+    }
+  },
+  "modes": {
+    "cool": {
+      "house-member": [
+        {
+          "src": "/map/cool/house-member-01.webp",
+          "width": 449,
+          "height": 512,
+          "anchor": [
+            0.4995,
+            0.9958
+          ]
+        }
+      ],
+      "house-cafe": [
+        {
+          "src": "/map/cool/house-cafe-01.webp",
+          "width": 509,
+          "height": 512,
+          "anchor": [
+            0.4996,
+            0.9966
+          ]
+        }
+      ],
+      "house-music": [
+        {
+          "src": "/map/cool/house-music-01.webp",
+          "width": 512,
+          "height": 471,
+          "anchor": [
+            0.4996,
+            0.9953
+          ]
+        }
+      ],
+      "house-shop": [
+        {
+          "src": "/map/cool/house-shop-01.webp",
+          "width": 423,
+          "height": 512,
+          "anchor": [
+            0.4995,
+            0.9957
+          ]
+        }
+      ],
+      "house-cottage": [
+        {
+          "src": "/map/cool/house-cottage-01.webp",
+          "width": 469,
+          "height": 512,
+          "anchor": [
+            0.4995,
+            0.9957
+          ]
+        }
+      ],
+      "tree": [
+        {
+          "src": "/map/cool/tree-01.webp",
+          "width": 438,
+          "height": 448,
+          "anchor": [
+            0.4991,
+            0.9958
+          ]
+        },
+        {
+          "src": "/map/cool/tree-02.webp",
+          "width": 448,
+          "height": 446,
+          "anchor": [
+            0.5,
+            0.9957
+          ]
+        },
+        {
+          "src": "/map/cool/tree-03.webp",
+          "width": 448,
+          "height": 446,
+          "anchor": [
+            0.4836,
+            0.9819
+          ]
+        },
+        {
+          "src": "/map/cool/tree-04.webp",
+          "width": 448,
+          "height": 437,
+          "anchor": [
+            0.5,
+            0.9958
+          ]
+        },
+        {
+          "src": "/map/cool/tree-05.webp",
+          "width": 448,
+          "height": 442,
+          "anchor": [
+            0.4996,
+            0.9949
+          ]
+        }
+      ],
+      "penlight": [
+        {
+          "src": "/map/cool/penlight-01.webp",
+          "width": 177,
+          "height": 256,
+          "anchor": [
+            0.535,
+            0.9967
+          ]
+        },
+        {
+          "src": "/map/cool/penlight-02.webp",
+          "width": 126,
+          "height": 256,
+          "anchor": [
+            0.5153,
+            0.9956
+          ]
+        },
+        {
+          "src": "/map/cool/penlight-03.webp",
+          "width": 123,
+          "height": 256,
+          "anchor": [
+            0.5164,
+            0.9956
+          ]
+        }
+      ],
+      "stage": [
+        {
+          "src": "/map/cool/stage-01.webp",
+          "width": 435,
+          "height": 512,
+          "anchor": [
+            0.4995,
+            0.9967
+          ]
+        },
+        {
+          "src": "/map/cool/stage-02.webp",
+          "width": 462,
+          "height": 512,
+          "anchor": [
+            0.4995,
+            0.9957
+          ]
+        },
+        {
+          "src": "/map/cool/stage-03.webp",
+          "width": 441,
+          "height": 512,
+          "anchor": [
+            0.4995,
+            0.9958
+          ]
+        }
+      ],
+      "castle": [
+        {
+          "src": "/map/cool/castle-01.webp",
+          "width": 721,
+          "height": 768,
+          "anchor": [
+            0.5004,
+            0.9968
+          ]
+        },
+        {
+          "src": "/map/cool/castle-02.webp",
+          "width": 766,
+          "height": 768,
+          "anchor": [
+            0.4996,
+            0.9968
+          ]
+        },
+        {
+          "src": "/map/cool/castle-03.webp",
+          "width": 768,
+          "height": 738,
+          "anchor": [
+            0.4996,
+            0.9958
+          ]
+        }
+      ]
+    },
+    "kawaii": {
+      "house-member": [
+        {
+          "src": "/map/kawaii/house-member-01.webp",
+          "width": 446,
+          "height": 512,
+          "anchor": [
+            0.4995,
+            0.9966
+          ]
+        }
+      ],
+      "house-cafe": [
+        {
+          "src": "/map/kawaii/house-cafe-01.webp",
+          "width": 481,
+          "height": 512,
+          "anchor": [
+            0.4996,
+            0.996
+          ]
+        }
+      ],
+      "house-music": [
+        {
+          "src": "/map/kawaii/house-music-01.webp",
+          "width": 499,
+          "height": 512,
+          "anchor": [
+            0.5,
+            0.9956
+          ]
+        }
+      ],
+      "house-shop": [
+        {
+          "src": "/map/kawaii/house-shop-01.webp",
+          "width": 414,
+          "height": 512,
+          "anchor": [
+            0.4989,
+            0.9957
+          ]
+        }
+      ],
+      "house-cottage": [
+        {
+          "src": "/map/kawaii/house-cottage-01.webp",
+          "width": 495,
+          "height": 512,
+          "anchor": [
+            0.4995,
+            0.9954
+          ]
+        }
+      ],
+      "tree": [
+        {
+          "src": "/map/kawaii/tree-01.webp",
+          "width": 448,
+          "height": 405,
+          "anchor": [
+            0.5,
+            0.9943
+          ]
+        },
+        {
+          "src": "/map/kawaii/tree-02.webp",
+          "width": 448,
+          "height": 448,
+          "anchor": [
+            0.4996,
+            0.994
+          ]
+        },
+        {
+          "src": "/map/kawaii/tree-03.webp",
+          "width": 448,
+          "height": 428,
+          "anchor": [
+            0.4992,
+            0.9949
+          ]
+        },
+        {
+          "src": "/map/kawaii/tree-04.webp",
+          "width": 448,
+          "height": 423,
+          "anchor": [
+            0.4992,
+            0.9948
+          ]
+        },
+        {
+          "src": "/map/kawaii/tree-05.webp",
+          "width": 448,
+          "height": 439,
+          "anchor": [
+            0.4988,
+            0.9958
+          ]
+        },
+        {
+          "src": "/map/kawaii/tree-06.webp",
+          "width": 448,
+          "height": 445,
+          "anchor": [
+            0.4984,
+            0.9918
+          ]
+        }
+      ],
+      "penlight": [
+        {
+          "src": "/map/kawaii/penlight-01.webp",
+          "width": 114,
+          "height": 256,
+          "anchor": [
+            0.499,
+            0.9965
+          ]
+        },
+        {
+          "src": "/map/kawaii/penlight-02.webp",
+          "width": 112,
+          "height": 256,
+          "anchor": [
+            0.499,
+            0.9957
+          ]
+        },
+        {
+          "src": "/map/kawaii/penlight-03.webp",
+          "width": 123,
+          "height": 256,
+          "anchor": [
+            0.5,
+            0.9958
+          ]
+        },
+        {
+          "src": "/map/kawaii/penlight-04.webp",
+          "width": 159,
+          "height": 256,
+          "anchor": [
+            0.5,
+            0.9936
+          ]
+        },
+        {
+          "src": "/map/kawaii/penlight-05.webp",
+          "width": 138,
+          "height": 256,
+          "anchor": [
+            0.4984,
+            0.9957
+          ]
+        }
+      ],
+      "stage": [
+        {
+          "src": "/map/kawaii/stage-01.webp",
+          "width": 401,
+          "height": 512,
+          "anchor": [
+            0.4989,
+            0.9965
+          ]
+        },
+        {
+          "src": "/map/kawaii/stage-02.webp",
+          "width": 442,
+          "height": 512,
+          "anchor": [
+            0.4995,
+            0.9958
+          ]
+        },
+        {
+          "src": "/map/kawaii/stage-03.webp",
+          "width": 441,
+          "height": 512,
+          "anchor": [
+            0.5,
+            0.9965
+          ]
+        }
+      ],
+      "castle": [
+        {
+          "src": "/map/kawaii/castle-01.webp",
+          "width": 737,
+          "height": 768,
+          "anchor": [
+            0.4996,
+            0.9959
+          ]
+        },
+        {
+          "src": "/map/kawaii/castle-02.webp",
+          "width": 763,
+          "height": 768,
+          "anchor": [
+            0.5,
+            0.9967
+          ]
+        },
+        {
+          "src": "/map/kawaii/castle-03.webp",
+          "width": 750,
+          "height": 768,
+          "anchor": [
+            0.4996,
+            0.9958
+          ]
+        }
+      ]
+    }
+  }
+}
