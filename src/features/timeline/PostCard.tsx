@@ -65,7 +65,7 @@ export function PostCard({
 
   return (
     <article
-      className="design-post border border-[var(--ui-border)] bg-[var(--ui-card)] p-4 shadow-[0_10px_28px_-16px_rgba(111,78,142,0.35)]"
+      className="design-post border border-[var(--ui-border)] bg-[var(--ui-card)] p-4 shadow-[0_10px_28px_-16px_var(--ui-shadow)]"
       data-testid="post-card"
     >
       <header className="flex items-center gap-2.5">
@@ -118,7 +118,7 @@ export function PostCard({
             disabled={deleting}
             aria-label="削除"
             title="削除"
-            className="ml-auto flex size-8 items-center justify-center rounded-full text-[var(--ui-muted)] hover:bg-[var(--ui-hover)] hover:text-[#c4456f] disabled:opacity-50"
+            className="ml-auto flex size-8 items-center justify-center rounded-full text-[var(--ui-muted)] hover:bg-[var(--ui-hover)] hover:text-[var(--ui-danger)] disabled:opacity-50"
           >
             <svg
               aria-hidden

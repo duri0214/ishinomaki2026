@@ -17,7 +17,7 @@ export function Toolbar({
         title="世界地図へ"
         className="flex size-11 shrink-0 items-center justify-center rounded-2xl bg-[var(--ui-rail-button)] text-2xl hover:bg-[var(--ui-rail-hover)]"
       >
-        <span aria-hidden className="design-brand" />
+        <span aria-hidden>🏝</span>
       </Link>
       <span aria-hidden className="h-6 w-px bg-white/15 lg:h-px lg:w-8" />
       <ToolbarIslands islands={islands} />

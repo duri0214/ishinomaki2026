@@ -134,7 +134,7 @@ export function Composer({
 
   return (
     <form
-      className="relative mx-4 mb-2 rounded-[28px] border border-[var(--ui-border)] bg-white p-3 shadow-[0_10px_28px_-16px_rgba(111,78,142,0.35)]"
+      className="relative mx-4 mb-2 rounded-[28px] border border-[var(--ui-border)] bg-[var(--ui-card)] p-3 shadow-[0_10px_28px_-16px_var(--ui-shadow)]"
       onSubmit={(e) => {
         e.preventDefault();
         submit();
@@ -161,7 +161,7 @@ export function Composer({
         {items.length > 0 && (
           <ul
             aria-label="タグの候補"
-            className="absolute z-20 mt-1 max-h-48 w-64 overflow-auto rounded-2xl border border-[var(--ui-border)] bg-white py-1 text-sm shadow-lg"
+            className="absolute z-20 mt-1 max-h-48 w-64 overflow-auto rounded-2xl border border-[var(--ui-border)] bg-[var(--ui-card)] py-1 text-sm shadow-lg"
           >
             {items.map((item, i) => (
               <li key={item.normalizedName}>
@@ -202,7 +202,7 @@ export function Composer({
           <button
             type="submit"
             disabled={pending || overLimit || text.trim() === ""}
-            className="ml-auto rounded-full bg-[var(--ui-accent)] px-5 py-1.5 text-sm font-bold text-white hover:bg-[#7b5a9d] disabled:bg-[#d9cfe4]"
+            className="ml-auto rounded-full bg-[var(--ui-accent)] px-5 py-1.5 text-sm font-bold text-[var(--ui-on-accent)] hover:bg-[var(--ui-accent-hover)] disabled:bg-[var(--ui-disabled)]"
           >
             {pending ? "投稿中…" : "投稿"}
           </button>

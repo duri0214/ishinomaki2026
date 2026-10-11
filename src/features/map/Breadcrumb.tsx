@@ -20,7 +20,7 @@ export function Breadcrumb({
         <li>
           <Link
             href="/"
-            className="rounded px-1 font-semibold text-[var(--ui-title)] hover:bg-[var(--ui-hover)] hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--ui-accent)]"
+            className="rounded px-1 text-[var(--ui-text)] hover:bg-[var(--ui-hover)] hover:text-[var(--ui-title)]"
           >
             🌊 世界
           </Link>
@@ -33,7 +33,7 @@ export function Breadcrumb({
             <li className="min-w-0 truncate">
               <Link
                 href={`/i/${island.slug}`}
-                className="rounded px-1 font-semibold text-[var(--ui-title)] hover:bg-[var(--ui-hover)] hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--ui-accent)]"
+                className="rounded px-1 text-[var(--ui-text)] hover:bg-[var(--ui-hover)] hover:text-[var(--ui-title)]"
               >
                 {island.name}
               </Link>
