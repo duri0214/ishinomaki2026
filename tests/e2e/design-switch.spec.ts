@@ -95,7 +95,8 @@ test("保存済みの値が不正な場合は既定の選択で起動する", as
   );
   await page.goto("/");
   await expect(page.locator("html")).toHaveAttribute("data-design", "kawaii");
-  await expect(
-    page.getByRole("button", { name: "かわいい" }),
-  ).toHaveAttribute("aria-pressed", "true");
+  await expect(page.getByRole("button", { name: "かわいい" })).toHaveAttribute(
+    "aria-pressed",
+    "true",
+  );
 });
