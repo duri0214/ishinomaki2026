@@ -1,7 +1,7 @@
 import { connection } from "next/server";
 import { QueryProvider } from "@/app/providers";
 import { ViewerProvider } from "@/features/auth/viewer";
-import { GroupPhoto } from "@/features/layout/GroupPhoto";
+import { GroupPhoto, type PhotoIsland } from "@/features/layout/GroupPhoto";
 import { Toolbar } from "@/features/layout/Toolbar";
 import { Breadcrumb } from "@/features/map/Breadcrumb";
 import { getMapData } from "@/features/map/data";
@@ -25,6 +25,24 @@ export default async function MainLayout({
     getClerkUserId(),
   ]);
   const islandNames = islands.map(({ slug, name }) => ({ slug, name }));
+  const photoIslands: PhotoIsland[] = islands.map(
+    ({ slug, name, members, topTags }) => ({
+      slug,
+      name,
+      tags: [
+        ...members.map((m) => ({
+          normalizedName: m.normalizedName,
+          name: m.name,
+          kind: "member" as const,
+        })),
+        ...topTags.map((t) => ({
+          normalizedName: t.normalizedName,
+          name: t.name,
+          kind: "topic" as const,
+        })),
+      ],
+    }),
+  );
 
   return (
     <QueryProvider>
@@ -41,7 +59,7 @@ export default async function MainLayout({
             <MapCanvas islands={islands} />
           </section>
           <aside className="flex min-h-0 flex-1 flex-col bg-[#fffcf8]">
-            <GroupPhoto islands={islandNames} />
+            <GroupPhoto islands={photoIslands} />
             <div className="flex shrink-0 items-center gap-2 px-4 pb-1 pt-3">
               <div className="min-w-0 flex-1">
                 <Breadcrumb islands={islandNames} />

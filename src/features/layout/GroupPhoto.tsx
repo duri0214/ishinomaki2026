@@ -2,22 +2,46 @@
 
 import { useParams } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
+import { decodeRouteParam } from "@/lib/route-params";
+
+export type PhotoIsland = {
+  slug: string;
+  name: string;
+  /** 島のメンバータグと話題タグの上位20件。ルートの tag がどの種類かを判定するのに使う */
+  tags: { normalizedName: string; name: string; kind: "member" | "topic" }[];
+};
 
 /**
  * タイムライン上部の集合写真。島ごとに `public/photos/<島のslug>.jpg`、
  * 世界地図では `public/photos/world.jpg` を表示する。ファイルがなければ仮の絵に切り替える。
+ * タグで絞っているときは、サブタイトルに島名、タイトルにタグ（人なら人名）を出す。
  */
-export function GroupPhoto({
-  islands,
-}: {
-  islands: { slug: string; name: string }[];
-}) {
-  const { island: slug } = useParams<{ island?: string }>();
-  const name = islands.find((i) => i.slug === slug)?.name ?? "島マップ";
+export function GroupPhoto({ islands }: { islands: PhotoIsland[] }) {
+  const { island: slug, tag: rawTag } = useParams<{
+    island?: string;
+    tag?: string;
+  }>();
+  const island = islands.find((i) => i.slug === slug);
+  const tagName = rawTag ? decodeRouteParam(rawTag) : undefined;
+
+  let title = island?.name ?? "島マップ";
+  let subtitle: string | undefined;
+  if (island && tagName) {
+    const tag = island.tags.find((t) => t.normalizedName === tagName);
+    title = tag?.kind === "member" ? tag.name : `#${tag?.name ?? tagName}`;
+    subtitle = island.name;
+  }
+
   const src = `/photos/${slug ?? "world"}.jpg`;
   return (
-    <figure className="relative h-28 shrink-0 overflow-hidden rounded-b-[28px] bg-[#efe6f4] lg:h-auto lg:max-h-[30dvh] lg:aspect-video">
-      <Photo key={src} src={src} alt={`${name}の集合写真`} />
+    <figure className="relative h-28 shrink-0 overflow-hidden bg-[#efe6f4] lg:h-auto lg:max-h-[27dvh] lg:aspect-[2/1]">
+      <Photo key={src} src={src} alt={`${title}の集合写真`} />
+      <figcaption className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/60 to-transparent px-4 pb-2.5 pt-8 text-white">
+        {subtitle && (
+          <p className="text-xs font-medium opacity-90">{subtitle}</p>
+        )}
+        <p className="font-serif text-lg font-bold">{title}</p>
+      </figcaption>
     </figure>
   );
 }
