@@ -115,3 +115,9 @@ DATABASE_URL="postgresql://USER:PASSWORD@HOST/DBNAME?sslmode=require"
 ## ディレクトリ
 
 `src/app`（ルート）、`src/features/*`（map / timeline / posts / tags / likes / users / islands / auth）、`src/db`（スキーマと接続）、`src/lib`、`scripts`（seed・migrate）、`drizzle`（マイグレーション）、`tests/unit`、`tests/e2e`。
+
+## ライブ参戦記録
+
+自分のプロフィールで「フォロー中のアイドル（推しグループ）」→「ライブ」の順に選び、参戦記録と2000文字以内のメモを保存できます。登録・編集・削除は自分のプロフィールのみで行えます。アイドルのページには参戦記録の操作UIを表示しません。記録は本人だけに表示し、フォローを外しても残ります。同じ公演の再保存は更新となります。
+
+`live_events` に公演、`live_records` にユーザーごとの記録を保存します。既存DBには `bun run db:migrate` でテーブルと各グループ3件の架空公演を追加します（ローカルは起動時にも自動適用）。新規デモDBには `bun run db:seed` で公演も投入します。シードは既存のデモデータを作り直すため、記録を保持したいDBではマイグレーションのみ実行してください。

@@ -125,6 +125,7 @@ function AuthDialog({
     <dialog
       ref={ref}
       aria-labelledby={titleId}
+      data-design="kawaii"
       onCancel={(e) => {
         e.preventDefault();
         onClose();
