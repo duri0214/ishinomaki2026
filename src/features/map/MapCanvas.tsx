@@ -284,6 +284,12 @@ export function MapCanvas({
         </g>
       </svg>
 
+      {islands.length === 0 && (
+        <p className="absolute inset-x-0 top-1/2 -translate-y-1/2 text-center text-sm font-bold text-slate-600">
+          まだ島がありません
+        </p>
+      )}
+
       <div className="absolute right-2 top-2 flex flex-col gap-1">
         <button
           type="button"

@@ -13,9 +13,15 @@ async function open(): Promise<Connection> {
     return connect({ databaseUrl: env.DATABASE_URL });
   }
   // DATABASE_URL がなければローカルの PGlite（開発用）。空なら自動でマイグレーションする
-  const dir = path.resolve(process.cwd(), env.PGLITE_DIR ?? ".pglite");
+  // ローカル専用の処理。本番(Neon)では通らないので、プロジェクト全体をファイルトレースの対象にしない
+  const dir = path.resolve(
+    /* turbopackIgnore: true */ process.cwd(),
+    env.PGLITE_DIR ?? ".pglite",
+  );
   const conn = await connect({ pgliteDir: dir });
-  await conn.migrate(path.resolve(process.cwd(), "drizzle"));
+  await conn.migrate(
+    path.resolve(/* turbopackIgnore: true */ process.cwd(), "drizzle"),
+  );
   return conn;
 }
 

@@ -88,7 +88,7 @@ export async function listMemberTags(
     })
     .from(tags)
     .where(and(eq(tags.islandId, islandId), eq(tags.kind, "member")))
-    .orderBy(asc(tags.createdAt), asc(tags.id));
+    .orderBy(asc(tags.createdAt), asc(tags.normalizedName));
 }
 
 export type TagSearchResult = {

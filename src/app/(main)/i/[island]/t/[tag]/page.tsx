@@ -30,10 +30,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     normalized,
   );
   const name = row?.name ?? normalized;
-  return {
-    title: `#${name} - ${island.name}`,
-    description: `${island.name}の #${name} の投稿`,
-  };
+  const title = `#${name} - ${island.name}`;
+  const description = `${island.name}の #${name} の投稿`;
+  return { title, description, openGraph: { title, description } };
 }
 
 /**

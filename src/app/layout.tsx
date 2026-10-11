@@ -3,12 +3,28 @@ import type { Metadata } from "next";
 import { isClerkConfigured } from "@/lib/env";
 import "./globals.css";
 
+const SITE_NAME = "島マップ";
+const DESCRIPTION = "アイドルファンのための、島のかたちをしたSNS";
+
+/** OGP などの絶対URLの基準。Vercel の本番ドメイン → ローカルの順 */
+const siteUrl = process.env.VERCEL_PROJECT_PRODUCTION_URL
+  ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`
+  : "http://localhost:3000";
+
 export const metadata: Metadata = {
+  metadataBase: new URL(siteUrl),
   title: {
-    default: "島マップ",
-    template: "%s | 島マップ",
+    default: SITE_NAME,
+    template: `%s | ${SITE_NAME}`,
   },
-  description: "アイドルファンのための、島のかたちをしたSNS",
+  description: DESCRIPTION,
+  openGraph: {
+    siteName: SITE_NAME,
+    type: "website",
+    locale: "ja_JP",
+    title: SITE_NAME,
+    description: DESCRIPTION,
+  },
 };
 
 export default function RootLayout({

@@ -15,9 +15,11 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   await connection();
   const island = await loadIsland((await params).island);
   if (!island) return { title: "島が見つかりません" };
+  const description = island.description ?? `${island.name}のみんなの投稿`;
   return {
     title: island.name,
-    description: island.description ?? `${island.name}のみんなの投稿`,
+    description,
+    openGraph: { title: island.name, description },
   };
 }
 

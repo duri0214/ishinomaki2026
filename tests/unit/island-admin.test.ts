@@ -93,12 +93,13 @@ describe("saveIsland", () => {
       ],
     });
     const members = await listMemberTags(conn.db, island.id);
+    // 同じトランザクションで作ったので作成時刻は同じ。名前順（normalized_name）で安定して並ぶ
     expect(members.map((m) => [m.name, m.normalizedName])).toEqual([
-      ["みさき", "みさき"],
       ["Hina", "hina"],
+      ["みさき", "みさき"],
     ]);
-    expect(members[0]?.position).toEqual({ x: 10, y: -20 });
-    const hina = must(members[1]?.position);
+    expect(members[1]?.position).toEqual({ x: 10, y: -20 });
+    const hina = must(members[0]?.position);
     expect(Math.hypot(hina.x, hina.y)).toBeLessThanOrEqual(85);
   });
 
