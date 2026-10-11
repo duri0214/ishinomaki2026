@@ -153,3 +153,16 @@ export function activeHashtagAt(
   if (!isBoundary(lastCodePoint(text, i - 1))) return null;
   return { start: i - 1, query: text.slice(i, Math.min(caret, text.length)) };
 }
+
+/**
+ * 文字列全体が、ひとつの有効なタグ名かどうかを調べる（メンバータグの登録などに使う）。
+ * `#` を付けて解析し、全体がちょうど1つのタグになれば、そのタグを返す。
+ */
+export function validateTagName(name: string): ParsedTag | null {
+  const result = parseHashtags(`#${name}`);
+  const only = result.occurrences[0];
+  if (result.tags.length !== 1 || !only) return null;
+  if (only.start !== 0 || only.end !== name.length + 1) return null;
+  const tag = result.tags[0];
+  return tag ?? null;
+}

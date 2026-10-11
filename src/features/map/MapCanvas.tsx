@@ -14,7 +14,7 @@ import {
 } from "react";
 import { cameraFor, focusForPath, focusKey, resolveFocus } from "./layout";
 import { MapScene } from "./MapScene";
-import type { Camera, MapIslandData, Viewport } from "./types";
+import type { Camera, MapFocus, MapIslandData, Viewport } from "./types";
 
 const ANIMATION_MS = 650;
 const REFRESH_MS = 5 * 60 * 1000;
@@ -30,15 +30,27 @@ const easeInOutCubic = (t: number) =>
  * d3 は d3-zoom（パン・ズームの入力処理）と d3-interpolate（移動経路）だけに使い、
  * DOM の描画は React が行う。
  */
-export function MapCanvas({ islands }: { islands: MapIslandData[] }) {
+export function MapCanvas({
+  islands,
+  focusOverride,
+  preview = false,
+}: {
+  islands: MapIslandData[];
+  /** URL の代わりに、見せる場所を指定する（島エディタのプレビュー用） */
+  focusOverride?: MapFocus;
+  /** true なら、家や島をクリックしてもページ移動せず、定期的な再取得もしない（島エディタのプレビュー用） */
+  preview?: boolean;
+}) {
   const params = useParams<{ island?: string; tag?: string }>();
   const router = useRouter();
 
   const paramIsland = params.island;
   const paramTag = params.tag;
   const focus = useMemo(
-    () => resolveFocus(islands, { island: paramIsland, tag: paramTag }),
-    [islands, paramIsland, paramTag],
+    () =>
+      focusOverride ??
+      resolveFocus(islands, { island: paramIsland, tag: paramTag }),
+    [islands, paramIsland, paramTag, focusOverride],
   );
   const key = focusKey(focus);
 
@@ -187,6 +199,7 @@ export function MapCanvas({ islands }: { islands: MapIslandData[] }) {
 
   const onNavigate = useCallback(
     (href: string) => {
+      if (preview) return;
       // ルートの解決を待たずに、先にズームを始める
       const destination = focusForPath(islands, href);
       const destinationKey = focusKey(destination);
@@ -196,25 +209,26 @@ export function MapCanvas({ islands }: { islands: MapIslandData[] }) {
       }
       router.push(href, { scroll: false });
     },
-    [islands, animateTo, router],
+    [islands, animateTo, router, preview],
   );
 
   const onHover = useCallback(
     (href: string) => {
-      if (prefetchedRef.current.has(href)) return;
+      if (preview || prefetchedRef.current.has(href)) return;
       prefetchedRef.current.add(href);
       router.prefetch(href);
     },
-    [router],
+    [router, preview],
   );
 
   // ランキング（5分キャッシュ）の更新を取り込む。順位が変わった家はスロットへ移動する
   useEffect(() => {
+    if (preview) return;
     const id = setInterval(() => {
       if (document.visibilityState === "visible") router.refresh();
     }, REFRESH_MS);
     return () => clearInterval(id);
-  }, [router]);
+  }, [router, preview]);
 
   const zoomBy = (factor: number) => {
     const svg = svgRef.current;
