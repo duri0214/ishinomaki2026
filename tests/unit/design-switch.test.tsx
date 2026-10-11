@@ -2,6 +2,7 @@
 import { runInNewContext } from "node:vm";
 import { act, cleanup, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import { Activity } from "react";
 import { hydrateRoot } from "react-dom/client";
 import { renderToString } from "react-dom/server";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
@@ -77,6 +78,7 @@ describe("DesignSwitch", () => {
   });
 
   it("初回描画前に復元された選択を表示する", () => {
+    window.localStorage.setItem(DESIGN_STORAGE_KEY, "cool");
     document.documentElement.dataset.design = "cool";
     render(<DesignSwitch />);
     expect(control().getAttribute("aria-checked")).toBe("false");
@@ -118,13 +120,167 @@ describe("DesignSwitch", () => {
       ["invalid", "true"],
       ["cool", "false"],
       [null, "true"],
-    ]) {
+    ] as const) {
       act(() => {
+        if (newValue === null) {
+          window.localStorage.removeItem(DESIGN_STORAGE_KEY);
+        } else {
+          window.localStorage.setItem(DESIGN_STORAGE_KEY, newValue);
+        }
         window.dispatchEvent(
-          new StorageEvent("storage", { key: DESIGN_STORAGE_KEY, newValue }),
+          new StorageEvent("storage", {
+            key: DESIGN_STORAGE_KEY,
+            newValue,
+            storageArea: window.localStorage,
+          }),
         );
       });
       expect(control().getAttribute("aria-checked")).toBe(expected);
     }
+  });
+
+  it("スイッチのない画面から戻ったときに別タブの選択を反映する", () => {
+    const view = render(<DesignSwitch />);
+    view.unmount();
+    window.localStorage.setItem(DESIGN_STORAGE_KEY, "cool");
+    window.dispatchEvent(
+      new StorageEvent("storage", {
+        key: DESIGN_STORAGE_KEY,
+        newValue: "cool",
+        storageArea: window.localStorage,
+      }),
+    );
+
+    render(<DesignSwitch />);
+    expect(control().getAttribute("aria-checked")).toBe("false");
+    expect(document.documentElement.dataset.design).toBe("cool");
+  });
+
+  it("Activityで非表示の間に別タブで変更した選択を再表示時に反映する", () => {
+    const view = render(
+      <Activity mode="visible">
+        <DesignSwitch />
+      </Activity>,
+    );
+    view.rerender(
+      <Activity mode="hidden">
+        <DesignSwitch />
+      </Activity>,
+    );
+    window.localStorage.setItem(DESIGN_STORAGE_KEY, "cool");
+    window.dispatchEvent(
+      new StorageEvent("storage", {
+        key: DESIGN_STORAGE_KEY,
+        newValue: "cool",
+        storageArea: window.localStorage,
+      }),
+    );
+
+    view.rerender(
+      <Activity mode="visible">
+        <DesignSwitch />
+      </Activity>,
+    );
+    expect(control().getAttribute("aria-checked")).toBe("false");
+    expect(document.documentElement.dataset.design).toBe("cool");
+  });
+
+  it("遅れて届いた別タブの通知で最新の選択を上書きしない", async () => {
+    const user = userEvent.setup();
+    render(<DesignSwitch />);
+    // 別タブの通知が待機中に、このタブで再び選び直す。
+    window.localStorage.setItem(DESIGN_STORAGE_KEY, "cool");
+    await user.click(control());
+    await user.click(control());
+    act(() => {
+      window.dispatchEvent(
+        new StorageEvent("storage", {
+          key: DESIGN_STORAGE_KEY,
+          oldValue: "kawaii",
+          newValue: "cool",
+          storageArea: window.localStorage,
+        }),
+      );
+    });
+
+    expect(window.localStorage.getItem(DESIGN_STORAGE_KEY)).toBe("kawaii");
+    expect(document.documentElement.dataset.design).toBe("kawaii");
+    expect(control().getAttribute("aria-checked")).toBe("true");
+  });
+
+  it("保存に失敗した選択もActivityで再表示した後に維持する", async () => {
+    window.localStorage.setItem(DESIGN_STORAGE_KEY, "kawaii");
+    vi.spyOn(Storage.prototype, "setItem").mockImplementation(() => {
+      throw new DOMException("保存不可", "SecurityError");
+    });
+    const user = userEvent.setup();
+    const view = render(
+      <Activity mode="visible">
+        <DesignSwitch />
+      </Activity>,
+    );
+    await user.click(control());
+    view.rerender(
+      <Activity mode="hidden">
+        <DesignSwitch />
+      </Activity>,
+    );
+    view.rerender(
+      <Activity mode="visible">
+        <DesignSwitch />
+      </Activity>,
+    );
+
+    expect(window.localStorage.getItem(DESIGN_STORAGE_KEY)).toBe("kawaii");
+    expect(document.documentElement.dataset.design).toBe("cool");
+    expect(control().getAttribute("aria-checked")).toBe("false");
+  });
+
+  it("sessionStorageのクリアでは選択を変更しない", () => {
+    window.localStorage.setItem(DESIGN_STORAGE_KEY, "cool");
+    document.documentElement.dataset.design = "cool";
+    render(<DesignSwitch />);
+    act(() => {
+      window.dispatchEvent(
+        new StorageEvent("storage", {
+          key: null,
+          newValue: null,
+          storageArea: window.sessionStorage,
+        }),
+      );
+    });
+    expect(document.documentElement.dataset.design).toBe("cool");
+    expect(control().getAttribute("aria-checked")).toBe("false");
+  });
+
+  it("localStorageのクリアを反映して既定値に戻す", () => {
+    window.localStorage.setItem(DESIGN_STORAGE_KEY, "cool");
+    document.documentElement.dataset.design = "cool";
+    render(<DesignSwitch />);
+    act(() => {
+      window.localStorage.clear();
+      window.dispatchEvent(
+        new StorageEvent("storage", {
+          key: null,
+          newValue: null,
+          storageArea: window.localStorage,
+        }),
+      );
+    });
+    expect(document.documentElement.dataset.design).toBe(DEFAULT_DESIGN);
+    expect(control().getAttribute("aria-checked")).toBe("true");
+  });
+
+  it("保存値を読み取れなくても切り替えと再表示ができる", async () => {
+    vi.spyOn(Storage.prototype, "getItem").mockImplementation(() => {
+      throw new DOMException("読み取り不可", "SecurityError");
+    });
+    const user = userEvent.setup();
+    const view = render(<DesignSwitch />);
+    await user.click(control());
+    view.unmount();
+    render(<DesignSwitch />);
+    expect(document.documentElement.dataset.design).toBe("cool");
+    expect(control().getAttribute("aria-checked")).toBe("false");
   });
 });

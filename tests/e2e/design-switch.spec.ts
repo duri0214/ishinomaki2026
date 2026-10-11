@@ -30,14 +30,39 @@ test("切り替えを保存し、ページ移動と再読み込み後も復元�
 test("切り替えてもURL・マップのDOM・カメラ位置・スクロール位置を維持する", async ({
   page,
 }) => {
+  await page.emulateMedia({ reducedMotion: "reduce" });
   await page.goto("/i/hoshizora/t/自己紹介");
   const map = page.getByTestId("map");
   const timeline = page.getByTestId("timeline");
   await expect(map).toHaveAttribute("data-focus", "house:hoshizora:自己紹介");
   await expect(page.getByTestId("post-card").first()).toBeVisible();
 
+  const scene = map.locator("svg > g");
+  const scale = () =>
+    scene.evaluate(
+      (element) =>
+        (element as SVGGElement).transform.baseVal.consolidate()?.matrix.a ?? 0,
+    );
+  // SSRの仮カメラを取得せず、計測後に拡大操作が反映されるまで待つ。
+  // reducedMotionにより操作後のカメラ移動は即時に完了する。
+  await expect(async () => {
+    const before = await scale();
+    expect(before).toBeGreaterThan(0);
+    await map.getByRole("button", { name: "拡大", exact: true }).click();
+    expect(await scale()).toBeCloseTo(before * 1.6, 6);
+  }).toPass({ timeout: 15_000 });
+
+  const zoomedCamera = await scene.getAttribute("transform");
+  const bounds = await map.boundingBox();
+  if (!bounds) throw new Error("マップの表示領域を取得できません");
+  await page.mouse.move(bounds.x + 40, bounds.y + 60);
+  await page.mouse.down();
+  await page.mouse.move(bounds.x + 80, bounds.y + 90, { steps: 5 });
+  await page.mouse.up();
+  await expect(scene).not.toHaveAttribute("transform", zoomedCamera ?? "");
+
   const url = page.url();
-  const camera = await map.locator("svg > g").getAttribute("transform");
+  const camera = await scene.getAttribute("transform");
   await map.evaluate((element) => {
     (element as HTMLElement & { __designMarker?: boolean }).__designMarker =
       true;
@@ -56,7 +81,7 @@ test("切り替えてもURL・マップのDOM・カメラ位置・スクロー�
         (element as HTMLElement & { __designMarker?: boolean }).__designMarker,
     ),
   ).toBe(true);
-  expect(await map.locator("svg > g").getAttribute("transform")).toBe(camera);
+  await expect(scene).toHaveAttribute("transform", camera ?? "");
   expect(await timeline.evaluate((element) => element.scrollTop)).toBe(
     scrollTop,
   );

@@ -55,6 +55,7 @@ bun run dev       # http://localhost:3000
 - 選択は `localStorage` の `ishinomaki-design` に保存し、初回描画前に `<html data-design="cool|kawaii">` へ復元します。未保存・不正な値・保存不可の場合の初期値は `kawaii` です。
 - 後から CSS の `[data-design="cool"]` / `[data-design="kawaii"]` にスタイルを追加できます。画像などの出し分けには `src/features/design/useDesign.ts` の `useDesign()` を使います。
 - ページ移動や切り替えでマップを再マウントせず、別タブの選択変更も反映します。ストレージに保存できなくても、そのページ内の切り替えは利用できます。
+- スイッチのない画面や非表示の画面から戻ったときも保存値を読み直します。遅れて届いた別タブの通知では最新の保存値を参照し、古い選択への巻き戻りを防ぎます。
 
 ## 公開までの手順（アカウントが必要な作業。まだ行っていません）
 
