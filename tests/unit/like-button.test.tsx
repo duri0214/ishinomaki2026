@@ -7,11 +7,13 @@ import type { LikeState } from "@/features/likes/service";
 import type { TimelinePage, TimelinePost } from "@/features/timeline/queries";
 import type { ActionResult } from "@/lib/action";
 
-const push = vi.fn();
-const viewer = { authEnabled: true, signedIn: true };
+const openAuth = vi.fn();
+const viewer = { signedIn: true };
 const setLikeAction = vi.fn();
 
-vi.mock("next/navigation", () => ({ useRouter: () => ({ push }) }));
+vi.mock("@/features/auth/AuthDialog", () => ({
+  useAuthDialog: () => openAuth,
+}));
 vi.mock("@/features/auth/viewer", () => ({ useViewer: () => viewer }));
 vi.mock("@/features/likes/actions", () => ({
   setLikeAction: (...args: unknown[]) => setLikeAction(...args),
@@ -24,7 +26,7 @@ const basePost: TimelinePost = {
   id: "11111111-1111-4111-8111-111111111111",
   body: "hello",
   createdAt: "2026-10-11T00:00:00.000Z",
-  author: { id: "u1", displayName: "a", avatarUrl: null },
+  author: { id: "u1", username: "a", displayName: "a", avatarUrl: null },
   island: { slug: "x", name: "X" },
   likeCount: 3,
   likedByMe: false,
@@ -70,9 +72,8 @@ const count = () => screen.getByTestId("like-count").textContent;
 
 beforeEach(() => {
   setLikeAction.mockReset();
-  push.mockReset();
+  openAuth.mockReset();
   viewer.signedIn = true;
-  viewer.authEnabled = true;
   vi.stubGlobal(
     "fetch",
     vi.fn(async () => ({
@@ -163,25 +164,16 @@ describe("LikeButton", () => {
     expect(screen.getByRole("button", { pressed: true })).toBeTruthy();
   });
 
-  it("未ログインならサインインへ誘導し、送信しない", async () => {
+  it("未ログインなら登録・ログインのモーダルを開き、送信しない", async () => {
     viewer.signedIn = false;
     const user = userEvent.setup();
     renderHarness();
     await user.click(screen.getByRole("button", { name: "いいね" }));
-    expect(push).toHaveBeenCalledWith("/sign-in");
+    expect(openAuth).toHaveBeenCalledWith({
+      reason: "いいねするにはアカウントが必要です",
+    });
     expect(setLikeAction).not.toHaveBeenCalled();
     expect(count()).toBe("3");
-  });
-
-  it("ログインが未設定のときは、案内を表示して送信しない", async () => {
-    viewer.signedIn = false;
-    viewer.authEnabled = false;
-    const user = userEvent.setup();
-    renderHarness();
-    await user.click(screen.getByRole("button", { name: "いいね" }));
-    expect(push).not.toHaveBeenCalled();
-    expect(screen.getByText(/ログインが設定されていない/)).toBeTruthy();
-    expect(setLikeAction).not.toHaveBeenCalled();
   });
 
   it("サーバーがエラーを返したら、メッセージを出して最新の状態を取り直す", async () => {
@@ -202,7 +194,7 @@ describe("LikeButton", () => {
     await waitFor(() => expect(count()).toBe("3"));
   });
 
-  it("未ログインのまま送信されてサーバーが unauthorized を返したら、サインインへ誘導する", async () => {
+  it("未ログインのまま送信されてサーバーが unauthorized を返したら（セッション切れ）、モーダルを開く", async () => {
     setLikeAction.mockResolvedValueOnce({
       ok: false,
       code: "unauthorized",
@@ -211,6 +203,6 @@ describe("LikeButton", () => {
     const user = userEvent.setup();
     renderHarness();
     await user.click(screen.getByRole("button", { name: "いいね" }));
-    await waitFor(() => expect(push).toHaveBeenCalledWith("/sign-in"));
+    await waitFor(() => expect(openAuth).toHaveBeenCalledTimes(1));
   });
 });

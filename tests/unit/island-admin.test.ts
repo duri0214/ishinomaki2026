@@ -1,8 +1,9 @@
 import { eq } from "drizzle-orm";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import type { Connection } from "@/db/connect";
-import { islands, postTags, tags } from "@/db/schema";
+import { islands, postTags, tags, userFavoriteMembers } from "@/db/schema";
 import { createIsland, saveIsland } from "@/features/islands/admin";
+import { getFavorites, updateProfile } from "@/features/profile/service";
 import { validateTagName } from "@/features/tags/parse";
 import { listMemberTags } from "@/features/tags/queries";
 import { assertDevEditor, isDevEditorEnabled } from "@/lib/dev-only";
@@ -130,6 +131,38 @@ describe("saveIsland", () => {
       .from(postTags)
       .where(eq(postTags.tagId, topic.id));
     expect(links).toHaveLength(1);
+  });
+
+  it("メンバーから外したタグは、推しメンバーからも外れる（推しグループは残る）", async () => {
+    await createIsland(conn.db, { slug: "oshi", name: "推し島" });
+    await save({
+      slug: "oshi",
+      members: [
+        { name: "あおい", x: 0, y: 0 },
+        { name: "ゆず", x: 10, y: 0 },
+      ],
+    });
+    const user = await insertUser(conn.db);
+    const island = must(
+      (await conn.db.select().from(islands).where(eq(islands.slug, "oshi")))[0],
+    );
+    const members = await listMemberTags(conn.db, island.id);
+    await updateProfile(conn.txDb, user.id, {
+      displayName: "x",
+      favorites: [
+        { islandSlug: "oshi", memberTagIds: members.map((m) => m.id) },
+      ],
+    });
+
+    await save({ slug: "oshi", members: [{ name: "ゆず", x: 10, y: 0 }] });
+    const favorites = await getFavorites(conn.db, user.id);
+    expect(favorites.map((f) => f.island.slug)).toEqual(["oshi"]);
+    expect(favorites[0]?.members.map((m) => m.name)).toEqual(["ゆず"]);
+    const rows = await conn.db
+      .select()
+      .from(userFavoriteMembers)
+      .where(eq(userFavoriteMembers.userId, user.id));
+    expect(rows).toHaveLength(1);
   });
 
   it("保存を繰り返しても同じ結果になり、メンバーが増殖しない", async () => {

@@ -1,15 +1,8 @@
 import { describe, expect, it } from "vitest";
-import {
-  EnvError,
-  isClerkConfigured,
-  isStrictRuntime,
-  parseEnv,
-} from "@/lib/env";
+import { EnvError, isStrictRuntime, parseEnv } from "@/lib/env";
 
 const full = {
   DATABASE_URL: "postgres://u:p@host.neon.tech/db",
-  CLERK_SECRET_KEY: "sk_test_x",
-  NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: "pk_test_x",
 };
 
 describe("parseEnv", () => {
@@ -24,10 +17,9 @@ describe("parseEnv", () => {
     ).toThrow(/DATABASE_URL/);
   });
 
-  it("本番でも必須の変数が揃っていれば通る（Webhookシークレットは任意）", () => {
+  it("本番でも必須の変数が揃っていれば通る", () => {
     const env = parseEnv(full, { strict: true });
     expect(env.DATABASE_URL).toBe(full.DATABASE_URL);
-    expect(env.CLERK_WEBHOOK_SIGNING_SECRET).toBeUndefined();
   });
 
   it("空文字は未設定として扱う", () => {
@@ -67,13 +59,5 @@ describe("isStrictRuntime", () => {
   it("開発・テストでは厳密にしない", () => {
     expect(isStrictRuntime({ NODE_ENV: "development" })).toBe(false);
     expect(isStrictRuntime({ NODE_ENV: "test" })).toBe(false);
-  });
-});
-
-describe("isClerkConfigured", () => {
-  it("2つのキーが揃っているときだけ true", () => {
-    expect(isClerkConfigured(full)).toBe(true);
-    expect(isClerkConfigured({ CLERK_SECRET_KEY: "sk" })).toBe(false);
-    expect(isClerkConfigured({})).toBe(false);
   });
 });

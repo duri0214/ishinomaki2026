@@ -22,7 +22,7 @@
 | レイアウト | PC優先。上に島マップ、下にタイムライン |
 | 家・島の絵 | SVGを手続き生成する（Claude作成）。後でAI生成画像に差し替えられるよう `image_url` 列を用意する |
 | リアルタイム更新 | なし。手動更新と無限スクロールで対応する |
-| 閲覧 / 投稿 | 閲覧はログイン不要。投稿といいねはClerkでのログインが必要 |
+| 閲覧 / 投稿 | 閲覧はログイン不要。投稿といいねはログインが必要（ユーザー名＋パスワード。詳細は [plan-account.md](plan-account.md)） |
 | 削除 | 論理削除（`deleted_at`） |
 | 言語 | 日本語のみ |
 | 規模 | 10ユーザー、1日100投稿。集計は都度 `COUNT` で行い、キャッシュで十分とする |
@@ -37,7 +37,7 @@
 | DB | Neon（PostgreSQL）。ブランチは `main`（本番）と `dev`（ローカル用）の2本 |
 | ORM / ドライバ | Drizzle ORM ＋ `@neondatabase/serverless` |
 | バリデーション | Zod（入力、クエリパラメータ、環境変数） |
-| 認証 | Clerk。Webhookで `users` テーブルへ同期し、初回投稿時の upsert でも補う |
+| 認証 | 自前実装（scrypt でハッシュ化したパスワード＋DB に保存するセッション）。当初は Clerk だったが置き換えた。詳細は [plan-account.md](plan-account.md) |
 | マップ | ReactでSVGを描画する。d3は `d3-zoom` と `d3-interpolate` だけを使い、DOMには触らせない |
 | ランタイム / パッケージ管理 | Node.js（着手時点のActive LTS）/ Bun（`bun install` とスクリプト実行） |
 | テスト | Vitest（単体テスト。DBを使うテストはPGliteで実行）、Playwright（E2Eは最小限） |
@@ -76,7 +76,7 @@
                           （上位20以外のタグでは島はズームしない）
 /dev/islands              島エディタ（ローカル専用。本番では notFound を返す）
 /dev/islands/[island]     島の編集（名前、世界地図上の座標、メンバータグとその配置）
-/sign-in, /sign-up        Clerk
+/u/[username]             プロフィール（推しグループと推しメンバー。本人なら編集）
 ```
 
 - `[island]` には `islands.slug`（英小文字とハイフン）を使う。
@@ -133,8 +133,11 @@ islands
   created_at timestamptz
 
 users
-  id uuid PK, clerk_user_id text UNIQUE, display_name text, avatar_url text?,
-  created_at, updated_at, deleted_at?
+  id uuid PK, username text UNIQUE(lower), password_hash text, display_name text,
+  avatar_url text?, created_at, updated_at, deleted_at?
+
+sessions / login_attempts / user_favorite_islands / user_favorite_members
+  plan-account.md の4章を参照
 
 tags
   id uuid PK, island_id FK→islands, name text, normalized_name text,
@@ -162,7 +165,7 @@ likes
 
 ### 将来の拡張に備えた点
 
-- **アカウント機能**: `users` に `handle`、`bio` などの列を追加し、`/u/[handle]` ページを作る。推しメン設定は `user_tags(user_id, tag_id)` テーブルで表す。
+- **アカウント機能**: [plan-account.md](plan-account.md) で計画済み。`bio` などは今後 `users` に列を足して対応する。
 - **スケジュール機能**: `events` テーブルと `event_tags(event_id, tag_id)` テーブルを作る。島の上に「今日の予定」を重ねて表示できるよう、`MapCanvas` は描画レイヤーを分けた構成にしておく。
 - **返信**: `posts.parent_id` 列を追加する。DMは別のテーブル群で作る。
 - **モデレーション**: `reports` テーブルを追加する。既に論理削除を前提にしているので、そのまま組み込める。
@@ -217,6 +220,8 @@ tests/e2e/      Playwright
 | 1-4 | テスト用にPGliteでDBを起動するヘルパーを作る | VitestからDBを使うテストが書ける |
 
 ### Phase 2: 認証
+
+> Clerk による実装は完了済み。その後、自前認証へ置き換えた（[plan-account.md](plan-account.md)）。
 
 | # | タスク | 完了条件 |
 | --- | --- | --- |
@@ -284,7 +289,6 @@ Phase 3（タイムライン）と Phase 4（マップの描画）は、Phase 1 
 
 | リスク | 対策 |
 | --- | --- |
-| ローカルでClerk Webhookを受けるにはトンネルが必要 | `ensureUser()` による upsert があるので、Webhookがなくても動く |
 | 遷移時のカクつき | マップをレイアウトに常駐させ、ズームはURLを変える前に開始する（2章） |
 | Neonの初回接続が遅い | HTTPドライバを使い、上位20件はキャッシュする |
 | 実在アイドルを扱う | 公式画像は使わない。誹謗中傷対策（通報、NGワード）はMVPの直後に優先して検討する |

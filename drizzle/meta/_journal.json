@@ -8,6 +8,20 @@
       "when": 1791685463790,
       "tag": "0000_gifted_random",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1791702905459,
+      "tag": "0001_add_username",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1791702944791,
+      "tag": "0002_account",
+      "breakpoints": true
     }
   ]
 }

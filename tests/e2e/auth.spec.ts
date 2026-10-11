@@ -1,62 +1,113 @@
-import { clerk, clerkSetup } from "@clerk/testing/playwright";
-import { expect, test } from "@playwright/test";
+import { expect, type Page, test } from "@playwright/test";
 
 /**
- * ログイン後の投稿・いいね・削除。Clerk の開発用インスタンスとテスト用ユーザーが必要なので、
- * 次の環境変数が揃っているときだけ実行する（CI では GitHub Secrets から渡す）。
- *   NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY / CLERK_SECRET_KEY : Clerk の開発用キー
- *   E2E_CLERK_USER_EMAIL : Clerk に作成したテスト用ユーザーのメールアドレス
+ * アカウント: 登録 → 推しの設定 → プロフィール → 投稿・いいね・削除 → ログアウト → ログイン。
+ * ユーザー名は実行ごとに変える（E2E 用の DB は起動時に作り直すが、ローカルでサーバーを使い回す場合に備える）。
  */
-const configured = Boolean(
-  process.env.CLERK_SECRET_KEY &&
-    process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY &&
-    process.env.E2E_CLERK_USER_EMAIL,
-);
+const username = `e2e_${Date.now().toString(36)}`;
+const password = "e2e-password";
 
-test.describe("ログイン後", () => {
-  test.skip(
-    !configured,
-    "Clerk のテスト用キーとユーザーが未設定のためスキップ",
-  );
+const dialog = (page: Page) => page.getByRole("dialog");
+
+test.describe("アカウント", () => {
   test.describe.configure({ mode: "serial" });
 
-  test.beforeAll(async () => {
-    await clerkSetup();
+  test("未ログインでは投稿フォームの代わりに案内が出て、いいねすると登録のモーダルが開く", async ({
+    page,
+  }) => {
+    await page.goto("/i/hoshizora");
+    await expect(page.getByRole("textbox", { name: "投稿の本文" })).toHaveCount(
+      0,
+    );
+    await page.getByRole("button", { name: "いいね" }).first().click();
+    await expect(dialog(page)).toBeVisible();
+    await expect(
+      dialog(page).getByText("いいねするにはアカウントが必要です"),
+    ).toBeVisible();
+    await dialog(page).getByRole("button", { name: "閉じる" }).click();
+    await expect(dialog(page)).toHaveCount(0);
   });
 
-  test("投稿 → いいね → 削除ができる", async ({ page }) => {
-    await page.goto("/");
-    await clerk.signIn({
-      page,
-      emailAddress: process.env.E2E_CLERK_USER_EMAIL as string,
-    });
+  test("登録して推しを選ぶと、プロフィールに表示される。投稿・いいね・削除もできる", async ({
+    page,
+  }) => {
+    await page.goto("/i/hoshizora");
+    await page.getByRole("button", { name: "ログイン", exact: true }).click();
+    await dialog(page).getByLabel("ユーザー名").fill(username);
+    await dialog(page).getByLabel("パスワード").fill(password);
+    await dialog(page).getByRole("button", { name: "登録する" }).click();
 
-    const body = `E2Eテスト ${Date.now()} #e2e-tag`;
+    // 2ステップ目: 推しを選ぶ
+    await expect(
+      dialog(page).getByRole("heading", { name: "推しを選ぶ" }),
+    ).toBeVisible();
+    await dialog(page).getByLabel("表示名").fill("E2Eさん");
+    await dialog(page)
+      .getByRole("checkbox", { name: "星空シアター島" })
+      .check();
+    await dialog(page).getByRole("button", { name: "ひなた" }).click();
+    await dialog(page).getByRole("button", { name: "保存" }).click();
+    await expect(dialog(page)).toHaveCount(0);
+
+    // ツールバーのメニューからプロフィールへ
+    await page.getByRole("button", { name: "アカウントメニュー" }).click();
+    await page.getByRole("menuitem", { name: "プロフィール" }).click();
+    await expect(page).toHaveURL(new RegExp(`/u/${username}$`));
+    await expect(page.getByRole("heading", { name: "E2Eさん" })).toBeVisible();
+    const favorites = page.getByRole("list", { name: "推し", exact: true });
+    await expect(
+      favorites.getByRole("link", { name: "星空シアター島" }),
+    ).toBeVisible();
+    await expect(favorites.getByRole("link", { name: "ひなた" })).toBeVisible();
+
+    // 投稿 → いいね → 取り消し → 削除
+    const body = `E2Eテスト ${Date.now()} #e2eタグ`;
     await page.goto("/i/hoshizora");
     await page.getByRole("textbox", { name: "投稿の本文" }).fill(body);
     await page.getByRole("button", { name: "投稿" }).click();
 
-    // 投稿がすぐタイムラインの先頭に出る。本文の #タグ はリンクになる
     const mine = page.getByTestId("post-card").filter({ hasText: body });
     await expect(mine).toBeVisible();
-    await expect(mine.getByRole("link", { name: "#e2e-tag" })).toBeVisible();
+    await expect(mine.getByRole("link", { name: "#e2eタグ" })).toBeVisible();
+    await expect(mine.getByRole("link", { name: "E2Eさん" })).toHaveAttribute(
+      "href",
+      `/u/${username}`,
+    );
 
-    // いいね（連打しても1件）→ 取り消し
-    const like = mine.getByRole("button", { name: "いいね" });
-    await like.click();
+    await mine.getByRole("button", { name: "いいね" }).click();
     await expect(mine.getByTestId("like-count")).toHaveText("1");
     await mine.getByRole("button", { name: "いいねを取り消す" }).click();
     await expect(mine.getByTestId("like-count")).toHaveText("0");
 
-    // 自分の投稿は削除できる
     page.once("dialog", (d) => d.accept());
     await mine.getByRole("button", { name: "削除" }).click();
     await expect(mine).toHaveCount(0);
   });
 
-  test("未ログインのいいねはサインインへ誘導される", async ({ page }) => {
-    await page.goto("/i/hoshizora");
-    await page.getByRole("button", { name: "いいね" }).first().click();
-    await expect(page).toHaveURL(/\/sign-in/);
+  test("ログアウトしてから、同じユーザー名（大文字でも）でログインできる", async ({
+    page,
+  }) => {
+    await page.goto("/");
+    await page.getByRole("button", { name: "ログイン", exact: true }).click();
+    await dialog(page).getByRole("tab", { name: "ログイン" }).click();
+    await dialog(page).getByLabel("ユーザー名").fill(username.toUpperCase());
+    await dialog(page).getByLabel("パスワード").fill("wrong-password");
+    await dialog(page).getByRole("button", { name: "ログインする" }).click();
+    await expect(
+      dialog(page).getByText("ユーザー名かパスワードが違います"),
+    ).toBeVisible();
+
+    await dialog(page).getByLabel("パスワード").fill(password);
+    await dialog(page).getByRole("button", { name: "ログインする" }).click();
+    await expect(dialog(page)).toHaveCount(0);
+    await expect(
+      page.getByRole("button", { name: "アカウントメニュー" }),
+    ).toBeVisible();
+
+    await page.getByRole("button", { name: "アカウントメニュー" }).click();
+    await page.getByRole("menuitem", { name: "ログアウト" }).click();
+    await expect(
+      page.getByRole("button", { name: "ログイン", exact: true }),
+    ).toBeVisible();
   });
 });

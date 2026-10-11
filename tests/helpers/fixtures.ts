@@ -15,7 +15,11 @@ export async function insertIsland(db: Db, slug = `island-${++seq}`) {
 export async function insertUser(db: Db, name = `user-${++seq}`) {
   const [row] = await db
     .insert(users)
-    .values({ clerkUserId: `clerk_${name}_${seq}`, displayName: name })
+    .values({
+      username: `u${++seq}_${name}`.replace(/[^A-Za-z0-9_]/g, "_").slice(0, 20),
+      passwordHash: "!",
+      displayName: name,
+    })
     .returning();
   return must(row);
 }

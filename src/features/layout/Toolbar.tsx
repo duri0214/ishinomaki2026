@@ -1,38 +1,9 @@
-import { Show, UserButton } from "@clerk/nextjs";
 import Link from "next/link";
+import { AccountButton } from "@/features/auth/AccountButton";
 import { DesignSwitch } from "@/features/design/DesignSwitch";
-import { isClerkConfigured } from "@/lib/env";
 import { ToolbarIslands } from "./ToolbarIslands";
 
-function AuthControls() {
-  if (!isClerkConfigured()) {
-    return (
-      <span
-        className="px-1 text-center text-[10px] leading-tight text-[#b9aed0]"
-        title="Clerk のキーが未設定のため、ログインは無効です"
-      >
-        閲覧のみ
-      </span>
-    );
-  }
-  return (
-    <>
-      <Show when="signed-in">
-        <UserButton />
-      </Show>
-      <Show when="signed-out">
-        <Link
-          href="/sign-in"
-          className="rounded-full bg-[#fffcf8] px-2.5 py-1 text-[11px] font-bold text-[#3f3158] hover:bg-white lg:px-2"
-        >
-          ログイン
-        </Link>
-      </Show>
-    </>
-  );
-}
-
-/** 左端のツールバー（狭い画面では上端の横並び）。世界へ戻る・島・デザイン・ログイン */
+/** 左端のツールバー（狭い画面では上端の横並び）。世界へ戻る・島の切り替え・デザイン・アカウント */
 export function Toolbar({
   islands,
 }: {
@@ -52,7 +23,7 @@ export function Toolbar({
       <ToolbarIslands islands={islands} />
       <div className="ml-auto flex shrink-0 items-center gap-2 lg:ml-0 lg:mt-auto lg:flex-col">
         <DesignSwitch />
-        <AuthControls />
+        <AccountButton />
       </div>
     </header>
   );
