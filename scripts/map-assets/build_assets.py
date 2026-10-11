@@ -7,13 +7,11 @@ ISLAND_SIZE = 690  # layout.ts の ISLAND_RADIUS * 2
 MAX_PX = {"house": 512, "tree": 448, "stage": 512, "castle": 768, "penlight": 256}
 
 # 島の土台（モード共通）
+# 島の土台（モード共通）。4島ぶん
 BASES = {
     "base-01": "cool/島土台/base-01.png",
-    "base-02": "cool/島土台/base-02.png",
     "base-03": "cool/島土台/base-03.png",
-    "base-04": "kawaii/島土台/base-02.png",
     "base-05": "kawaii/島土台/base-03.png",
-    "base-06": "kawaii/島土台/Empty Art Nouveau Floating Island-7.png",
     "base-07": "kawaii/島土台/Empty pastel terraced floating island-13.png",
 }
 
