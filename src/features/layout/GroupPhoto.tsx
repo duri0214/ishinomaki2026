@@ -40,7 +40,9 @@ export function GroupPhoto({ islands }: { islands: PhotoIsland[] }) {
         {subtitle && (
           <p className="text-xs font-medium opacity-90">{subtitle}</p>
         )}
-        <p className="truncate font-serif text-sm font-bold md:text-lg">{title}</p>
+        <p className="truncate font-serif text-sm font-bold md:text-lg">
+          {title}
+        </p>
       </figcaption>
     </figure>
   );
