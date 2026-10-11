@@ -94,36 +94,38 @@ export function ProfileEditor({
         submit();
       }}
     >
-      <label className="flex flex-col gap-1 text-sm font-bold text-[#3f3158]">
+      <label className="flex flex-col gap-1 text-sm font-bold text-[var(--ui-title)]">
         表示名
         <input
           value={displayName}
           onChange={(e) => setDisplayName(e.target.value)}
           maxLength={DISPLAY_NAME_MAX * 2}
-          className="rounded-xl border border-[#e2d7ea] bg-[#faf6fb] px-3 py-2 text-[15px] font-normal outline-none focus:ring-2 focus:ring-[#c9a5e0]"
+          className="rounded-xl border border-[var(--ui-border)] bg-[var(--ui-panel)] px-3 py-2 text-[15px] font-normal text-[var(--ui-text)] outline-none focus:ring-2 focus:ring-[var(--ui-accent)]"
         />
       </label>
 
       <fieldset className="flex flex-col gap-2">
-        <legend className="mb-1 text-sm font-bold text-[#3f3158]">
+        <legend className="mb-1 text-sm font-bold text-[var(--ui-title)]">
           推しグループと推しメンバー
         </legend>
         {options.length === 0 && (
-          <p className="text-sm text-[#a79bb8]">グループがまだありません</p>
+          <p className="text-sm text-[var(--ui-muted)]">
+            グループがまだありません
+          </p>
         )}
         {options.map((island) => {
           const members = selected.get(island.slug);
           return (
             <div
               key={island.slug}
-              className="rounded-2xl border border-[#ece4ef] bg-white px-3 py-2"
+              className="rounded-2xl border border-[var(--ui-border)] bg-[var(--ui-panel)] px-3 py-2"
             >
-              <label className="flex items-center gap-2 text-sm font-bold text-[#3f3158]">
+              <label className="flex items-center gap-2 text-sm font-bold text-[var(--ui-title)]">
                 <input
                   type="checkbox"
                   checked={members !== undefined}
                   onChange={() => toggleIsland(island.slug)}
-                  className="size-4 accent-[#8e6bb0]"
+                  className="size-4 accent-[var(--ui-accent)]"
                 />
                 {island.name}
               </label>
@@ -142,8 +144,8 @@ export function ProfileEditor({
                         onClick={() => toggleMember(island.slug, m.id)}
                         className={`rounded-full px-3 py-1 text-xs font-bold transition-colors ${
                           on
-                            ? "bg-[#8e6bb0] text-white"
-                            : "bg-[#f6f0fa] text-[#6a5c7d] hover:bg-[#ece2f4]"
+                            ? "bg-[var(--ui-accent)] text-[var(--ui-on-accent)]"
+                            : "bg-[var(--ui-hover)] text-[var(--ui-text)] hover:bg-[var(--ui-border)]"
                         }`}
                       >
                         {m.name}
@@ -167,7 +169,7 @@ export function ProfileEditor({
           <button
             type="button"
             onClick={onCancel}
-            className="rounded-full px-4 py-1.5 text-sm text-[#6a5c7d] hover:bg-[#f6f0fa]"
+            className="rounded-full px-4 py-1.5 text-sm text-[var(--ui-text)] hover:bg-[var(--ui-hover)]"
           >
             {cancelLabel}
           </button>
@@ -175,7 +177,7 @@ export function ProfileEditor({
         <button
           type="submit"
           disabled={pending}
-          className="rounded-full bg-[#8e6bb0] px-5 py-1.5 text-sm font-bold text-white hover:bg-[#7b5a9d] disabled:bg-[#d9cfe4]"
+          className="rounded-full bg-[var(--ui-accent)] px-5 py-1.5 text-sm font-bold text-[var(--ui-on-accent)] hover:bg-[var(--ui-accent-hover)] disabled:bg-[var(--ui-disabled)]"
         >
           {pending ? "保存中…" : submitLabel}
         </button>

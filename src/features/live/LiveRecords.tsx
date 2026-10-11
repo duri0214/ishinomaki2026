@@ -2,14 +2,14 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { type CSSProperties, useEffect, useState } from "react";
 import { deleteLiveRecordAction, saveLiveRecordAction } from "./actions";
 import type { LiveData } from "./service";
 
 const field =
-  "w-full rounded-xl border border-[#ece4ef] bg-white p-2 text-sm text-[#3f3158]";
+  "w-full rounded-xl border border-[var(--ui-border)] bg-[var(--ui-panel)] p-2 text-sm text-[var(--ui-text)] disabled:cursor-not-allowed disabled:border-dashed disabled:bg-[var(--ui-hover)] disabled:text-[var(--ui-muted)] disabled:opacity-60";
 const button =
-  "rounded-full bg-[#f6f0fa] px-4 py-2 text-sm font-bold text-[#6a5c7d] disabled:opacity-50";
+  "rounded-full bg-[var(--ui-hover)] px-4 py-2 text-sm font-bold text-[var(--ui-text)] disabled:opacity-50";
 const date = (value: string) =>
   new Intl.DateTimeFormat("ja-JP", {
     dateStyle: "medium",
@@ -61,9 +61,9 @@ export function LiveRecords({
     }
   }
   return (
-    <section className="mx-4 mb-4 rounded-[28px] border border-[#ece4ef] bg-white p-4 text-[#3f3158]">
+    <section className="design-post mx-4 mb-4 border border-[var(--ui-border)] bg-[var(--ui-card)] p-4 text-[var(--ui-title)]">
       <h2 className="font-serif text-lg font-bold">ライブ参戦記録</h2>
-      <p className="mt-1 text-xs text-[#6a5c7d]">
+      <p className="mt-1 text-xs text-[var(--ui-text)]">
         自分だけの記録です。公演一覧はデモ用の架空のライブです。
       </p>
       <form
@@ -112,7 +112,9 @@ export function LiveRecords({
                 setNote(record?.note ?? "");
               }}
             >
-              <option value="">ライブを選択</option>
+              <option value="">
+                {idol ? "ライブを選択" : "先にアイドルを選択してください"}
+              </option>
               {events.map((e) => (
                 <option key={e.id} value={e.id}>
                   {date(e.startsAt)} · {e.title}
@@ -157,7 +159,7 @@ export function LiveRecords({
         これまでの参戦 · {records.length}公演
       </h3>
       {records.length === 0 ? (
-        <p className="mt-2 text-sm text-[#6a5c7d]">
+        <p className="mt-2 text-sm text-[var(--ui-text)]">
           参戦記録はまだありません。
         </p>
       ) : (
@@ -238,7 +240,10 @@ function IdolRecords({
   }, [storageKey, defaultColor]);
   const name = entries[0]?.event.islandName;
   return (
-    <details open className="group rounded-2xl border border-[#ece4ef] p-3">
+    <details
+      open
+      className="group rounded-2xl border border-[var(--ui-border)] p-3"
+    >
       <summary className="cursor-pointer text-sm font-bold">
         {name}{" "}
         <span className="ml-1 text-xs font-normal">{entries.length}公演</span>
@@ -248,7 +253,7 @@ function IdolRecords({
           公演カードの色
           <select
             aria-label={`${name}の公演カードの色`}
-            className="rounded-lg border border-[#ece4ef] bg-white p-1"
+            className="rounded-lg border border-[var(--ui-border)] bg-[var(--ui-panel)] p-1"
             value={color}
             onChange={(e) => {
               setColor(e.target.value);
@@ -270,8 +275,8 @@ function IdolRecords({
           {entries.map(({ record, event }) => (
             <li
               key={event.id}
-              className="rounded-xl p-3"
-              style={{ backgroundColor: color }}
+              className="live-card rounded-xl p-3"
+              style={{ "--live-card": color } as CSSProperties}
             >
               <p className="font-bold">{event.title}</p>
               <p className="text-xs">

@@ -90,15 +90,17 @@ it("アイドル別に開閉でき、公演を新しい順に並べ、色を個�
       .map((e) => e.textContent?.slice(0, 3)),
   ).toEqual(["秋公演", "春公演"]);
   const b = screen.getByRole("list", { name: "アイドルBの参戦記録" });
-  const before = within(b).getByRole("listitem").style.backgroundColor;
+  const color = (element: HTMLElement) =>
+    element.style.getPropertyValue("--live-card");
+  const before = color(within(b).getByRole("listitem"));
   await user.selectOptions(
     screen.getByLabelText("アイドルAの公演カードの色"),
     "#fce7ef",
   );
-  expect(within(a).getAllByRole("listitem")[0]?.style.backgroundColor).toBe(
-    "rgb(252, 231, 239)",
+  expect(color(within(a).getAllByRole("listitem")[0] as HTMLElement)).toBe(
+    "#fce7ef",
   );
-  expect(within(b).getByRole("listitem").style.backgroundColor).toBe(before);
+  expect(color(within(b).getByRole("listitem"))).toBe(before);
   const details = a.closest("details") as HTMLDetailsElement;
   await user.click(details.querySelector("summary") as HTMLElement);
   expect(details.open).toBe(false);
