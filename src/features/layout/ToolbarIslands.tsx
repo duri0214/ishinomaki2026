@@ -26,8 +26,8 @@ export function ToolbarIslands({
             title={name}
             className={`flex size-11 shrink-0 items-center justify-center rounded-2xl font-serif text-lg font-bold transition-colors ${
               active
-                ? "bg-[#fffcf8] text-[#2b2140]"
-                : "bg-[#3d3157] text-[#e7def5] hover:bg-[#4a3d68]"
+                ? "bg-[var(--ui-selected)] text-[var(--ui-selected-text)] ring-2 ring-[var(--ui-accent)]"
+                : "bg-[var(--ui-rail-button)] text-[var(--ui-rail-text)] hover:bg-[var(--ui-rail-hover)]"
             }`}
           >
             {Array.from(name)[0]}

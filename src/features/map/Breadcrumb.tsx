@@ -20,20 +20,20 @@ export function Breadcrumb({
         <li>
           <Link
             href="/"
-            className="rounded px-1 text-[#6a5c7d] hover:bg-[#f3ecf7]"
+            className="rounded px-1 font-semibold text-[var(--ui-title)] hover:bg-[var(--ui-hover)] hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--ui-accent)]"
           >
             🌊 世界
           </Link>
         </li>
         {island && (
           <>
-            <li aria-hidden className="text-[#c5bad6]">
+            <li aria-hidden className="text-[var(--ui-muted)]">
               ›
             </li>
             <li className="min-w-0 truncate">
               <Link
                 href={`/i/${island.slug}`}
-                className="rounded px-1 text-[#6a5c7d] hover:bg-[#f3ecf7]"
+                className="rounded px-1 font-semibold text-[var(--ui-title)] hover:bg-[var(--ui-hover)] hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--ui-accent)]"
               >
                 {island.name}
               </Link>
@@ -42,11 +42,11 @@ export function Breadcrumb({
         )}
         {island && tag && (
           <>
-            <li aria-hidden className="text-[#c5bad6]">
+            <li aria-hidden className="text-[var(--ui-muted)]">
               ›
             </li>
             <li
-              className="min-w-0 truncate font-bold text-[#8e6bb0]"
+              className="min-w-0 truncate font-bold text-[var(--ui-accent)]"
               aria-current="page"
             >
               #{tag}

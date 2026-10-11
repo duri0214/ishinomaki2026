@@ -24,7 +24,7 @@ afterEach(() => {
   delete document.documentElement.dataset.design;
 });
 
-const control = () => screen.getByRole("switch", { name: "かわいいデザイン" });
+const control = () => screen.getByRole("button", { name: "かわいい" });
 
 describe("DesignSwitch", () => {
   it.each([
@@ -69,7 +69,7 @@ describe("DesignSwitch", () => {
       await act(async () => {
         root = hydrateRoot(container, <DesignSwitch />);
       });
-      expect(control().getAttribute("aria-checked")).toBe("false");
+      expect(control().getAttribute("aria-pressed")).toBe("false");
       expect(errors).not.toHaveBeenCalled();
     } finally {
       await act(async () => root?.unmount());
@@ -81,23 +81,31 @@ describe("DesignSwitch", () => {
     window.localStorage.setItem(DESIGN_STORAGE_KEY, "cool");
     document.documentElement.dataset.design = "cool";
     render(<DesignSwitch />);
-    expect(control().getAttribute("aria-checked")).toBe("false");
-    expect(control().textContent).toBe("かっこいい");
+    expect(control().getAttribute("aria-pressed")).toBe("false");
+    expect(control().textContent).toBe("♡かわいい");
   });
 
   it("クリックとキーボードで切り替え、選択を保存する", async () => {
     const user = userEvent.setup();
     render(<DesignSwitch />);
-    expect(control().getAttribute("aria-checked")).toBe("true");
+    expect(control().getAttribute("aria-pressed")).toBe("true");
 
-    await user.click(control());
+    await user.click(
+      screen.getByRole("button", {
+        name:
+          document.documentElement.dataset.design === "kawaii"
+            ? "かっこいい"
+            : "かわいい",
+      }),
+    );
     expect(document.documentElement.dataset.design).toBe("cool");
     expect(window.localStorage.getItem(DESIGN_STORAGE_KEY)).toBe("cool");
-    expect(control().getAttribute("aria-checked")).toBe("false");
+    expect(control().getAttribute("aria-pressed")).toBe("false");
 
-    await user.keyboard(" ");
+    await user.click(control());
     expect(document.documentElement.dataset.design).toBe("kawaii");
     expect(window.localStorage.getItem(DESIGN_STORAGE_KEY)).toBe("kawaii");
+    await user.tab({ shift: true });
     await user.keyboard("{Enter}");
     expect(document.documentElement.dataset.design).toBe("cool");
   });
@@ -108,9 +116,16 @@ describe("DesignSwitch", () => {
     });
     const user = userEvent.setup();
     render(<DesignSwitch />);
-    await user.click(control());
+    await user.click(
+      screen.getByRole("button", {
+        name:
+          document.documentElement.dataset.design === "kawaii"
+            ? "かっこいい"
+            : "かわいい",
+      }),
+    );
     expect(document.documentElement.dataset.design).toBe("cool");
-    expect(control().getAttribute("aria-checked")).toBe("false");
+    expect(control().getAttribute("aria-pressed")).toBe("false");
   });
 
   it("別タブの変更を反映し、削除・不正な値は既定値に戻す", () => {
@@ -135,7 +150,7 @@ describe("DesignSwitch", () => {
           }),
         );
       });
-      expect(control().getAttribute("aria-checked")).toBe(expected);
+      expect(control().getAttribute("aria-pressed")).toBe(expected);
     }
   });
 
@@ -152,7 +167,7 @@ describe("DesignSwitch", () => {
     );
 
     render(<DesignSwitch />);
-    expect(control().getAttribute("aria-checked")).toBe("false");
+    expect(control().getAttribute("aria-pressed")).toBe("false");
     expect(document.documentElement.dataset.design).toBe("cool");
   });
 
@@ -181,7 +196,7 @@ describe("DesignSwitch", () => {
         <DesignSwitch />
       </Activity>,
     );
-    expect(control().getAttribute("aria-checked")).toBe("false");
+    expect(control().getAttribute("aria-pressed")).toBe("false");
     expect(document.documentElement.dataset.design).toBe("cool");
   });
 
@@ -190,8 +205,22 @@ describe("DesignSwitch", () => {
     render(<DesignSwitch />);
     // 別タブの通知が待機中に、このタブで再び選び直す。
     window.localStorage.setItem(DESIGN_STORAGE_KEY, "cool");
-    await user.click(control());
-    await user.click(control());
+    await user.click(
+      screen.getByRole("button", {
+        name:
+          document.documentElement.dataset.design === "kawaii"
+            ? "かっこいい"
+            : "かわいい",
+      }),
+    );
+    await user.click(
+      screen.getByRole("button", {
+        name:
+          document.documentElement.dataset.design === "kawaii"
+            ? "かっこいい"
+            : "かわいい",
+      }),
+    );
     act(() => {
       window.dispatchEvent(
         new StorageEvent("storage", {
@@ -205,7 +234,7 @@ describe("DesignSwitch", () => {
 
     expect(window.localStorage.getItem(DESIGN_STORAGE_KEY)).toBe("kawaii");
     expect(document.documentElement.dataset.design).toBe("kawaii");
-    expect(control().getAttribute("aria-checked")).toBe("true");
+    expect(control().getAttribute("aria-pressed")).toBe("true");
   });
 
   it("保存に失敗した選択もActivityで再表示した後に維持する", async () => {
@@ -219,7 +248,14 @@ describe("DesignSwitch", () => {
         <DesignSwitch />
       </Activity>,
     );
-    await user.click(control());
+    await user.click(
+      screen.getByRole("button", {
+        name:
+          document.documentElement.dataset.design === "kawaii"
+            ? "かっこいい"
+            : "かわいい",
+      }),
+    );
     view.rerender(
       <Activity mode="hidden">
         <DesignSwitch />
@@ -233,7 +269,7 @@ describe("DesignSwitch", () => {
 
     expect(window.localStorage.getItem(DESIGN_STORAGE_KEY)).toBe("kawaii");
     expect(document.documentElement.dataset.design).toBe("cool");
-    expect(control().getAttribute("aria-checked")).toBe("false");
+    expect(control().getAttribute("aria-pressed")).toBe("false");
   });
 
   it("sessionStorageのクリアでは選択を変更しない", () => {
@@ -250,7 +286,7 @@ describe("DesignSwitch", () => {
       );
     });
     expect(document.documentElement.dataset.design).toBe("cool");
-    expect(control().getAttribute("aria-checked")).toBe("false");
+    expect(control().getAttribute("aria-pressed")).toBe("false");
   });
 
   it("localStorageのクリアを反映して既定値に戻す", () => {
@@ -268,7 +304,7 @@ describe("DesignSwitch", () => {
       );
     });
     expect(document.documentElement.dataset.design).toBe(DEFAULT_DESIGN);
-    expect(control().getAttribute("aria-checked")).toBe("true");
+    expect(control().getAttribute("aria-pressed")).toBe("true");
   });
 
   it("保存値を読み取れなくても切り替えと再表示ができる", async () => {
@@ -277,10 +313,17 @@ describe("DesignSwitch", () => {
     });
     const user = userEvent.setup();
     const view = render(<DesignSwitch />);
-    await user.click(control());
+    await user.click(
+      screen.getByRole("button", {
+        name:
+          document.documentElement.dataset.design === "kawaii"
+            ? "かっこいい"
+            : "かわいい",
+      }),
+    );
     view.unmount();
     render(<DesignSwitch />);
     expect(document.documentElement.dataset.design).toBe("cool");
-    expect(control().getAttribute("aria-checked")).toBe("false");
+    expect(control().getAttribute("aria-pressed")).toBe("false");
   });
 });

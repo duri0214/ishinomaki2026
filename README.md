@@ -48,7 +48,7 @@ bun run dev       # http://localhost:3000
 
 ## デザイン切り替えの共通基盤
 
-ツールバーのスイッチで `cool` / `kawaii` の選択を切り替えます。現時点では選択と保存の仕組みだけを実装しており、どちらを選んでも既存の配色・画像を表示します。デザイン別のスタイルや `img` の素材取り込みは今後の作業です。
+ツールバーの2つのデザインボタンで `cool` / `kawaii` の選択を切り替えます。cool は濃紺・アイスブルーと角の浅いカード、kawaii はクリーム・ローズと丸いカードを表示します。提供素材は `public/design/{cool,kawaii}/` に配置し、完成島を写真未登録時のヘッダー、ペンライトをツールバーに使用しています。世界地図には島画像、島を開くと土台・メンバーの家・話題タグの家をテーマ別に表示します。登録済みの個別画像は優先します。
 
 - 選択は `localStorage` の `ishinomaki-design` に保存し、初回描画前に `<html data-design="cool|kawaii">` へ復元します。未保存・不正な値・保存不可の場合の初期値は `kawaii` です。
 - 後から CSS の `[data-design="cool"]` / `[data-design="kawaii"]` にスタイルを追加できます。画像などの出し分けには `src/features/design/useDesign.ts` の `useDesign()` を使います。
