@@ -1,7 +1,8 @@
 "use client";
 
+import Image from "next/image";
 import { useParams } from "next/navigation";
-import { useEffect, useRef, useState } from "react";
+import { useState } from "react";
 import { decodeRouteParam } from "@/lib/route-params";
 
 export type PhotoIsland = {
@@ -10,6 +11,14 @@ export type PhotoIsland = {
   /** 島のメンバータグと話題タグの上位20件。ルートの tag がどの種類かを判定するのに使う */
   tags: { normalizedName: string; name: string; kind: "member" | "topic" }[];
 };
+
+/**
+ * 集合写真の表示幅。`(main)/layout.tsx` のグリッドに合わせる。
+ * 550px以下は全幅、551〜767pxは2列の右半分、768〜1023pxは右30%、
+ * 1024px以上は左のツールバー（4.5rem）を除いた領域の30%。
+ */
+const PHOTO_SIZES =
+  "(max-width: 550px) 100vw, (max-width: 767px) 50vw, (max-width: 1023px) 30vw, calc((100vw - 4.5rem) * 0.3)";
 
 /**
  * タイムライン上部の集合写真。島ごとに `public/photos/<島のslug>.jpg`、
@@ -50,24 +59,18 @@ export function GroupPhoto({ islands }: { islands: PhotoIsland[] }) {
 
 function Photo({ src, alt }: { src: string; alt: string }) {
   const [missing, setMissing] = useState(false);
-  const ref = useRef<HTMLImageElement>(null);
-  // 読み込みの失敗がハイドレーションより先に起きると onError が呼ばれないので、ここでも確かめる
-  useEffect(() => {
-    const img = ref.current;
-    if (!img) return;
-    if (img.complete && img.naturalWidth === 0) {
-      setMissing(true);
-      return;
-    }
-    const onError = () => setMissing(true);
-    img.addEventListener("error", onError);
-    return () => img.removeEventListener("error", onError);
-  }, []);
-
   if (missing) return <Placeholder />;
+  // ハイドレーションより先に読み込みが失敗しても、next/image が onError を再通知する
   return (
-    // biome-ignore lint/performance/noImgElement: 画像がなければ onError で差し替えるため、next/image は使わない
-    <img ref={ref} src={src} alt={alt} className="size-full object-cover" />
+    <Image
+      src={src}
+      alt={alt}
+      fill
+      sizes={PHOTO_SIZES}
+      loading="eager"
+      className="object-cover"
+      onError={() => setMissing(true)}
+    />
   );
 }
 
