@@ -6,13 +6,29 @@ from PIL import Image
 ISLAND_SIZE = 690  # layout.ts の ISLAND_RADIUS * 2
 MAX_PX = {"house": 512, "tree": 448, "stage": 512, "castle": 768, "penlight": 256}
 
-# 島の土台（モード共通）
-# 島の土台（モード共通）。4島ぶん
+# 島の土台（モード共通）と、その島の色
 BASES = {
-    "base-01": "cool/島土台/base-01.png",
-    "base-03": "cool/島土台/base-03.png",
-    "base-05": "kawaii/島土台/base-03.png",
-    "base-07": "kawaii/島土台/Empty pastel terraced floating island-13.png",
+    "base-01": {"src": "cool/島土台/base-01.png", "palette": "blue"},
+    "base-03": {"src": "cool/島土台/base-03.png", "palette": "green"},
+    "base-05": {"src": "kawaii/島土台/base-03.png", "palette": "pink"},
+    "base-07": {"src": "kawaii/島土台/Empty pastel terraced floating island-13.png", "palette": "purple"},
+}
+
+# 島の色。hue＝塗り替える色相(度)、sat＝彩度の倍率、
+# pick＝使う元画像の番号（1始まり。書いていない役割は1番を使う）
+PALETTES = {
+    "blue": {"hue": 212, "sat": 1.0, "pick": {
+        "cool": {"tree": 1, "stage": 1, "castle": 1, "penlight": 1},
+        "kawaii": {"tree": 2, "stage": 1, "castle": 1, "penlight": 2}}},
+    "green": {"hue": 150, "sat": 0.9, "pick": {
+        "cool": {"tree": 3, "stage": 3, "castle": 3, "penlight": 3},
+        "kawaii": {"tree": 4, "stage": 3, "castle": 3, "penlight": 2}}},
+    "pink": {"hue": 340, "sat": 0.75, "pick": {
+        "cool": {"tree": 4, "stage": 2, "castle": 2, "penlight": 2},
+        "kawaii": {"tree": 5, "stage": 2, "castle": 2, "penlight": 1}}},
+    "purple": {"hue": 272, "sat": 0.85, "pick": {
+        "cool": {"tree": 2, "stage": 2, "castle": 2, "penlight": 2},
+        "kawaii": {"tree": 2, "stage": 1, "castle": 1, "penlight": 5}}},
 }
 
 # モードごとのスプライト（ステージ＝小さい城、城＝大きい城）
@@ -70,6 +86,7 @@ def open_zip(path) -> tuple[zipfile.ZipFile, dict]:
         names[name] = info
     return zf, names
 
+
 def load(zf, names, rel) -> Image.Image:
     """'デザイン用画像/' + rel を RGBA で読む"""
     info = names["デザイン用画像/" + rel]      # 正しい名前から ZipInfo を探す
@@ -107,6 +124,22 @@ def resize_max(img, limit) -> Image.Image:
     return img.resize(size, Image.LANCZOS)  # LANCZOS ＝ 縮小してもきれいな方式
 
 
+def recolor(img, hue_deg, sat_mul) -> Image.Image:
+    """屋根や壁などの色だけを hue_deg の色相に塗り替える（陰影・質感は残す）"""
+    alpha = np.array(img.getchannel("A"))
+    hsv = np.array(img.convert("RGB").convert("HSV")).astype(float)
+    h = hsv[..., 0] * 360 / 255             # Pillow の色相 0〜255 を 0〜360度 にする
+    s, v = hsv[..., 1], hsv[..., 2]
+    warm = (h >= 15) & (h <= 65) & (v > 150)  # 窓の明かり・金の飾り（明るい黄〜橙）は残す
+    leaf = (h >= 70) & (h <= 165) & (s > 60)  # 草・葉っぱは残す
+    target = (s > 25) & ~warm & ~leaf         # それ以外の色がついている部分を塗り替える
+    hsv[..., 0] = np.where(target, hue_deg / 360 * 255, hsv[..., 0])
+    hsv[..., 1] = np.where(target, np.clip(s * sat_mul, 0, 255), s)
+    out = Image.fromarray(hsv.astype(np.uint8), "HSV").convert("RGB")
+    out.putalpha(Image.fromarray(alpha))    # 透明度は元のまま
+    return out
+
+
 def main():
     zip_path, repo = sys.argv[1], sys.argv[2]
     manifest = {"islandSize": ISLAND_SIZE, "bases": {}, "modes": {}}
@@ -115,36 +148,41 @@ def main():
 
     # 1) 土台: 切り取らずに、そのまま WebP で保存する（配置の座標がキャンバス基準のため）
     os.makedirs(os.path.join(public, "base"), exist_ok=True)
-    for name, rel in BASES.items():
-        img = load(zf, names, rel)
+    for name, base in BASES.items():
+        img = load(zf, names, base["src"])
         img.save(os.path.join(public, "base", f"{name}.webp"), "WEBP", quality=82, method=4)
         manifest["bases"][name] = {
             "src": f"/map/base/{name}.webp",
             "width": img.width,
             "height": img.height,
+            "palette": base["palette"],
         }
         print("base", name)
 
-    # 2) スプライト: 余白を切り取り、縮小して保存する
+    # 2) スプライト: モード × 島の色 × 役割 ごとに1枚ずつ作る
+    cache = {}  # 同じ元画像を何度も切り取らないため
     for mode, roles in SPRITES.items():
-        os.makedirs(os.path.join(public, mode), exist_ok=True)
         manifest["modes"][mode] = {}
-        for role, rels in roles.items():
-            key = "house" if role.startswith("house") else role  # MAX_PX のキー
-            variants = []
-            for i, rel in enumerate(rels, start=1):
-                sprite, anchor = crop_and_anchor(load(zf, names, rel))
-                sprite = resize_max(sprite, MAX_PX[key])
-                file = f"{role}-{i:02d}.webp"
-                sprite.save(os.path.join(public, mode, file), "WEBP", quality=82, method=4)
-                variants.append({
-                    "src": f"/map/{mode}/{file}",
+        for palette, pal in PALETTES.items():
+            out_dir = os.path.join(public, mode, palette)
+            os.makedirs(out_dir, exist_ok=True)
+            manifest["modes"][mode][palette] = {}
+            for role, rels in roles.items():
+                key = "house" if role.startswith("house") else role  # MAX_PX のキー
+                rel = rels[pal["pick"][mode].get(role, 1) - 1]
+                if rel not in cache:
+                    sprite, anchor = crop_and_anchor(load(zf, names, rel))
+                    cache[rel] = (resize_max(sprite, MAX_PX[key]), anchor)
+                sprite, anchor = cache[rel]
+                sprite = recolor(sprite, pal["hue"], pal["sat"])
+                sprite.save(os.path.join(out_dir, f"{role}.webp"), "WEBP", quality=82, method=4)
+                manifest["modes"][mode][palette][role] = {
+                    "src": f"/map/{mode}/{palette}/{role}.webp",
                     "width": sprite.width,
                     "height": sprite.height,
                     "anchor": anchor,
-                })
-                print(mode, file)
-            manifest["modes"][mode][role] = variants
+                }
+            print(mode, palette)
 
     # 3) manifest.json を保存する（TypeScript から import して使う）
     out_dir = os.path.join(repo, "src", "features", "map", "generated")
@@ -152,6 +190,7 @@ def main():
     with open(os.path.join(out_dir, "manifest.json"), "w", encoding="utf-8") as f:
         json.dump(manifest, f, ensure_ascii=False, indent=2)
     print("done")
+
 
 if __name__ == "__main__":
     main()
