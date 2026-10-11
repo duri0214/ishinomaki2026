@@ -213,3 +213,34 @@ export type Island = typeof islands.$inferSelect;
 export type User = typeof users.$inferSelect;
 export type Tag = typeof tags.$inferSelect;
 export type Post = typeof posts.$inferSelect;
+
+/** デモを含むライブ公演。グループごとに管理する。 */
+export const liveEvents = pgTable(
+  "live_events",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    islandId: uuid("island_id")
+      .notNull()
+      .references(() => islands.id, { onDelete: "cascade" }),
+    title: text("title").notNull(),
+    venue: text("venue").notNull(),
+    startsAt: timestamptz("starts_at").notNull(),
+  },
+  (t) => [unique("live_events_island_title_uq").on(t.islandId, t.title)],
+);
+
+/** フォロー解除後も参戦記録は残す。本人と公演の組み合わせは一意。 */
+export const liveRecords = pgTable(
+  "live_records",
+  {
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    eventId: uuid("event_id")
+      .notNull()
+      .references(() => liveEvents.id, { onDelete: "cascade" }),
+    note: text("note").notNull().default(""),
+    updatedAt: timestamptz("updated_at").notNull().defaultNow(),
+  },
+  (t) => [primaryKey({ columns: [t.userId, t.eventId] })],
+);

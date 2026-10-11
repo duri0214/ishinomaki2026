@@ -1,6 +1,7 @@
 import { inArray, sql } from "drizzle-orm";
 import type { Db } from "../src/db/connect";
 import { islands, likes, posts, postTags, tags, users } from "../src/db/schema";
+import { seedDemoLives } from "../src/features/live/demo";
 import {
   SEED_ISLAND_SLUGS,
   SEED_USER_PREFIX,
@@ -32,6 +33,10 @@ export async function applySeed(txDb: Db, seed: SeedData): Promise<void> {
 
     await tx.insert(users).values(seed.users);
     await tx.insert(islands).values(seed.islands);
+    await seedDemoLives(
+      tx,
+      (await tx.select({ id: islands.id }).from(islands)).map((i) => i.id),
+    );
     for (const rows of chunk(seed.tags)) await tx.insert(tags).values(rows);
     for (const rows of chunk(seed.posts)) await tx.insert(posts).values(rows);
     for (const rows of chunk(seed.postTags)) {
