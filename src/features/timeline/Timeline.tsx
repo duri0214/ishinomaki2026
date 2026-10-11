@@ -91,7 +91,7 @@ export function Timeline({
             type="button"
             onClick={() => fetchNextPage()}
             disabled={isFetchingNextPage}
-            className="mx-auto rounded-full border border-[var(--ui-border)] bg-white px-4 py-1 text-sm text-[var(--ui-text)] hover:bg-[var(--ui-hover)] disabled:opacity-50"
+            className="mx-auto rounded-full border border-[var(--ui-border)] bg-[var(--ui-card)] px-4 py-1 text-sm text-[var(--ui-text)] hover:bg-[var(--ui-hover)] disabled:opacity-50"
           >
             {isFetchingNextPage ? "読み込み中…" : "もっと見る"}
           </button>

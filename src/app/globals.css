@@ -52,6 +52,11 @@ body {
   --ui-text: #705362;
   --ui-muted: #806676;
   --ui-accent: #a63868;
+  --ui-on-accent: #ffffff;
+  --ui-accent-hover: #862852;
+  --ui-disabled: #d9cfe4;
+  --ui-danger: #c4456f;
+  --ui-shadow: rgba(111, 78, 142, 0.35);
   --ui-border: #efdae2;
   --ui-hover: #fbeaf1;
   --ui-rail: #553344;
@@ -72,6 +77,11 @@ body {
   --ui-text: #d0dded;
   --ui-muted: #a6b9d2;
   --ui-accent: #88ddf4;
+  --ui-on-accent: #10223b;
+  --ui-accent-hover: #6cc9e4;
+  --ui-disabled: #344763;
+  --ui-danger: #ff8aa8;
+  --ui-shadow: rgba(0, 0, 0, 0.45);
   --ui-border: #344763;
   --ui-hover: #283c58;
   --ui-rail: #0a1223;
@@ -93,9 +103,9 @@ body {
   background: var(--ui-hero);
 }
 .design-eyebrow {
-  color: #fff;
-  background: #30223bc9;
-  border: 1px solid #ffffff40;
+  color: var(--ui-rail-text);
+  background: color-mix(in srgb, var(--ui-rail) 80%, transparent);
+  border: 1px solid var(--ui-rail-hover);
 }
 .design-panel :is(input, textarea) {
   background: var(--ui-card);
