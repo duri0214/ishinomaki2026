@@ -135,7 +135,8 @@ function AuthDialog({
       }}
       onClick={(e) => {
         // 押下も解放も背景（dialog 自身）のときだけ閉じる
-        if (e.target === e.currentTarget && pressedOnBackdrop.current) onClose();
+        if (e.target === e.currentTarget && pressedOnBackdrop.current)
+          onClose();
         pressedOnBackdrop.current = false;
       }}
       className="m-auto w-[min(26rem,calc(100vw-2rem))] rounded-[28px] bg-[#fffcf8] p-0 text-[#3f3158] shadow-2xl backdrop:bg-[#2b2140]/50"
