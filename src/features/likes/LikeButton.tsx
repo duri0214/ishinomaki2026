@@ -71,11 +71,21 @@ export function LikeButton({ post }: { post: TimelinePost }) {
         onClick={onClick}
         aria-pressed={post.likedByMe}
         aria-label={post.likedByMe ? "いいねを取り消す" : "いいね"}
-        className={`inline-flex items-center gap-1 rounded-full px-2 py-1 text-sm transition-colors hover:bg-rose-50 ${
-          post.likedByMe ? "text-rose-600" : "text-slate-500"
+        className={`inline-flex items-center gap-1.5 rounded-full px-2 py-1 text-sm transition-colors hover:bg-[#fbeef3] ${
+          post.likedByMe ? "text-[#d6457a]" : "text-[#a79bb8]"
         }`}
       >
-        <span aria-hidden>{post.likedByMe ? "♥" : "♡"}</span>
+        <svg
+          aria-hidden
+          viewBox="0 0 24 24"
+          className="size-6"
+          fill={post.likedByMe ? "currentColor" : "none"}
+          stroke="currentColor"
+          strokeWidth="1.6"
+          strokeLinejoin="round"
+        >
+          <path d="M12 20.5s-7.5-4.6-7.5-10.2A4.3 4.3 0 0 1 12 7.6a4.3 4.3 0 0 1 7.5 2.7c0 5.6-7.5 10.2-7.5 10.2Z" />
+        </svg>
         <span data-testid="like-count">{post.likeCount}</span>
       </button>
       {message && (

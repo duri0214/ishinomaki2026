@@ -12,7 +12,7 @@ export function PostBody({
   const segments = segmentBody(body);
   let offset = 0;
   return (
-    <p className="whitespace-pre-wrap break-words text-[15px] leading-relaxed">
+    <p className="whitespace-pre-wrap break-words text-base leading-7 text-[#6a5c7d]">
       {segments.map((seg) => {
         const key = `${offset}`;
         offset += seg.text.length;
@@ -21,7 +21,7 @@ export function PostBody({
           <Link
             key={key}
             href={`/i/${islandSlug}/t/${encodeURIComponent(seg.normalizedName)}`}
-            className="text-sky-700 hover:underline"
+            className="font-bold text-[#8e6bb0] hover:underline"
           >
             {seg.text}
           </Link>

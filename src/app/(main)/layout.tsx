@@ -1,15 +1,19 @@
 import { connection } from "next/server";
 import { QueryProvider } from "@/app/providers";
 import { ViewerProvider } from "@/features/auth/viewer";
-import { Header } from "@/features/layout/Header";
+import { GroupPhoto } from "@/features/layout/GroupPhoto";
+import { Toolbar } from "@/features/layout/Toolbar";
+import { Breadcrumb } from "@/features/map/Breadcrumb";
 import { getMapData } from "@/features/map/data";
 import { MapCanvas } from "@/features/map/MapCanvas";
+import { TagSearch } from "@/features/tags/TagSearch";
 import { getClerkUserId } from "@/lib/auth";
 import { isClerkConfigured } from "@/lib/env";
 
 /**
- * ヘッダーとマップは、ここに置いて常駐させる。
+ * ツールバーとマップは、ここに置いて常駐させる。
  * レイアウトはページ遷移では再マウントされないので、SVG とズームの状態が保たれる。
+ * 16:9 の画面では、左端のツールバー ＋ マップ70% ＋ 右30%（集合写真・現在地・タイムライン）に分ける。
  */
 export default async function MainLayout({
   children,
@@ -20,6 +24,7 @@ export default async function MainLayout({
     getMapData(),
     getClerkUserId(),
   ]);
+  const islandNames = islands.map(({ slug, name }) => ({ slug, name }));
 
   return (
     <QueryProvider>
@@ -27,15 +32,24 @@ export default async function MainLayout({
         authEnabled={isClerkConfigured()}
         initialSignedIn={clerkUserId !== null}
       >
-        <div className="flex h-dvh flex-col">
-          <Header islands={islands.map(({ slug, name }) => ({ slug, name }))} />
+        <div className="flex h-dvh flex-col lg:grid lg:grid-cols-[4.5rem_7fr_3fr]">
+          <Toolbar islands={islandNames} />
           <section
             aria-label="マップ"
-            className="h-[55vh] min-h-[240px] shrink-0 border-b border-slate-300"
+            className="h-[38dvh] min-h-[220px] shrink-0 lg:h-auto lg:min-h-0"
           >
             <MapCanvas islands={islands} />
           </section>
-          <main className="flex min-h-0 flex-1 flex-col">{children}</main>
+          <aside className="flex min-h-0 flex-1 flex-col bg-[#fffcf8]">
+            <GroupPhoto islands={islandNames} />
+            <div className="flex shrink-0 items-center gap-2 px-4 pb-1 pt-3">
+              <div className="min-w-0 flex-1">
+                <Breadcrumb islands={islandNames} />
+              </div>
+              <TagSearch />
+            </div>
+            <main className="flex min-h-0 flex-1 flex-col">{children}</main>
+          </aside>
         </div>
       </ViewerProvider>
     </QueryProvider>
