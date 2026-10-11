@@ -65,7 +65,7 @@ export function PostCard({
 
   return (
     <article
-      className="rounded-[28px] border border-[#ece4ef] bg-white p-4 shadow-[0_10px_28px_-16px_rgba(111,78,142,0.35)]"
+      className="design-post border border-[var(--ui-border)] bg-[var(--ui-card)] p-4 shadow-[0_10px_28px_-16px_var(--ui-shadow)]"
       data-testid="post-card"
     >
       <header className="flex items-center gap-2.5">
@@ -76,11 +76,11 @@ export function PostCard({
           {Array.from(post.author.displayName)[0]}
         </span>
         <div className="min-w-0">
-          <p className="truncate text-sm font-bold leading-tight text-[#3f3158]">
+          <p className="truncate text-sm font-bold leading-tight text-[var(--ui-title)]">
             {post.author.username ? (
               <Link
                 href={`/u/${post.author.username}`}
-                className="hover:text-[#8e6bb0] hover:underline"
+                className="hover:text-[var(--ui-accent)] hover:underline"
               >
                 {post.author.displayName}
               </Link>
@@ -88,12 +88,12 @@ export function PostCard({
               post.author.displayName
             )}
           </p>
-          <p className="truncate text-[11px] leading-tight text-[#a79bb8]">
+          <p className="truncate text-[11px] leading-tight text-[var(--ui-muted)]">
             {showIsland && (
               <>
                 <Link
                   href={`/i/${post.island.slug}`}
-                  className="hover:text-[#8e6bb0] hover:underline"
+                  className="hover:text-[var(--ui-accent)] hover:underline"
                 >
                   {post.island.name}
                 </Link>
@@ -118,7 +118,7 @@ export function PostCard({
             disabled={deleting}
             aria-label="削除"
             title="削除"
-            className="ml-auto flex size-8 items-center justify-center rounded-full text-[#a79bb8] hover:bg-[#f6f0fa] hover:text-[#c4456f] disabled:opacity-50"
+            className="ml-auto flex size-8 items-center justify-center rounded-full text-[var(--ui-muted)] hover:bg-[var(--ui-hover)] hover:text-[var(--ui-danger)] disabled:opacity-50"
           >
             <svg
               aria-hidden

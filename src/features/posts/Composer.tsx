@@ -42,13 +42,13 @@ export function Composer({
 
   if (!viewer.signedIn) {
     return (
-      <div className="mx-4 mb-2 rounded-2xl bg-[#f6f0fa] px-4 py-2.5 text-sm text-[#6a5c7d]">
+      <div className="mx-4 mb-2 rounded-2xl bg-[var(--ui-hover)] px-4 py-2.5 text-sm text-[var(--ui-text)]">
         <button
           type="button"
           onClick={() =>
             openAuth({ reason: "投稿するにはアカウントが必要です" })
           }
-          className="font-bold text-[#8e6bb0] underline"
+          className="font-bold text-[var(--ui-accent)] underline"
         >
           ログイン・新規登録
         </button>
@@ -134,7 +134,7 @@ export function Composer({
 
   return (
     <form
-      className="relative mx-4 mb-2 rounded-[28px] border border-[#ece4ef] bg-white p-3 shadow-[0_10px_28px_-16px_rgba(111,78,142,0.35)]"
+      className="relative mx-4 mb-2 rounded-[28px] border border-[var(--ui-border)] bg-[var(--ui-card)] p-3 shadow-[0_10px_28px_-16px_var(--ui-shadow)]"
       onSubmit={(e) => {
         e.preventDefault();
         submit();
@@ -161,14 +161,14 @@ export function Composer({
         {items.length > 0 && (
           <ul
             aria-label="タグの候補"
-            className="absolute z-20 mt-1 max-h-48 w-64 overflow-auto rounded-2xl border border-[#ece4ef] bg-white py-1 text-sm shadow-lg"
+            className="absolute z-20 mt-1 max-h-48 w-64 overflow-auto rounded-2xl border border-[var(--ui-border)] bg-[var(--ui-card)] py-1 text-sm shadow-lg"
           >
             {items.map((item, i) => (
               <li key={item.normalizedName}>
                 <button
                   type="button"
                   className={`flex w-full items-center gap-2 px-3 py-1 text-left ${
-                    i === highlight ? "bg-[#f6f0fa]" : ""
+                    i === highlight ? "bg-[var(--ui-hover)]" : ""
                   }`}
                   // クリックでテキストエリアのフォーカスが外れないようにする
                   onMouseDown={(e) => e.preventDefault()}
@@ -187,7 +187,9 @@ export function Composer({
         )}
         <div className="mt-1 flex items-center gap-3 text-xs">
           <span
-            className={overLimit ? "font-bold text-rose-600" : "text-[#a79bb8]"}
+            className={
+              overLimit ? "font-bold text-rose-600" : "text-[var(--ui-muted)]"
+            }
             aria-live="polite"
           >
             {length}/{MAX_POST_LENGTH}
@@ -200,7 +202,7 @@ export function Composer({
           <button
             type="submit"
             disabled={pending || overLimit || text.trim() === ""}
-            className="ml-auto rounded-full bg-[#8e6bb0] px-5 py-1.5 text-sm font-bold text-white hover:bg-[#7b5a9d] disabled:bg-[#d9cfe4]"
+            className="ml-auto rounded-full bg-[var(--ui-accent)] px-5 py-1.5 text-sm font-bold text-[var(--ui-on-accent)] hover:bg-[var(--ui-accent-hover)] disabled:bg-[var(--ui-disabled)]"
           >
             {pending ? "投稿中…" : "投稿"}
           </button>

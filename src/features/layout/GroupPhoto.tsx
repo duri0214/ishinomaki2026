@@ -2,6 +2,7 @@
 
 import { useParams } from "next/navigation";
 import { ArtistProfileButton } from "@/features/artists/ArtistProfileButton";
+import { useDesign } from "@/features/design/useDesign";
 import { decodeRouteParam } from "@/lib/route-params";
 import { GroupImage } from "./GroupImage";
 
@@ -26,6 +27,7 @@ const PHOTO_SIZES =
  * タグで絞っているときは、サブタイトルに島名、タイトルにタグ（人なら人名）を出す。
  */
 export function GroupPhoto({ islands }: { islands: PhotoIsland[] }) {
+  const { design } = useDesign();
   const { island: slug, tag: rawTag } = useParams<{
     island?: string;
     tag?: string;
@@ -43,13 +45,16 @@ export function GroupPhoto({ islands }: { islands: PhotoIsland[] }) {
 
   const src = `/photos/${slug ?? "world"}.jpg`;
   return (
-    <figure className="relative h-28 w-full shrink-0 min-[551px]:aspect-[2/1] min-[551px]:h-auto min-[551px]:max-h-[27dvh] bg-[#efe6f4]">
+    <figure className="design-hero relative h-28 w-full shrink-0 min-[551px]:aspect-[2/1] min-[551px]:h-auto min-[551px]:max-h-[27dvh] overflow-hidden bg-[#efe6f4]">
       <GroupImage
         key={src}
         src={src}
         alt={`${title}の集合写真`}
         sizes={PHOTO_SIZES}
       />
+      <span className="design-eyebrow absolute left-4 top-3 rounded-full px-2.5 py-1 text-[10px] font-bold tracking-[0.18em]">
+        {design === "cool" ? "IDOL KINGDOM / COOL" : "IDOL KINGDOM / KAWAII"}
+      </span>
       {island && !rawTag && (
         <ArtistProfileButton
           key={island.slug}

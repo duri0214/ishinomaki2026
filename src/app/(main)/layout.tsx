@@ -62,7 +62,7 @@ export default async function MainLayout({
             >
               <MapCanvas islands={islands} />
             </section>
-            <aside className="flex min-h-0 min-w-0 flex-1 flex-col bg-[#fffcf8]">
+            <aside className="design-panel flex min-h-0 min-w-0 flex-1 flex-col bg-[var(--ui-panel)]">
               <GroupPhoto islands={photoIslands} />
               <div className="flex shrink-0 items-center gap-2 px-4 pb-1 pt-3">
                 <div className="min-w-0 flex-1">

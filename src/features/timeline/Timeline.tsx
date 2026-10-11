@@ -49,13 +49,13 @@ export function Timeline({
       data-testid="timeline"
     >
       <div className="flex flex-col gap-4 py-2">
-        <div className="flex items-center justify-between text-xs text-[#a79bb8]">
+        <div className="flex items-center justify-between text-xs text-[var(--ui-muted)]">
           <span>新しい順</span>
           <button
             type="button"
             onClick={() => query.refetch()}
             disabled={query.isFetching}
-            className="rounded px-2 py-1 hover:bg-[#f3ecf7] disabled:opacity-50"
+            className="rounded px-2 py-1 hover:bg-[var(--ui-hover)] disabled:opacity-50"
           >
             {query.isFetching && !isFetchingNextPage ? "更新中…" : "↻ 更新"}
           </button>
@@ -78,7 +78,7 @@ export function Timeline({
         )}
 
         {posts.length === 0 && !query.isError && !query.isPending && (
-          <p className="py-10 text-center text-sm leading-7 text-[#8a7d9d]">
+          <p className="py-10 text-center text-sm leading-7 text-[var(--ui-text)]">
             {emptyMessage}
           </p>
         )}
@@ -91,7 +91,7 @@ export function Timeline({
             type="button"
             onClick={() => fetchNextPage()}
             disabled={isFetchingNextPage}
-            className="mx-auto rounded-full border border-[#e3d9ec] bg-white px-4 py-1 text-sm text-[#6a5c7d] hover:bg-[#f6f0fa] disabled:opacity-50"
+            className="mx-auto rounded-full border border-[var(--ui-border)] bg-[var(--ui-card)] px-4 py-1 text-sm text-[var(--ui-text)] hover:bg-[var(--ui-hover)] disabled:opacity-50"
           >
             {isFetchingNextPage ? "読み込み中…" : "もっと見る"}
           </button>

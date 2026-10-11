@@ -10,12 +10,12 @@ export function Toolbar({
   islands: { slug: string; name: string }[];
 }) {
   return (
-    <header className="flex min-[551px]:col-span-2 shrink-0 items-center gap-2 bg-[#2b2140] px-3 py-2 lg:col-span-1 lg:flex-col lg:px-0 lg:py-4">
+    <header className="design-toolbar flex min-[551px]:col-span-2 shrink-0 items-center gap-2 bg-[var(--ui-rail)] px-3 py-2 lg:col-span-1 lg:flex-col lg:px-0 lg:py-4">
       <Link
         href="/"
         aria-label="世界地図へ"
         title="世界地図へ"
-        className="flex size-11 shrink-0 items-center justify-center rounded-2xl bg-[#3d3157] text-2xl hover:bg-[#4a3d68]"
+        className="flex size-11 shrink-0 items-center justify-center rounded-2xl bg-[var(--ui-rail-button)] text-2xl hover:bg-[var(--ui-rail-hover)]"
       >
         <span aria-hidden>🏝</span>
       </Link>
