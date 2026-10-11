@@ -5,9 +5,10 @@ test("切り替えを保存し、ページ移動と再読み込み後も復元�
   page,
 }) => {
   await page.goto("/");
-  const control = page.getByRole("switch", { name: "かわいいデザイン" });
-  await expect(control).toHaveAttribute("aria-checked", "true");
-  await control.click();
+  const kawaii = page.getByRole("button", { name: "かわいい" });
+  const cool = page.getByRole("button", { name: "かっこいい" });
+  await expect(kawaii).toHaveAttribute("aria-pressed", "true");
+  await cool.click();
   await expect(page.locator("html")).toHaveAttribute("data-design", "cool");
   expect(
     await page.evaluate((key) => localStorage.getItem(key), DESIGN_STORAGE_KEY),
@@ -15,14 +16,14 @@ test("切り替えを保存し、ページ移動と再読み込み後も復元�
 
   await page.getByTestId("island-hoshizora").click();
   await expect(page).toHaveURL(/\/i\/hoshizora$/);
-  await expect(control).toHaveAttribute("aria-checked", "false");
+  await expect(kawaii).toHaveAttribute("aria-pressed", "false");
   await page.reload();
-  await expect(control).toHaveAttribute("aria-checked", "false");
+  await expect(kawaii).toHaveAttribute("aria-pressed", "false");
   await expect(page.locator("html")).toHaveAttribute("data-design", "cool");
 
-  await control.focus();
+  await kawaii.focus();
   await page.keyboard.press("Space");
-  await expect(control).toHaveAttribute("aria-checked", "true");
+  await expect(kawaii).toHaveAttribute("aria-pressed", "true");
   await page.reload();
   await expect(page.locator("html")).toHaveAttribute("data-design", "kawaii");
 });
@@ -72,7 +73,7 @@ test("切り替えてもURL・マップのDOM・カメラ位置・スクロー�
     return element.scrollTop;
   });
 
-  await page.getByRole("switch", { name: "かわいいデザイン" }).click();
+  await page.getByRole("button", { name: "かっこいい" }).click();
   await expect(page.locator("html")).toHaveAttribute("data-design", "cool");
   expect(page.url()).toBe(url);
   expect(
@@ -95,6 +96,6 @@ test("保存済みの値が不正な場合は既定の選択で起動する", as
   await page.goto("/");
   await expect(page.locator("html")).toHaveAttribute("data-design", "kawaii");
   await expect(
-    page.getByRole("switch", { name: "かわいいデザイン" }),
-  ).toHaveAttribute("aria-checked", "true");
+    page.getByRole("button", { name: "かわいい" }),
+  ).toHaveAttribute("aria-pressed", "true");
 });
