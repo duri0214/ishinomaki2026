@@ -1,0 +1,41 @@
+@import "tailwindcss";
+
+:root {
+  --background: #f4f9fc;
+  --foreground: #12222e;
+  --sea: #cfe8f3;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-sea: var(--sea);
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family:
+    "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Yu Gothic UI", Meiryo,
+    system-ui, sans-serif;
+}
+
+/* 家が現れるときのフェード（順位の入れ替えによる移動は transform の transition で行う） */
+@keyframes house-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.house-enter {
+  animation: house-in 450ms ease-out both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .house-enter {
+    animation: none;
+  }
+}

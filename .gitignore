@@ -1,0 +1,15 @@
+node_modules
+.next
+out
+.env
+.env.*
+!.env.example
+.pglite*
+.vercel
+*.tsbuildinfo
+next-env.d.ts
+coverage
+playwright-report
+test-results
+.DS_Store
+.claude/launch.json
