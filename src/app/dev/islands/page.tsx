@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { connection } from "next/server";
 import { getDb } from "@/db";
 import { CreateIslandForm } from "@/features/islands/CreateIslandForm";
 import { listIslands } from "@/features/islands/queries";
@@ -7,6 +8,8 @@ export const metadata = { title: "島エディタ" };
 
 /** 島の一覧と作成 */
 export default async function DevIslandsPage() {
+  // DB を読むので、ビルド時に静的生成しない（レイアウトとページは並行して描画されるため、ここでも指定する）
+  await connection();
   const islands = await listIslands(await getDb());
   return (
     <main className="mx-auto max-w-2xl p-6">

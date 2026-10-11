@@ -24,6 +24,10 @@ jobs:
       - run: bun run test
       # 環境変数が空でもビルドできること（本番の必須チェックはビルド中は行わない）
       - run: bun run build
+        env:
+          PGLITE_DIR: .pglite-build-check
+      # ビルド中にDBへ接続していないこと（接続していれば PGlite のディレクトリができる）
+      - run: test ! -e .pglite-build-check
 
   e2e:
     runs-on: ubuntu-latest

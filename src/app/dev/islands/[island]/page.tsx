@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { connection } from "next/server";
 import { IslandEditor } from "@/features/islands/IslandEditor";
 import { loadIsland } from "@/features/islands/load";
 import { getMapData } from "@/features/map/data";
@@ -15,6 +16,7 @@ export default async function DevIslandPage({
 }: {
   params: Promise<{ island: string }>;
 }) {
+  await connection();
   const slug = (await params).island;
   const islands = await getMapData();
   const island = islands.find((i) => i.slug === slug);
