@@ -68,18 +68,18 @@ export function PostCard({
       className="rounded-[28px] border border-[#ece4ef] bg-white p-4 shadow-[0_10px_28px_-16px_rgba(111,78,142,0.35)]"
       data-testid="post-card"
     >
-      <header className="flex items-center gap-3">
+      <header className="flex items-center gap-2.5">
         <span
           aria-hidden
-          className={`flex size-12 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br font-serif text-xl font-bold text-white ${avatarClass(post.author.displayName)}`}
+          className={`flex size-9 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br font-serif text-base font-bold text-white ${avatarClass(post.author.displayName)}`}
         >
           {Array.from(post.author.displayName)[0]}
         </span>
         <div className="min-w-0">
-          <p className="truncate text-base font-bold text-[#3f3158]">
+          <p className="truncate text-sm font-bold leading-tight text-[#3f3158]">
             {post.author.displayName}
           </p>
-          <p className="truncate text-xs text-[#a79bb8]">
+          <p className="truncate text-[11px] leading-tight text-[#a79bb8]">
             {showIsland && (
               <>
                 <Link
@@ -97,7 +97,7 @@ export function PostCard({
           </p>
         </div>
       </header>
-      <div className="mt-3">
+      <div className="mt-2">
         <PostBody body={post.body} islandSlug={post.island.slug} />
       </div>
       <footer className="mt-3 flex items-center gap-2">
