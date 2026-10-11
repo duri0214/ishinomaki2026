@@ -14,7 +14,6 @@ it("編集フォームは対象のカード内に開き、キャンセルで元�
   const user = userEvent.setup();
   render(
     <LiveRecords
-      ownerId="test-user"
       data={{
         favorites: [],
         events: [
@@ -48,8 +47,18 @@ it("編集フォームは対象のカード内に開き、キャンセルで元�
   );
 });
 
-it("アイドル別に開閉でき、公演を新しい順に並べ、色を個別に保持する", async () => {
+it("廃止した公演カードの色のキーだけを localStorage から消す", () => {
   localStorage.clear();
+  localStorage.setItem("live-record-color:fan:a", "#fce7ef");
+  localStorage.setItem("live-record-color:fan:b", "#e5f1fc");
+  localStorage.setItem("other-key", "keep");
+  render(<LiveRecords data={{ favorites: [], events: [], records: [] }} />);
+  expect(localStorage.getItem("live-record-color:fan:a")).toBeNull();
+  expect(localStorage.getItem("live-record-color:fan:b")).toBeNull();
+  expect(localStorage.getItem("other-key")).toBe("keep");
+});
+
+it("アイドル別に開閉でき、公演を新しい順に並べる", async () => {
   const user = userEvent.setup();
   const events = [
     {
@@ -82,34 +91,17 @@ it("アイドル別に開閉でき、公演を新しい順に並べ、色を個�
     events,
     records: events.map((e) => ({ eventId: e.id, note: "" })),
   };
-  const view = render(<LiveRecords ownerId="fan" data={data} />);
+  render(<LiveRecords data={data} />);
   const a = screen.getByRole("list", { name: "アイドルAの参戦記録" });
   expect(
     within(a)
       .getAllByRole("listitem")
       .map((e) => e.textContent?.slice(0, 3)),
   ).toEqual(["秋公演", "春公演"]);
-  const b = screen.getByRole("list", { name: "アイドルBの参戦記録" });
-  const color = (element: HTMLElement) =>
-    element.style.getPropertyValue("--live-card");
-  const before = color(within(b).getByRole("listitem"));
-  await user.selectOptions(
-    screen.getByLabelText("アイドルAの公演カードの色"),
-    "#fce7ef",
-  );
-  expect(color(within(a).getAllByRole("listitem")[0] as HTMLElement)).toBe(
-    "#fce7ef",
-  );
-  expect(color(within(b).getByRole("listitem"))).toBe(before);
+  expect(screen.queryByLabelText(/公演カードの色/)).toBeNull();
   const details = a.closest("details") as HTMLDetailsElement;
   await user.click(details.querySelector("summary") as HTMLElement);
   expect(details.open).toBe(false);
   await user.click(details.querySelector("summary") as HTMLElement);
   expect(details.open).toBe(true);
-  view.unmount();
-  render(<LiveRecords ownerId="fan" data={data} />);
-  expect(
-    (screen.getByLabelText("アイドルAの公演カードの色") as HTMLSelectElement)
-      .value,
-  ).toBe("#fce7ef");
 });

@@ -2,12 +2,15 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { type CSSProperties, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { deleteLiveRecordAction, saveLiveRecordAction } from "./actions";
 import type { LiveData } from "./service";
 
-const field =
-  "w-full rounded-xl border border-[var(--ui-border)] bg-[var(--ui-panel)] p-2 text-sm text-[var(--ui-text)] disabled:cursor-not-allowed disabled:border-dashed disabled:bg-[var(--ui-hover)] disabled:text-[var(--ui-muted)] disabled:opacity-60";
+const fieldBase =
+  "w-full rounded-xl border border-[var(--ui-border)] p-2 text-sm text-[var(--ui-text)] disabled:cursor-not-allowed disabled:border-dashed disabled:bg-[var(--ui-hover)] disabled:text-[var(--ui-muted)] disabled:opacity-60";
+const field = `${fieldBase} bg-[var(--ui-panel)]`;
+// 記録カード(--ui-panel)の上に置く入力欄。カードと背景が同じにならないようにする
+const cardField = `${fieldBase} bg-[var(--ui-card)]`;
 const button =
   "rounded-full bg-[var(--ui-hover)] px-4 py-2 text-sm font-bold text-[var(--ui-text)] disabled:opacity-50";
 const date = (value: string) =>
@@ -17,14 +20,20 @@ const date = (value: string) =>
     timeZone: "Asia/Tokyo",
   }).format(new Date(value));
 
-export function LiveRecords({
-  data,
-  ownerId,
-}: {
-  data: LiveData;
-  ownerId: string;
-}) {
+/** 廃止した「公演カードの色」が localStorage に残したキーを消す。 */
+function clearLegacyColorKeys() {
+  try {
+    for (const key of Object.keys(localStorage)) {
+      if (key.startsWith("live-record-color:")) localStorage.removeItem(key);
+    }
+  } catch {
+    /* localStorage が使えない環境では何もしない */
+  }
+}
+
+export function LiveRecords({ data }: { data: LiveData }) {
   const router = useRouter();
+  useEffect(clearLegacyColorKeys, []);
   const [idol, setIdol] = useState("");
   const [eventId, setEventId] = useState("");
   const [note, setNote] = useState("");
@@ -183,14 +192,7 @@ export function LiveRecords({
                   Date.parse(b.event.startsAt) - Date.parse(a.event.startsAt) ||
                   a.event.id.localeCompare(b.event.id),
               );
-            return (
-              <IdolRecords
-                key={slug}
-                ownerId={ownerId}
-                slug={slug}
-                entries={entries}
-              />
-            );
+            return <IdolRecords key={slug} slug={slug} entries={entries} />;
           })}
         </div>
       )}
@@ -198,46 +200,16 @@ export function LiveRecords({
   );
 }
 
-const colors = [
-  { name: "ラベンダー", value: "#f6f0fa" },
-  { name: "ピンク", value: "#fce7ef" },
-  { name: "ブルー", value: "#e5f1fc" },
-  { name: "ミント", value: "#e4f5eb" },
-  { name: "イエロー", value: "#fff4d6" },
-  { name: "オレンジ", value: "#ffeadb" },
-];
-
 function IdolRecords({
-  ownerId,
   slug,
   entries,
 }: {
-  ownerId: string;
   slug: string;
   entries: {
     record: LiveData["records"][number];
     event: LiveData["events"][number];
   }[];
 }) {
-  const defaultColor =
-    colors[
-      [...slug].reduce((sum, char) => sum + char.charCodeAt(0), 0) %
-        colors.length
-    ]?.value ?? "#f6f0fa";
-  const [color, setColor] = useState(defaultColor);
-  const storageKey = `live-record-color:${ownerId}:${slug}`;
-  useEffect(() => {
-    try {
-      const saved = localStorage.getItem(storageKey);
-      setColor(
-        colors.some((c) => c.value === saved)
-          ? (saved as string)
-          : defaultColor,
-      );
-    } catch {
-      setColor(defaultColor);
-    }
-  }, [storageKey, defaultColor]);
   const name = entries[0]?.event.islandName;
   return (
     <details
@@ -249,34 +221,11 @@ function IdolRecords({
         <span className="ml-1 text-xs font-normal">{entries.length}公演</span>
       </summary>
       <div className="mt-3">
-        <label className="flex items-center gap-2 text-xs">
-          公演カードの色
-          <select
-            aria-label={`${name}の公演カードの色`}
-            className="rounded-lg border border-[var(--ui-border)] bg-[var(--ui-panel)] p-1"
-            value={color}
-            onChange={(e) => {
-              setColor(e.target.value);
-              try {
-                localStorage.setItem(storageKey, e.target.value);
-              } catch {
-                /* 保存できない場合もこの画面では反映する */
-              }
-            }}
-          >
-            {colors.map((c) => (
-              <option key={c.value} value={c.value}>
-                {c.name}
-              </option>
-            ))}
-          </select>
-        </label>
-        <ul aria-label={`${name}の参戦記録`} className="mt-3 space-y-3">
+        <ul aria-label={`${name}の参戦記録`} className="space-y-3">
           {entries.map(({ record, event }) => (
             <li
               key={event.id}
-              className="live-card rounded-xl p-3"
-              style={{ "--live-card": color } as CSSProperties}
+              className="rounded-xl border border-[var(--ui-border)] bg-[var(--ui-panel)] p-3"
             >
               <p className="font-bold">{event.title}</p>
               <p className="text-xs">
@@ -345,7 +294,7 @@ function RecordEditor({
             <label className="block text-sm">
               感想・メモ（任意）
               <textarea
-                className={field}
+                className={cardField}
                 rows={3}
                 maxLength={2000}
                 value={note}

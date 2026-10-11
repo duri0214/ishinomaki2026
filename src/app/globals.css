@@ -65,7 +65,6 @@ body {
   --ui-rail-text: #ffe6ef;
   --ui-radius: 28px;
   --ui-hero: radial-gradient(ellipse at 70% 40%, #fff4cb, #f3d5e6 65%, #dfcde9);
-  --ui-tint: 100%;
 }
 
 [data-design="cool"] {
@@ -91,7 +90,6 @@ body {
   --ui-rail-text: #c0eafa;
   --ui-radius: 10px;
   --ui-hero: radial-gradient(ellipse at 70% 40%, #305477, #1d294d 65%, #11182b);
-  --ui-tint: 28%;
 }
 
 .design-panel {
@@ -100,14 +98,6 @@ body {
 .design-post {
   border-radius: var(--ui-radius);
   box-shadow: 0 8px 24px -18px var(--ui-accent);
-}
-/* ユーザーが選んだ淡い色を、テーマのカード色に混ぜて使う */
-.live-card {
-  background-color: color-mix(
-    in srgb,
-    var(--live-card) var(--ui-tint),
-    var(--ui-card)
-  );
 }
 .design-hero {
   background: var(--ui-hero);

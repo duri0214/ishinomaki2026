@@ -36,7 +36,7 @@ export default async function ProfilePage({ params }: Props) {
   return (
     <div className="min-h-0 flex-1 overflow-y-auto pt-1">
       <ProfileView profile={profile} />
-      {liveData && <LiveRecords data={liveData} ownerId={profile.id} />}
+      {liveData && <LiveRecords data={liveData} />}
     </div>
   );
 }
