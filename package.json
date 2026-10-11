@@ -32,7 +32,6 @@
     "react-dom": "^19.3.0",
     "server-only": "^0.0.1",
     "svix": "^2.8.0",
-    "ws": "^8.22.0",
     "zod": "^4.6.5"
   },
   "devDependencies": {
@@ -46,7 +45,6 @@
     "@types/node": "^26.6.5",
     "@types/react": "^19.3.0",
     "@types/react-dom": "^19.3.0",
-    "@types/ws": "^8.18.2",
     "drizzle-kit": "^0.31.11",
     "postcss": "^8.5.29",
     "tailwindcss": "^4.3.3",
