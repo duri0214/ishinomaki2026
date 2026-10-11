@@ -97,14 +97,6 @@ body {
   background: #30223bc9;
   border: 1px solid #ffffff40;
 }
-.design-brand {
-  width: 36px;
-  height: 36px;
-  background: url("/design/kawaii/penlight.webp") center / contain no-repeat;
-}
-[data-design="cool"] .design-brand {
-  background-image: url("/design/cool/penlight.webp");
-}
 .design-panel :is(input, textarea) {
   background: var(--ui-card);
   color: var(--ui-text);
