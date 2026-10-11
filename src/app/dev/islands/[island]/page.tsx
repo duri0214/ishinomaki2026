@@ -34,6 +34,13 @@ export default async function DevIslandPage({
           島ビューを開く
         </Link>
         <span className="mx-2 text-slate-400">|</span>
+        <Link
+          href={`/dev/islands/${slug}/traits`}
+          className="text-sky-700 underline"
+        >
+          傾向タグを編集
+        </Link>
+        <span className="mx-2 text-slate-400">|</span>
         <Link href="/" className="text-sky-700 underline">
           世界地図を開く
         </Link>

@@ -1,5 +1,6 @@
 import { sql } from "drizzle-orm";
 import {
+  check,
   foreignKey,
   index,
   jsonb,
@@ -7,6 +8,7 @@ import {
   pgTable,
   primaryKey,
   real,
+  smallint,
   text,
   timestamp,
   unique,
@@ -206,6 +208,26 @@ export const userFavoriteMembers = pgTable(
       columns: [t.tagId, t.islandId],
       foreignColumns: [tags.id, tags.islandId],
     }).onDelete("cascade"),
+  ],
+);
+
+/**
+ * 島(グループ)の傾向タグ。軸(axis)ごとに 1〜5 の段階を持つ（左のラベルが 1、右が 5）。
+ * 軸の定義は features/traits/constants.ts。未評価の軸は行を持たない。
+ */
+export const islandTraits = pgTable(
+  "island_traits",
+  {
+    islandId: uuid("island_id")
+      .notNull()
+      .references(() => islands.id, { onDelete: "cascade" }),
+    axis: text("axis").notNull(),
+    score: smallint("score").notNull(),
+    updatedAt: timestamptz("updated_at").notNull().defaultNow(),
+  },
+  (t) => [
+    primaryKey({ columns: [t.islandId, t.axis] }),
+    check("island_traits_score_range", sql`${t.score} between 1 and 5`),
   ],
 );
 
