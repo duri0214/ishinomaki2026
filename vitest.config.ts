@@ -13,7 +13,7 @@ export default defineConfig({
   },
   test: {
     environment: "node",
-    include: ["src/**/*.test.ts", "tests/unit/**/*.test.ts"],
+    include: ["src/**/*.test.{ts,tsx}", "tests/unit/**/*.test.{ts,tsx}"],
     // PGlite の起動を含むため少し長めにとる
     testTimeout: 30_000,
     hookTimeout: 60_000,

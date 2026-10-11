@@ -4,7 +4,7 @@ out
 .env
 .env.*
 !.env.example
-.pglite
+.pglite*
 .vercel
 *.tsbuildinfo
 next-env.d.ts

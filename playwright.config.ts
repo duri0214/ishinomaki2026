@@ -4,6 +4,9 @@ const port = 3100;
 
 export default defineConfig({
   testDir: "./tests/e2e",
+  // 開発サーバーは初回アクセス時にルートをコンパイルするので、長めにとる
+  timeout: 60_000,
+  expect: { timeout: 15_000 },
   fullyParallel: false,
   retries: process.env.CI ? 1 : 0,
   reporter: process.env.CI ? "github" : "list",
@@ -14,10 +17,11 @@ export default defineConfig({
     trace: "retain-on-failure",
   },
   webServer: {
-    command: `bun x next dev --port ${port}`,
+    command: `bun run db:reset-e2e && bun x next dev --port ${port}`,
     url: `http://localhost:${port}`,
     reuseExistingServer: !process.env.CI,
     timeout: 120_000,
-    env: { PGLITE_DIR: ".pglite-e2e" },
+    // E2E は必ずローカルのPGliteを使う（.env.local に DATABASE_URL があっても無視する）
+    env: { PGLITE_DIR: ".pglite-e2e", DATABASE_URL: "" },
   },
 });

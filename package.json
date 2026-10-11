@@ -17,7 +17,8 @@
     "test:e2e": "playwright test",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "bun scripts/migrate.ts",
-    "db:seed": "bun scripts/seed.ts"
+    "db:seed": "bun scripts/seed.ts",
+    "db:reset-e2e": "bun scripts/reset-e2e.ts"
   },
   "dependencies": {
     "@clerk/nextjs": "^7.9.14",
@@ -36,9 +37,13 @@
   },
   "devDependencies": {
     "@biomejs/biome": "^2.5.15",
+    "@clerk/testing": "^2.2.45",
     "@electric-sql/pglite": "^0.5.8",
     "@playwright/test": "^1.64.0",
     "@tailwindcss/postcss": "^4.3.3",
+    "@testing-library/dom": "^10.4.2",
+    "@testing-library/react": "^16.3.3",
+    "@testing-library/user-event": "^14.6.7",
     "@types/d3-interpolate": "^3.0.4",
     "@types/d3-selection": "^3.0.12",
     "@types/d3-zoom": "^3.0.9",
@@ -46,6 +51,7 @@
     "@types/react": "^19.3.0",
     "@types/react-dom": "^19.3.0",
     "drizzle-kit": "^0.31.11",
+    "jsdom": "^30.1.2",
     "postcss": "^8.5.29",
     "tailwindcss": "^4.3.3",
     "typescript": "^7.0.2",
