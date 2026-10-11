@@ -17,17 +17,24 @@ export function Timeline({
 }) {
   const query = useTimeline(scope, initialPage);
   const containerRef = useRef<HTMLDivElement>(null);
-  const { hasNextPage, isFetchingNextPage, fetchNextPage } = query;
+  const {
+    hasNextPage,
+    isFetchingNextPage,
+    isFetchNextPageError,
+    fetchNextPage,
+  } = query;
 
   // 下端まで400px以内になったら続きを読み込む。
   // 内容が領域より短いときにも読み込めるよう、描画のたびに確認する
   const loadMoreIfNearEnd = useCallback(() => {
     const el = containerRef.current;
     if (!el || !hasNextPage || isFetchingNextPage) return;
+    // 続きの取得に失敗したら、自動では再試行しない（「もっと見る」ボタンで再試行する）
+    if (isFetchNextPageError) return;
     // 非表示のタイムライン（戻る操作用に残っている前のページ）は読み込まない
     if (el.clientHeight === 0) return;
     if (el.scrollHeight - el.scrollTop - el.clientHeight < 400) fetchNextPage();
-  }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
+  }, [hasNextPage, isFetchingNextPage, isFetchNextPageError, fetchNextPage]);
   useEffect(() => {
     loadMoreIfNearEnd();
   });
