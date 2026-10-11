@@ -130,29 +130,4 @@ test.describe("閲覧", () => {
       page.getByRole("link", { name: "世界地図へ戻る" }),
     ).toBeVisible();
   });
-
-  test("ログインのキーが未設定なら、投稿できない旨を表示する", async ({
-    page,
-  }) => {
-    test.skip(
-      Boolean(process.env.CLERK_SECRET_KEY),
-      "Clerk が設定されている環境では対象外",
-    );
-    await page.goto("/i/hoshizora");
-    await expect(page.getByText(/閲覧のみ/).first()).toBeVisible();
-    await expect(page.getByRole("textbox", { name: "投稿の本文" })).toHaveCount(
-      0,
-    );
-
-    // いいねしようとしても、送信されずに案内が出る
-    await page.getByRole("button", { name: "いいね" }).first().click();
-    await expect(
-      page.getByText("ログインが設定されていないため、いいねできません"),
-    ).toBeVisible();
-
-    await page.goto("/sign-in");
-    await expect(
-      page.getByText("ログインは現在設定されていません"),
-    ).toBeVisible();
-  });
 });

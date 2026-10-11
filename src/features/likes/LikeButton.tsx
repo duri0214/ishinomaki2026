@@ -1,8 +1,8 @@
 "use client";
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { useAuthDialog } from "@/features/auth/AuthDialog";
 import { useViewer } from "@/features/auth/viewer";
 import type { TimelinePost } from "@/features/timeline/queries";
 import { patchPostInCaches } from "@/features/timeline/useTimeline";
@@ -10,9 +10,11 @@ import { setLikeAction } from "./actions";
 
 export function LikeButton({ post }: { post: TimelinePost }) {
   const queryClient = useQueryClient();
-  const router = useRouter();
+  const openAuth = useAuthDialog();
   const viewer = useViewer();
   const [message, setMessage] = useState<string | null>(null);
+  const askToSignIn = () =>
+    openAuth({ reason: "いいねするにはアカウントが必要です" });
   const mutationKey = ["like", post.id];
 
   const mutation = useMutation({
@@ -35,7 +37,7 @@ export function LikeButton({ post }: { post: TimelinePost }) {
     onSuccess: (result) => {
       if (!result.ok) {
         setMessage(result.message);
-        if (result.code === "unauthorized") router.push("/sign-in");
+        if (result.code === "unauthorized") askToSignIn();
         queryClient.invalidateQueries({ queryKey: ["timeline"] });
         return;
       }
@@ -57,8 +59,7 @@ export function LikeButton({ post }: { post: TimelinePost }) {
 
   const onClick = () => {
     if (!viewer.signedIn) {
-      if (viewer.authEnabled) router.push("/sign-in");
-      else setMessage("ログインが設定されていないため、いいねできません");
+      askToSignIn();
       return;
     }
     mutation.mutate(!post.likedByMe);

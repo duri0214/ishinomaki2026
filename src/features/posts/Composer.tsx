@@ -1,8 +1,8 @@
 "use client";
 
 import { useQueryClient } from "@tanstack/react-query";
-import Link from "next/link";
 import { useRef, useState } from "react";
+import { useAuthDialog } from "@/features/auth/AuthDialog";
 import { useViewer } from "@/features/auth/viewer";
 import { codePointLength } from "@/features/tags/normalize";
 import { activeHashtagAt } from "@/features/tags/parse";
@@ -20,6 +20,7 @@ export function Composer({
   initialText?: string;
 }) {
   const viewer = useViewer();
+  const openAuth = useAuthDialog();
   const queryClient = useQueryClient();
   const [text, setText] = useState(initialText);
   const [caret, setCaret] = useState(0);
@@ -42,19 +43,16 @@ export function Composer({
   if (!viewer.signedIn) {
     return (
       <div className="mx-4 mb-2 rounded-2xl bg-[#f6f0fa] px-4 py-2.5 text-sm text-[#6a5c7d]">
-        {viewer.authEnabled ? (
-          <>
-            <Link
-              href="/sign-in"
-              className="font-bold text-[#8e6bb0] underline"
-            >
-              ログイン
-            </Link>
-            すると投稿やいいねができます
-          </>
-        ) : (
-          "ログインが設定されていないため、投稿できません（閲覧のみ）"
-        )}
+        <button
+          type="button"
+          onClick={() =>
+            openAuth({ reason: "投稿するにはアカウントが必要です" })
+          }
+          className="font-bold text-[#8e6bb0] underline"
+        >
+          ログイン・新規登録
+        </button>
+        すると投稿やいいねができます
       </div>
     );
   }
@@ -90,6 +88,10 @@ export function Composer({
         await queryClient.invalidateQueries({ queryKey: ["timeline"] });
       } else {
         setError(result.message);
+        // セッションが切れていたら、ログインへ誘導する（本文は残す）
+        if (result.code === "unauthorized") {
+          openAuth({ mode: "signin", reason: "ログインし直してください" });
+        }
       }
     } catch {
       setError("投稿できませんでした。通信状況を確認してください");

@@ -77,7 +77,16 @@ export function PostCard({
         </span>
         <div className="min-w-0">
           <p className="truncate text-sm font-bold leading-tight text-[#3f3158]">
-            {post.author.displayName}
+            {post.author.username ? (
+              <Link
+                href={`/u/${post.author.username}`}
+                className="hover:text-[#8e6bb0] hover:underline"
+              >
+                {post.author.displayName}
+              </Link>
+            ) : (
+              post.author.displayName
+            )}
           </p>
           <p className="truncate text-[11px] leading-tight text-[#a79bb8]">
             {showIsland && (

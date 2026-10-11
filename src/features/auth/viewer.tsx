@@ -1,59 +1,35 @@
 "use client";
 
-import { useAuth } from "@clerk/nextjs";
 import { createContext, useContext } from "react";
 
-export type Viewer = {
-  /** Clerk のキーが設定されていて、ログインできる状態か */
-  authEnabled: boolean;
-  signedIn: boolean;
+export type ViewerUser = {
+  id: string;
+  username: string;
+  displayName: string;
 };
 
-const ViewerContext = createContext<Viewer>({
-  authEnabled: false,
-  signedIn: false,
-});
+export type Viewer = {
+  signedIn: boolean;
+  user: ViewerUser | null;
+};
+
+const ViewerContext = createContext<Viewer>({ signedIn: false, user: null });
 
 export function useViewer(): Viewer {
   return useContext(ViewerContext);
 }
 
-function ClerkViewerProvider({
-  initialSignedIn,
+/** サーバーで判定した閲覧者を配る。ログイン・ログアウト後は router.refresh() で更新される */
+export function ViewerProvider({
+  user,
   children,
 }: {
-  initialSignedIn: boolean;
+  user: ViewerUser | null;
   children: React.ReactNode;
 }) {
-  const { isLoaded, isSignedIn } = useAuth();
-  // Clerk の読み込みが終わるまでは、サーバーで判定した状態を使う（ハイドレーションのずれ防止）
-  const signedIn = isLoaded ? Boolean(isSignedIn) : initialSignedIn;
   return (
-    <ViewerContext.Provider value={{ authEnabled: true, signedIn }}>
+    <ViewerContext.Provider value={{ signedIn: user !== null, user }}>
       {children}
     </ViewerContext.Provider>
-  );
-}
-
-export function ViewerProvider({
-  authEnabled,
-  initialSignedIn,
-  children,
-}: {
-  authEnabled: boolean;
-  initialSignedIn: boolean;
-  children: React.ReactNode;
-}) {
-  if (!authEnabled) {
-    return (
-      <ViewerContext.Provider value={{ authEnabled: false, signedIn: false }}>
-        {children}
-      </ViewerContext.Provider>
-    );
-  }
-  return (
-    <ClerkViewerProvider initialSignedIn={initialSignedIn}>
-      {children}
-    </ClerkViewerProvider>
   );
 }

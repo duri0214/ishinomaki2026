@@ -13,7 +13,13 @@ export type TimelinePost = {
   body: string;
   /** ISO 8601 */
   createdAt: string;
-  author: { id: string; displayName: string; avatarUrl: string | null };
+  author: {
+    id: string;
+    /** 退会済みなら null（プロフィールへリンクしない） */
+    username: string | null;
+    displayName: string;
+    avatarUrl: string | null;
+  };
   island: { slug: string; name: string };
   likeCount: number;
   likedByMe: boolean;
@@ -35,6 +41,7 @@ function selectPosts(db: Db, viewerId: string | null) {
       body: posts.body,
       createdAt: posts.createdAt,
       authorId: users.id,
+      authorUsername: users.username,
       authorName: users.displayName,
       authorAvatar: users.avatarUrl,
       authorDeletedAt: users.deletedAt,
@@ -60,6 +67,7 @@ function toTimelinePost(row: Row, viewerId: string | null): TimelinePost {
     createdAt: row.createdAt.toISOString(),
     author: {
       id: row.authorId,
+      username: deleted ? null : row.authorUsername,
       displayName: deleted ? DELETED_USER_NAME : row.authorName,
       avatarUrl: deleted ? null : row.authorAvatar,
     },

@@ -14,10 +14,6 @@ const envSchema = z.object({
   ),
   /** PGlite のデータ置き場（ローカル専用） */
   PGLITE_DIR: optionalString,
-  CLERK_SECRET_KEY: optionalString,
-  NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: optionalString,
-  /** Webhook を受ける前は発行できないので、本番でも必須にはしない */
-  CLERK_WEBHOOK_SIGNING_SECRET: optionalString,
 });
 
 export type Env = z.infer<typeof envSchema>;
@@ -25,8 +21,6 @@ export type Env = z.infer<typeof envSchema>;
 /** 本番ランタイムで必須になる環境変数 */
 const REQUIRED_IN_PRODUCTION = [
   "DATABASE_URL",
-  "CLERK_SECRET_KEY",
-  "NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY",
 ] as const satisfies readonly (keyof Env)[];
 
 export class EnvError extends Error {
@@ -80,14 +74,4 @@ let cached: Env | undefined;
 export function getEnv(): Env {
   cached ??= parseEnv(process.env, { strict: isStrictRuntime() });
   return cached;
-}
-
-/** Clerk のキーが揃っているか。揃っていなければ認証まわりは無効（閲覧だけできる） */
-export function isClerkConfigured(
-  source: Record<string, string | undefined> = process.env,
-): boolean {
-  return Boolean(
-    source.CLERK_SECRET_KEY?.trim() &&
-      source.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY?.trim(),
-  );
 }

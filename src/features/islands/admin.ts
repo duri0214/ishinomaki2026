@@ -1,7 +1,7 @@
 import { and, eq, inArray, max } from "drizzle-orm";
 import { z } from "zod";
 import type { Db } from "@/db/connect";
-import { type Island, islands, tags } from "@/db/schema";
+import { type Island, islands, tags, userFavoriteMembers } from "@/db/schema";
 import { clampToPlaza, ISLAND_RADIUS } from "@/features/map/layout";
 import { validateTagName } from "@/features/tags/parse";
 import { AppError } from "@/lib/errors";
@@ -150,6 +150,10 @@ export async function saveIsland(
         .update(tags)
         .set({ kind: "topic", position: null })
         .where(inArray(tags.id, removed));
+      // 話題タグに戻すと外部キーは働かないので、推しメンバーからも外す
+      await tx
+        .delete(userFavoriteMembers)
+        .where(inArray(userFavoriteMembers.tagId, removed));
     }
 
     // 一覧のメンバーを作成または更新する
