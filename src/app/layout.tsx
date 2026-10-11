@@ -1,5 +1,6 @@
 import { ClerkProvider } from "@clerk/nextjs";
 import type { Metadata } from "next";
+import { DEFAULT_DESIGN, DESIGN_INIT_SCRIPT } from "@/features/design/design";
 import { isClerkConfigured } from "@/lib/env";
 import "./globals.css";
 
@@ -31,7 +32,11 @@ export default function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
   const content = (
-    <html lang="ja">
+    <html lang="ja" data-design={DEFAULT_DESIGN} suppressHydrationWarning>
+      <head>
+        {/* biome-ignore lint/security/noDangerouslySetInnerHtml: 検証済みの固定スクリプトで保存済みのデザインを初回描画前に復元する */}
+        <script dangerouslySetInnerHTML={{ __html: DESIGN_INIT_SCRIPT }} />
+      </head>
       <body>{children}</body>
     </html>
   );
