@@ -1,7 +1,9 @@
 node_modules
 .next
+.next-*
 out
 .env
+.env.local
 .env.*
 !.env.example
 .pglite*
