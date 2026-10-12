@@ -17,7 +17,7 @@ const partner = { username: `e2e_rel_p_${suffix}`, name: `相手${suffix}` };
 const viewer = { username: `e2e_rel_v_${suffix}`, name: `自分${suffix}` };
 const password = "e2e-password";
 const ISLAND = { slug: "shiokaze", name: "TWICE" };
-const MEMBERS = ["ナヨン", "ジョンヨン"];
+const MEMBERS = ["モモ", "サナ"];
 const SIGN_IN_REASON = "共通点のあるユーザーを見るにはアカウントが必要です";
 
 type Account = typeof partner;
@@ -191,8 +191,8 @@ test("同じ推しメンバー・公演のユーザーが、共通点のバッ�
       card.getByRole("link", { name: partner.name }),
     ).toHaveAttribute("href", `/u/${partner.username}`);
     await expect(card.getByText(`@${partner.username}`)).toBeVisible();
-    await expect(card.getByText("ナヨンを推しています")).toBeVisible();
-    await expect(card.getByText("ジョンヨンを推しています")).toBeVisible();
+    await expect(card.getByText("モモを推しています")).toBeVisible();
+    await expect(card.getByText("サナを推しています")).toBeVisible();
     // 同じグループの推しは、メンバーの共通点に含まれるので別のバッジにしない
     await expect(card.getByText(`${ISLAND.name}を推しています`)).toHaveCount(0);
     await expect(card.getByText(/に参戦しています/)).toHaveCount(0);
