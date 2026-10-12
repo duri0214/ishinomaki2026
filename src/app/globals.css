@@ -41,6 +41,13 @@
   --color-sea: var(--sea);
 }
 
+/*
+ * 横に領域を並べ、マップ・一覧などをそれぞれの中でスクロールさせるレイアウト。
+ * 幅550px以下の縦長スマホと、高さ500px以下の横向きスマホでは、領域を縦に積んでページ全体をスクロールする。
+ * 固定の高さに要素を積むと、投稿一覧の表示領域が残らないため。
+ */
+@custom-variant wide (@media (min-width: 551px) and (min-height: 501px));
+
 body {
   background: var(--background);
   color: var(--foreground);

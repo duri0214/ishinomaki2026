@@ -15,7 +15,7 @@ import {
 import type { RelatedUser } from "./rank";
 import { SignInRequiredError, useRelatedUsers } from "./useRelatedUsers";
 
-/** 共通点のあるユーザーの一覧。この領域だけがスクロールする */
+/** 共通点のあるユーザーの一覧。横並びのレイアウトでは、この領域だけがスクロールする */
 export function RelatedUsers({ active }: { active: boolean }) {
   const { signedIn, user } = useViewer();
   const openAuth = useAuthDialog();
@@ -29,7 +29,7 @@ export function RelatedUsers({ active }: { active: boolean }) {
 
   return (
     <div
-      className="min-h-0 flex-1 overflow-y-auto px-4 pb-8"
+      className="flex-1 px-4 pb-8 wide:min-h-0 wide:overflow-y-auto"
       data-testid="related-users"
     >
       <div className="flex flex-col gap-4 py-2">

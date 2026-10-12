@@ -13,7 +13,7 @@ export function ToolbarIslands({
   return (
     <nav
       aria-label="島"
-      className="flex min-w-0 items-center gap-2 overflow-x-auto lg:flex-col lg:overflow-visible"
+      className="flex min-w-0 items-center gap-2 overflow-x-auto wide:lg:flex-col wide:lg:overflow-visible"
     >
       {islands.map(({ slug, name }) => {
         const active = slug === current;

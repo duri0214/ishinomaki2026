@@ -21,7 +21,7 @@ export default async function FollowingPage({ params }: Props) {
   );
   if (!profile) notFound();
   return (
-    <div className="min-h-0 flex-1 overflow-y-auto pt-1">
+    <div className="flex-1 pt-1 wide:min-h-0 wide:overflow-y-auto">
       <FollowList
         owner={profile}
         kind="following"
