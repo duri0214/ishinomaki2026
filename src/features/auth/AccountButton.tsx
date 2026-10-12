@@ -49,7 +49,11 @@ export function AccountButton() {
 
   const signOut = async () => {
     setMenuOpen(false);
-    await signOutAction();
+    const result = await signOutAction();
+    if (!result.ok) return;
+    // 私的なDMだけを中断・破棄し、公開タイムラインは再取得して維持する。
+    await queryClient.cancelQueries({ queryKey: ["messages"] });
+    queryClient.removeQueries({ queryKey: ["messages"] });
     router.refresh();
     queryClient.invalidateQueries({ queryKey: ["timeline"] });
     // 前のユーザーの関連ユーザーを、画面にもキャッシュにも残さない

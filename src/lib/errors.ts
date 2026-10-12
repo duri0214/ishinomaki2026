@@ -4,6 +4,7 @@ export type AppErrorCode =
   | "island_not_found"
   | "post_not_found"
   | "user_not_found"
+  | "conversation_not_found"
   | "forbidden"
   | "username_taken"
   | "invalid_credentials"

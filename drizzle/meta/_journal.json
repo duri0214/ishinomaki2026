@@ -64,6 +64,13 @@
       "when": 1791769340117,
       "tag": "0008_add_related_users_indexes",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1791769903355,
+      "tag": "0009_add_direct_messages",
+      "breakpoints": true
     }
   ]
 }
