@@ -12,8 +12,22 @@ import {
   useRef,
   useState,
 } from "react";
-import { cameraFor, focusForPath, focusKey, resolveFocus } from "./layout";
+import { AccountButton } from "@/features/auth/AccountButton";
+import { DesignSwitch } from "@/features/design/DesignSwitch";
+import { useDesign } from "@/features/design/useDesign";
+import { useTagSuggestions } from "@/features/tags/useTagSuggestions";
+import { backgroundImage } from "./assets";
+import {
+  cameraFor,
+  focusForPath,
+  focusKey,
+  MAP_TOPIC_HOUSES,
+  MAX_ZOOM,
+  MIN_ZOOM,
+  resolveFocus,
+} from "./layout";
 import { MapScene } from "./MapScene";
+import { useMapSearch } from "./searchStore";
 import type { Camera, MapFocus, MapIslandData, Viewport } from "./types";
 
 const ANIMATION_MS = 650;
@@ -43,6 +57,8 @@ export function MapCanvas({
 }) {
   const params = useParams<{ island?: string; tag?: string }>();
   const router = useRouter();
+  // 見た目のモード（かわいい / かっこいい）。切り替えてもマップは作り直さない（島の絵と家の位置が変わる）
+  const { design } = useDesign();
 
   const paramIsland = params.island;
   const paramTag = params.tag;
@@ -52,6 +68,35 @@ export function MapCanvas({
       resolveFocus(islands, { island: paramIsland, tag: paramTag }),
     [islands, paramIsland, paramTag, focusOverride],
   );
+  // タグ検索の入力中は、島の家を検索結果に入れ替える（TagSearch と同じ問い合わせなので結果は共有される）
+  const searchQuery = useMapSearch();
+  const focusedSlug = focus.kind === "world" ? undefined : focus.slug;
+  const suggestions = useTagSuggestions(
+    focusedSlug,
+    searchQuery,
+    !preview && searchQuery !== "",
+  );
+  const searchResults =
+    searchQuery !== "" ? (suggestions.data ?? undefined) : undefined;
+  const focusedIsland = islands.find((i) => i.slug === focusedSlug);
+  // 家の数（メンバーは家ではなく中央のアイコンなので数えない）
+  const houseCount = focusedIsland
+    ? searchResults
+      ? Math.min(
+          searchResults.filter(
+            (t) =>
+              t.kind !== "member" &&
+              !focusedIsland.members.some(
+                (m) => m.normalizedName === t.normalizedName,
+              ),
+          ).length,
+          MAP_TOPIC_HOUSES,
+        )
+      : Math.min(focusedIsland.topTags.length, MAP_TOPIC_HOUSES)
+    : 0;
+  // モードごとの背景の絵（public/map/background/）。なければ海の色と波の模様
+  const background = backgroundImage(design);
+
   const key = focusKey(focus);
 
   const containerRef = useRef<HTMLDivElement>(null);
@@ -67,7 +112,7 @@ export function MapCanvas({
 
   const [view, setView] = useState<Viewport>(DEFAULT_VIEW);
   const [camera, setCamera] = useState<Camera>(() =>
-    cameraFor(focus, islands, DEFAULT_VIEW),
+    cameraFor(focus, islands, DEFAULT_VIEW, design),
   );
 
   const cancelAnimation = useCallback(() => {
@@ -133,7 +178,7 @@ export function MapCanvas({
     const svg = svgRef.current;
     if (!svg) return;
     const behavior = zoom<SVGSVGElement, unknown>()
-      .scaleExtent([0.05, 12])
+      .scaleExtent([MIN_ZOOM, MAX_ZOOM])
       .on("start", (event) => {
         // ユーザーの操作（ホイール・ドラッグ・ピンチ）が始まったら、自動の移動を止める
         if (event.sourceEvent) cancelAnimation();
@@ -142,11 +187,42 @@ export function MapCanvas({
         const { x, y, k } = event.transform;
         setCamera({ x, y, k });
       });
+    // ホイール（2本指スクロール）はマップの移動、Ctrl / ⌘ ＋ホイールとピンチは拡大・縮小
+    behavior.filter((event: Event) =>
+      event.type === "wheel"
+        ? (event as WheelEvent).ctrlKey || (event as WheelEvent).metaKey
+        : !(event as MouseEvent).ctrlKey && !(event as MouseEvent).button,
+    );
+    // 拡大・縮小の速さ: ピンチ（小さい値がたくさん来る）は速めに、マウスの Ctrl＋ホイール（1目盛り100前後）はゆっくり
+    behavior.wheelDelta((event: WheelEvent) => {
+      if (event.deltaMode === 1) return -event.deltaY * 0.05;
+      if (event.deltaMode === 2) return -event.deltaY;
+      return -event.deltaY * (Math.abs(event.deltaY) < 50 ? 0.02 : 0.004);
+    });
     behaviorRef.current = behavior;
-    select(svg).call(behavior).on("dblclick.zoom", null);
+    const selection = select(svg);
+    selection.call(behavior).on("dblclick.zoom", null);
+    const onWheel = (event: WheelEvent) => {
+      if (event.ctrlKey || event.metaKey) return; // 拡大・縮小は d3-zoom に任せる
+      event.preventDefault();
+      cancelAnimation();
+      const unit =
+        event.deltaMode === 1
+          ? 16
+          : event.deltaMode === 2
+            ? svg.clientHeight
+            : 1;
+      // Shift ＋ホイールは横に動かす
+      const dx = (event.shiftKey ? event.deltaY : event.deltaX) * unit;
+      const dy = (event.shiftKey ? 0 : event.deltaY) * unit;
+      const k = zoomTransform(svg).k;
+      behavior.translateBy(selection, -dx / k, -dy / k);
+    };
+    svg.addEventListener("wheel", onWheel, { passive: false });
     return () => {
       cancelAnimation();
-      select(svg).on(".zoom", null);
+      svg.removeEventListener("wheel", onWheel);
+      selection.on(".zoom", null);
       behaviorRef.current = null;
     };
   }, [cancelAnimation]);
@@ -176,7 +252,9 @@ export function MapCanvas({
     return () => observer.disconnect();
   }, []);
 
-  // URL（島・タグ）か画面サイズが変わったら、目標の位置へ動かす
+  // URL（島・タグ）か画面サイズが変わったら、目標の位置へ動かす。
+  // モード（かわいい / かっこいい）を切り替えたときはカメラを動かさない（デザイン切替の仕様。
+  // モードごとの土台の絵は、build_levels.py で同じ位置・大きさにそろえてある）
   useLayoutEffect(() => {
     const first = lastKeyRef.current === null;
     const keyChanged = lastKeyRef.current !== key;
@@ -194,8 +272,8 @@ export function MapCanvas({
     // クリックで既に同じ行き先へ動き始めているなら、そのまま続ける
     if (!first && !viewChanged && pending === key) return;
 
-    animateTo(cameraFor(focus, islands, view), first || viewChanged);
-  }, [key, view, focus, islands, animateTo]);
+    animateTo(cameraFor(focus, islands, view, design), first || viewChanged);
+  }, [key, view, focus, islands, animateTo, design]);
 
   const onNavigate = useCallback(
     (href: string) => {
@@ -205,11 +283,14 @@ export function MapCanvas({
       const destinationKey = focusKey(destination);
       if (destinationKey !== lastKeyRef.current) {
         pendingKeyRef.current = destinationKey;
-        animateTo(cameraFor(destination, islands, viewRef.current), false);
+        animateTo(
+          cameraFor(destination, islands, viewRef.current, design),
+          false,
+        );
       }
       router.push(href, { scroll: false });
     },
-    [islands, animateTo, router, preview],
+    [islands, animateTo, router, preview, design],
   );
 
   const onHover = useCallback(
@@ -235,7 +316,7 @@ export function MapCanvas({
     if (!svg) return;
     const { width, height } = viewRef.current;
     const c = zoomTransform(svg);
-    const k = Math.min(12, Math.max(0.05, c.k * factor));
+    const k = Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, c.k * factor));
     // 画面中心を保ったまま拡大・縮小する
     const cx = (width / 2 - c.x) / c.k;
     const cy = (height / 2 - c.y) / c.k;
@@ -245,9 +326,11 @@ export function MapCanvas({
   return (
     <div
       ref={containerRef}
-      className="relative h-full w-full overflow-hidden bg-sea"
+      className={`relative h-full w-full overflow-hidden bg-sea ${background ? "bg-cover bg-center" : ""}`}
+      style={background ? { backgroundImage: `url(${background})` } : undefined}
       data-testid="map"
       data-focus={key}
+      data-background={background ?? undefined}
     >
       <svg
         ref={svgRef}
@@ -255,7 +338,7 @@ export function MapCanvas({
         aria-labelledby="map-title"
       >
         <title id="map-title">
-          島マップ（ドラッグで移動、ホイールで拡大・縮小できます）
+          島マップ（ドラッグやホイールで移動、Ctrl＋ホイールやピンチで拡大・縮小できます）
         </title>
         <defs>
           <pattern
@@ -278,7 +361,7 @@ export function MapCanvas({
         <rect
           width="100%"
           height="100%"
-          fill="url(#waves)"
+          fill={background ? "transparent" : "url(#waves)"}
           data-testid="map-sea"
           onClick={() => {
             if (focus.kind === "house") onNavigate(`/i/${focus.slug}`);
@@ -288,11 +371,30 @@ export function MapCanvas({
           <MapScene
             islands={islands}
             focus={focus}
+            mode={design}
+            searchResults={searchResults}
             onNavigate={onNavigate}
             onHover={onHover}
           />
         </g>
       </svg>
+
+      {focusedIsland && !preview && (
+        <p className="absolute left-2 top-2 rounded-full bg-white/90 px-3 py-1 text-xs text-[#6a5c7d] shadow">
+          {focusedIsland.name} ・ 家 {houseCount}/{MAP_TOPIC_HOUSES} ・{" "}
+          {searchResults
+            ? `「${searchQuery}」の検索結果`
+            : "よく使われているタグ"}
+        </p>
+      )}
+
+      {/* PC では左のツールバーをなくしたので、デザインの切り替えとアカウントはマップの左下に置く */}
+      {!preview && (
+        <div className="absolute bottom-2 left-2 hidden items-center gap-1 rounded-2xl bg-[#2b2140]/90 py-1 pl-1 pr-2 shadow lg:flex">
+          <DesignSwitch />
+          <AccountButton />
+        </div>
+      )}
 
       {islands.length === 0 && (
         <p className="absolute inset-x-0 top-1/2 -translate-y-1/2 text-center text-sm font-bold text-slate-600">
@@ -321,7 +423,7 @@ export function MapCanvas({
           type="button"
           aria-label="元の位置に戻す"
           onClick={() =>
-            animateTo(cameraFor(focus, islands, viewRef.current), false)
+            animateTo(cameraFor(focus, islands, viewRef.current, design), false)
           }
           className="size-8 rounded-md bg-white/90 text-sm shadow hover:bg-white"
         >

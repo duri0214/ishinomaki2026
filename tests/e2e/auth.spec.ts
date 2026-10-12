@@ -42,10 +42,8 @@ test.describe("アカウント", () => {
       dialog(page).getByRole("heading", { name: "推しを選ぶ" }),
     ).toBeVisible();
     await dialog(page).getByLabel("表示名").fill("E2Eさん");
-    await dialog(page)
-      .getByRole("checkbox", { name: "星空シアター島" })
-      .check();
-    await dialog(page).getByRole("button", { name: "ひなた" }).click();
+    await dialog(page).getByRole("checkbox", { name: "ARASHI" }).check();
+    await dialog(page).getByRole("button", { name: "櫻井翔" }).click();
     await dialog(page).getByRole("button", { name: "保存" }).click();
     await expect(dialog(page)).toHaveCount(0);
 
@@ -55,10 +53,8 @@ test.describe("アカウント", () => {
     await expect(page).toHaveURL(new RegExp(`/u/${username}$`));
     await expect(page.getByRole("heading", { name: "E2Eさん" })).toBeVisible();
     const favorites = page.getByRole("list", { name: "推し", exact: true });
-    await expect(
-      favorites.getByRole("link", { name: "星空シアター島" }),
-    ).toBeVisible();
-    await expect(favorites.getByRole("link", { name: "ひなた" })).toBeVisible();
+    await expect(favorites.getByRole("link", { name: "ARASHI" })).toBeVisible();
+    await expect(favorites.getByRole("link", { name: "櫻井翔" })).toBeVisible();
 
     // 投稿 → いいね → 取り消し → 削除
     const body = `E2Eテスト ${Date.now()} #e2eタグ`;

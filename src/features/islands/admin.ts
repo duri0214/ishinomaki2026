@@ -2,6 +2,7 @@ import { and, eq, inArray, max } from "drizzle-orm";
 import { z } from "zod";
 import type { Db } from "@/db/connect";
 import { type Island, islands, tags, userFavoriteMembers } from "@/db/schema";
+import { BASE_NAMES } from "@/features/map/assets";
 import { clampToPlaza, ISLAND_RADIUS } from "@/features/map/layout";
 import { validateTagName } from "@/features/tags/parse";
 import { AppError } from "@/lib/errors";
@@ -25,6 +26,11 @@ export const createIslandInputSchema = z.object({
   slug: islandSlugSchema,
   name: nameSchema,
   description: descriptionSchema.optional(),
+  /** マップの土台（base-01 など）。省略すると作成順に割り当てる */
+  base: z
+    .string()
+    .refine((b) => BASE_NAMES.includes(b), "その土台はありません")
+    .optional(),
 });
 
 const coord = z.number().finite().min(-COORD_LIMIT).max(COORD_LIMIT);
@@ -79,6 +85,7 @@ export async function createIsland(
         description: parsed.data.description ?? null,
         worldX,
         worldY: 0,
+        theme: parsed.data.base ? { base: parsed.data.base } : null,
       })
       .returning();
     if (!row) throw new Error("島を作成できませんでした");
@@ -174,4 +181,66 @@ export async function saveIsland(
     }
     return island;
   });
+}
+
+/** 島の土台（マップの絵。base-01 など）を選ぶ。islands.theme.base に保存する（DBの列は増やさない） */
+export async function setIslandBase(
+  db: Db,
+  slug: string,
+  base: string,
+): Promise<Island> {
+  if (!BASE_NAMES.includes(base)) {
+    throw new AppError("validation", "その土台はありません");
+  }
+  const [current] = await db
+    .select({ theme: islands.theme })
+    .from(islands)
+    .where(eq(islands.slug, slug))
+    .limit(1);
+  if (!current) throw new AppError("island_not_found", "島が見つかりません");
+  const [island] = await db
+    .update(islands)
+    .set({ theme: { ...(current.theme ?? {}), base } })
+    .where(eq(islands.slug, slug))
+    .returning();
+  if (!island) throw new AppError("island_not_found", "島が見つかりません");
+  return island;
+}
+
+/**
+ * 家（話題タグ）を新しく建てる。投稿がまだなくても、上位10件に空きがあればマップに家が出る。
+ * すでに同じ名前のタグがあるときはエラー。
+ */
+export async function createTopicTag(
+  db: Db,
+  slug: string,
+  name: string,
+): Promise<{ normalizedName: string }> {
+  const tag = validateTagName(name.trim().replace(/^[#＃]/, ""));
+  if (!tag) {
+    throw new AppError(
+      "validation",
+      `「${name}」はタグ名として使えません（空白・記号を含まない30文字以内の名前にしてください）`,
+    );
+  }
+  const [island] = await db
+    .select({ id: islands.id })
+    .from(islands)
+    .where(eq(islands.slug, slug))
+    .limit(1);
+  if (!island) throw new AppError("island_not_found", "島が見つかりません");
+  const inserted = await db
+    .insert(tags)
+    .values({
+      islandId: island.id,
+      name: tag.name,
+      normalizedName: tag.normalizedName,
+      kind: "topic",
+    })
+    .onConflictDoNothing({ target: [tags.islandId, tags.normalizedName] })
+    .returning({ normalizedName: tags.normalizedName });
+  if (inserted.length === 0) {
+    throw new AppError("validation", `#${tag.name} はこの島にすでにあります`);
+  }
+  return { normalizedName: tag.normalizedName };
 }

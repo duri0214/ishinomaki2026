@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { connection } from "next/server";
+import { IslandBasePanel } from "@/features/islands/IslandBasePanel";
 import { IslandEditor } from "@/features/islands/IslandEditor";
 import { loadIsland } from "@/features/islands/load";
 import { getMapData } from "@/features/map/data";
@@ -39,6 +40,7 @@ export default async function DevIslandPage({
         </Link>
       </p>
       <h1 className="mt-2 text-xl font-bold">島の編集: {island.name}</h1>
+      <IslandBasePanel slug={slug} base={island.base} />
       <IslandEditor
         key={island.id}
         island={island}

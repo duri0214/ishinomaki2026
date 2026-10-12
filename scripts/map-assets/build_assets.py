@@ -143,12 +143,23 @@ def recolor(img, hue_deg, sat_mul) -> Image.Image:
 def main():
     zip_path, repo = sys.argv[1], sys.argv[2]
     manifest = {"islandSize": ISLAND_SIZE, "bases": {}, "modes": {}}
+    # 前回の manifest.json。build_levels.py で差し替えた土台（custom）とレベルの絵は、そのまま残す
+    manifest_path = os.path.join(repo, "src", "features", "map", "generated", "manifest.json")
+    old = {}
+    if os.path.exists(manifest_path):
+        with open(manifest_path, encoding="utf-8") as f:
+            old = json.load(f)
+    custom = {name: b for name, b in old.get("bases", {}).items() if b.get("custom")}
     zf, names = open_zip(zip_path)
     public = os.path.join(repo, "public", "map")
 
     # 1) 土台: 切り取らずに、そのまま WebP で保存する（配置の座標がキャンバス基準のため）
     os.makedirs(os.path.join(public, "base"), exist_ok=True)
     for name, base in BASES.items():
+        if name in custom:
+            manifest["bases"][name] = custom[name]
+            print("base", name, "（build_levels.py の絵をそのまま使う）")
+            continue
         img = load(zf, names, base["src"])
         img.save(os.path.join(public, "base", f"{name}.webp"), "WEBP", quality=82, method=4)
         manifest["bases"][name] = {
@@ -183,6 +194,12 @@ def main():
                     "anchor": anchor,
                 }
             print(mode, palette)
+
+    for name, b in custom.items():
+        manifest["bases"].setdefault(name, b)  # build_levels.py で増やした土台
+    for key in ("levels", "levelFrame", "idols", "backgrounds"):  # build_levels / build_idols / build_backgrounds の分
+        if key in old:
+            manifest[key] = old[key]
 
     # 3) manifest.json を保存する（TypeScript から import して使う）
     out_dir = os.path.join(repo, "src", "features", "map", "generated")

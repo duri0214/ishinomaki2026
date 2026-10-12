@@ -22,9 +22,9 @@ describe("シードデータ", () => {
     expect(generateSeed(NOW)).toEqual(generateSeed(NOW));
   });
 
-  it("島2つ・メンバー各5人・話題タグ50件以上・ユーザー10人・投稿500件程度", () => {
+  it("島4つ・メンバー各5人以上・話題タグ50件以上・ユーザー10人・投稿500件以上", () => {
     const seed = generateSeed(NOW);
-    expect(seed.islands).toHaveLength(2);
+    expect(seed.islands).toHaveLength(4);
     expect(seed.users).toHaveLength(10);
     expect(seed.posts.length).toBeGreaterThanOrEqual(500);
     expect(
@@ -32,10 +32,9 @@ describe("シードデータ", () => {
     ).toBeGreaterThanOrEqual(50);
     for (const island of seed.islands) {
       expect(
-        seed.tags.filter(
-          (t) => t.islandId === island.id && t.kind === "member",
-        ),
-      ).toHaveLength(5);
+        seed.tags.filter((t) => t.islandId === island.id && t.kind === "member")
+          .length,
+      ).toBeGreaterThanOrEqual(5);
     }
   });
 
@@ -61,7 +60,7 @@ describe("applySeed", () => {
     await applySeed(conn.txDb, generateSeed(NOW));
     await applySeed(conn.txDb, generateSeed(NOW));
     expect(await counts()).toEqual(first);
-    expect(first.islands).toBe(2);
+    expect(first.islands).toBe(4);
 
     const all = await conn.db.select().from(islands);
     const tops = [];
@@ -70,7 +69,9 @@ describe("applySeed", () => {
       expect(top).toHaveLength(20);
       // 投稿数に差がつくこと（先頭が最後より多い）
       expect((top[0]?.postCount ?? 0) > (top[19]?.postCount ?? 0)).toBe(true);
-      expect(await listMemberTags(conn.db, island.id)).toHaveLength(5);
+      expect(
+        (await listMemberTags(conn.db, island.id)).length,
+      ).toBeGreaterThanOrEqual(5);
       tops.push(top.map((t) => t.normalizedName));
     }
     // 島ごとに別のタグレコードなので、同じ名前でもIDは別

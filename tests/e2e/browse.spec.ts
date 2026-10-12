@@ -10,7 +10,9 @@ test.describe("閲覧", () => {
     await expect(cards(page).first()).toBeVisible();
     // 全島タイムラインの投稿には、島名のバッジが付く
     await expect(
-      cards(page).first().getByRole("link", { name: /島$/ }),
+      cards(page)
+        .first()
+        .getByRole("link", { name: /^(ARASHI|TWICE|M!LK|FRUITSZIPPER)$/ }),
     ).toBeVisible();
 
     // 島をクリック → 島へズーム
@@ -18,13 +20,20 @@ test.describe("閲覧", () => {
     await expect(page).toHaveURL(/\/i\/hoshizora$/);
     await expect(map(page)).toHaveAttribute("data-focus", "island:hoshizora");
     await expect(
-      page.getByRole("link", { name: "星空シアター島" }).first(),
+      page.getByRole("link", { name: "ARASHI" }).first(),
     ).toBeVisible();
 
-    // 家（メンバー5軒の次の、順位1位のタグ）をクリック → 家へズーム
-    const houses = page.locator('[data-testid^="house-"]');
-    await expect(houses).toHaveCount(25); // メンバー5 + 話題タグ20
-    const first = houses.nth(5);
+    // 中央の広場にメンバー5人のアイコン、まわりに話題タグの家10軒
+    await expect(page.locator("[data-member]")).toHaveCount(5);
+    const houses = page.locator(
+      '[data-testid^="house-"][aria-label*="、直近7日で"]',
+    );
+    await expect(houses).toHaveCount(10);
+    // メンバーのアイコンにホバーすると、#名前 の札が出る
+    await page.getByTestId("house-櫻井翔").hover();
+    await expect(page.getByTestId("member-label-櫻井翔")).toBeVisible();
+    // 家（話題タグ）をクリック → 家へズーム
+    const first = houses.first();
     const label = (await first.getAttribute("aria-label")) ?? "";
     const tagName = label.match(/^#([^、]+)、/)?.[1] ?? "";
     expect(tagName).not.toBe("");
@@ -78,7 +87,7 @@ test.describe("閲覧", () => {
       page.getByRole("navigation", { name: "現在地" }),
     ).toContainText("#自己紹介");
     await expect(cards(page).first()).toContainText("#自己紹介");
-    await expect(page).toHaveTitle(/#自己紹介 - 星空シアター島/);
+    await expect(page).toHaveTitle(/#自己紹介 - ARASHI/);
   });
 
   test("タグ検索から、上位20件以外のタグも開ける（島はズームしない）", async ({
@@ -91,9 +100,12 @@ test.describe("閲覧", () => {
     await suggestions.getByRole("button").first().click();
     await expect(page).toHaveURL(/\/i\/hoshizora\/t\//);
 
-    // まだ誰も使っていないタグは、島のまま・投稿0件で開く
+    // まだ誰も使っていないタグも、空き区画に家を建ててその家へ寄る（投稿0件で開く）
     await page.goto("/i/hoshizora/t/zzz-unused-tag");
-    await expect(map(page)).toHaveAttribute("data-focus", "island:hoshizora");
+    await expect(map(page)).toHaveAttribute(
+      "data-focus",
+      "house:hoshizora:zzz-unused-tag",
+    );
     await expect(
       page.getByText("#zzz-unused-tag の投稿はまだありません"),
     ).toBeVisible();

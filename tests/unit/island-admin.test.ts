@@ -2,7 +2,12 @@ import { eq } from "drizzle-orm";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import type { Connection } from "@/db/connect";
 import { islands, postTags, tags, userFavoriteMembers } from "@/db/schema";
-import { createIsland, saveIsland } from "@/features/islands/admin";
+import {
+  createIsland,
+  createTopicTag,
+  saveIsland,
+  setIslandBase,
+} from "@/features/islands/admin";
 import { getFavorites, updateProfile } from "@/features/profile/service";
 import { validateTagName } from "@/features/tags/parse";
 import { listMemberTags } from "@/features/tags/queries";
@@ -268,5 +273,49 @@ describe("開発環境ガード", () => {
     } finally {
       (process.env as Record<string, string | undefined>).NODE_ENV = original;
     }
+  });
+});
+
+describe("setIslandBase / createTopicTag", () => {
+  it("島を作るときに土台を選べる（theme.base）。ない土台はエラー", async () => {
+    const island = await createIsland(conn.db, {
+      slug: "with-base",
+      name: "土台つきの島",
+      base: "base-07",
+    });
+    expect(island.theme).toMatchObject({ base: "base-07" });
+    await expect(
+      createIsland(conn.db, { slug: "bad-base", name: "島", base: "base-99" }),
+    ).rejects.toThrow("その土台はありません");
+  });
+
+  it("土台を選ぶと theme.base に保存し、ない土台はエラー", async () => {
+    await createIsland(conn.db, { slug: "base-test", name: "土台の島" });
+    const island = await setIslandBase(conn.db, "base-test", "base-05");
+    expect(island.theme).toMatchObject({ base: "base-05" });
+    await expect(
+      setIslandBase(conn.db, "base-test", "base-99"),
+    ).rejects.toThrow("その土台はありません");
+    await expect(setIslandBase(conn.db, "nope", "base-01")).rejects.toThrow(
+      "島が見つかりません",
+    );
+  });
+
+  it("家（話題タグ）を建てる。# は付けても付けなくてもよく、同じ名前は2回建てられない", async () => {
+    await createIsland(conn.db, { slug: "house-test", name: "家の島" });
+    expect(await createTopicTag(conn.db, "house-test", "#新しい家")).toEqual({
+      normalizedName: "新しい家",
+    });
+    await expect(
+      createTopicTag(conn.db, "house-test", "新しい家"),
+    ).rejects.toThrow("すでにあります");
+    await expect(
+      createTopicTag(conn.db, "house-test", "空白 あり"),
+    ).rejects.toThrow("タグ名として使えません");
+    const [row] = await conn.db
+      .select()
+      .from(tags)
+      .where(eq(tags.normalizedName, "新しい家"));
+    expect(row?.kind).toBe("topic");
   });
 });

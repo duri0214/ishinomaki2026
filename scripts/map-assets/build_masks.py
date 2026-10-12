@@ -41,6 +41,8 @@ def main():
     out_dir = os.path.join(repo, "scripts", "map-assets", "masks")
     os.makedirs(out_dir, exist_ok=True)
     for name, base in manifest["bases"].items():
+        if base.get("custom"):
+            continue  # build_levels.py で作った土台のマスクはそのまま
         img = Image.open(os.path.join(repo, "public", base["src"].lstrip("/"))).convert("RGBA")
         mask = lawn_mask(img)
         rgba = np.zeros((img.height, img.width, 4), np.uint8)
