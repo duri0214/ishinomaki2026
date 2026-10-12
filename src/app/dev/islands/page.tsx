@@ -2,6 +2,7 @@ import Link from "next/link";
 import { connection } from "next/server";
 import { getDb } from "@/db";
 import { CreateIslandForm } from "@/features/islands/CreateIslandForm";
+import { createIslandAction } from "@/features/islands/dev-actions";
 import { listIslands } from "@/features/islands/queries";
 
 export const metadata = { title: "島エディタ" };
@@ -38,7 +39,7 @@ export default async function DevIslandsPage() {
       )}
 
       <h2 className="mt-8 font-bold">島を作る</h2>
-      <CreateIslandForm />
+      <CreateIslandForm createAction={createIslandAction} />
 
       <p className="mt-8 text-sm">
         <Link href="/" className="text-sky-700 underline">

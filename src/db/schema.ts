@@ -4,6 +4,7 @@ import {
   check,
   foreignKey,
   index,
+  integer,
   jsonb,
   pgEnum,
   pgTable,
@@ -137,6 +138,22 @@ export const posts = pgTable(
       t.id.desc().nullsFirst(),
     ),
   ],
+);
+
+export const postImages = pgTable(
+  "post_images",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    postId: uuid("post_id")
+      .notNull()
+      .references(() => posts.id, { onDelete: "cascade" }),
+    url: text("url").notNull(),
+    width: integer("width").notNull(),
+    height: integer("height").notNull(),
+    position: integer("position").notNull(),
+    createdAt: timestamptz("created_at").notNull().defaultNow(),
+  },
+  (t) => [unique("post_images_post_position_uq").on(t.postId, t.position)],
 );
 
 export const postTags = pgTable(

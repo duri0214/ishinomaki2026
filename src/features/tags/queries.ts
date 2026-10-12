@@ -76,6 +76,27 @@ export type MemberTag = {
   position: { x: number; y: number } | null;
 };
 
+export type TopicTag = {
+  id: string;
+  name: string;
+  normalizedName: string;
+};
+
+export async function listTopicTags(
+  db: Db,
+  islandId: string,
+): Promise<TopicTag[]> {
+  return db
+    .select({
+      id: tags.id,
+      name: tags.name,
+      normalizedName: tags.normalizedName,
+    })
+    .from(tags)
+    .where(and(eq(tags.islandId, islandId), eq(tags.kind, "topic")))
+    .orderBy(asc(tags.createdAt), asc(tags.normalizedName));
+}
+
 export async function listMemberTags(
   db: Db,
   islandId: string,

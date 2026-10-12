@@ -15,3 +15,5 @@ playwright-report
 test-results
 .DS_Store
 .claude/launch.json
+
+/public/uploads/
