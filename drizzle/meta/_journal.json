@@ -57,6 +57,13 @@
       "when": 1791766346046,
       "tag": "0007_cheerful_white_queen",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1791784800000,
+      "tag": "0008_restore_post_images",
+      "breakpoints": true
     }
   ]
 }
