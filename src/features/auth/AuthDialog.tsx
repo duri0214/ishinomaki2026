@@ -125,6 +125,7 @@ function AuthDialog({
     <dialog
       ref={ref}
       aria-labelledby={titleId}
+      data-design="kawaii"
       onCancel={(e) => {
         e.preventDefault();
         onClose();
@@ -139,18 +140,21 @@ function AuthDialog({
           onClose();
         pressedOnBackdrop.current = false;
       }}
-      className="m-auto w-[min(26rem,calc(100vw-2rem))] rounded-[28px] bg-[#fffcf8] p-0 text-[#3f3158] shadow-2xl backdrop:bg-[#2b2140]/50"
+      className="design-dialog m-auto w-[min(26rem,calc(100vw-2rem))] p-0 shadow-2xl backdrop:bg-[#2b2140]/50"
     >
-      <div className="flex max-h-[85dvh] flex-col gap-4 overflow-y-auto p-5">
+      <div className="design-dialog-content flex max-h-[85dvh] flex-col gap-4 overflow-y-auto">
         <div className="flex items-start justify-between gap-2">
-          <h2 id={titleId} className="font-serif text-lg font-bold">
+          <h2
+            id={titleId}
+            className="font-serif text-lg font-bold text-[var(--ui-title)]"
+          >
             {title}
           </h2>
           <button
             type="button"
             onClick={onClose}
             aria-label="閉じる"
-            className="flex size-8 items-center justify-center rounded-full text-[#a79bb8] hover:bg-[#f6f0fa]"
+            className="flex size-8 items-center justify-center rounded-full text-[var(--ui-muted)] hover:bg-[var(--ui-hover)]"
           >
             ×
           </button>
@@ -159,14 +163,14 @@ function AuthDialog({
         {state.step === "credentials" ? (
           <>
             {state.reason && (
-              <p className="rounded-2xl bg-[#f6f0fa] px-3 py-2 text-sm text-[#6a5c7d]">
+              <p className="design-notice bg-[var(--ui-hover)] px-3 py-2 text-sm">
                 {state.reason}
               </p>
             )}
             <div
               role="tablist"
               aria-label="登録またはログイン"
-              className="grid grid-cols-2 rounded-full bg-[#f1eaf6] p-1 text-sm font-bold"
+              className="design-segmented grid grid-cols-2 text-sm font-bold"
             >
               {(
                 [
@@ -180,11 +184,7 @@ function AuthDialog({
                   role="tab"
                   aria-selected={state.mode === mode}
                   onClick={() => setState({ ...state, mode })}
-                  className={`rounded-full py-1.5 transition-colors ${
-                    state.mode === mode
-                      ? "bg-white text-[#3f3158] shadow-sm"
-                      : "text-[#8a7ca0]"
-                  }`}
+                  className="design-segment py-1.5 transition-colors"
                 >
                   {label}
                 </button>
@@ -208,7 +208,7 @@ function AuthDialog({
           </>
         ) : (
           <>
-            <p className="text-sm text-[#6a5c7d]">
+            <p className="text-sm">
               アカウントを作成しました。推しを選ぶとプロフィールに表示されます（あとからでも変えられます）。
             </p>
             <ProfileEditor
@@ -288,7 +288,7 @@ function CredentialsForm({
         autoComplete={signup ? "new-password" : "current-password"}
       />
       {signup && (
-        <p className="rounded-xl bg-amber-50 px-3 py-2 text-xs text-amber-900">
+        <p className="design-notice bg-[var(--ui-hover)] px-3 py-2 text-xs">
           メールアドレスを登録しないため、パスワードを忘れるとアカウントを復旧できません。
         </p>
       )}
@@ -300,7 +300,7 @@ function CredentialsForm({
       <button
         type="submit"
         disabled={pending}
-        className="rounded-full bg-[#8e6bb0] py-2 text-sm font-bold text-white hover:bg-[#7b5a9d] disabled:bg-[#d9cfe4]"
+        className="rounded-[var(--ui-radius-inner)] bg-[var(--ui-accent)] py-2 text-sm font-bold text-[var(--ui-on-accent)] hover:bg-[var(--ui-accent-hover)] disabled:bg-[var(--ui-disabled)]"
       >
         {pending ? "送信中…" : signup ? "登録する" : "ログインする"}
       </button>
@@ -342,10 +342,10 @@ function Field({
         spellCheck={false}
         required
         aria-describedby={hint ? `${id}-hint` : undefined}
-        className="rounded-xl border border-[#e2d7ea] bg-[#faf6fb] px-3 py-2 text-[15px] outline-none focus:ring-2 focus:ring-[#c9a5e0]"
+        className="design-field px-3 py-2 text-[15px] outline-none"
       />
       {hint && (
-        <p id={`${id}-hint`} className="text-xs text-[#a79bb8]">
+        <p id={`${id}-hint`} className="text-xs text-[var(--ui-muted)]">
           {hint}
         </p>
       )}

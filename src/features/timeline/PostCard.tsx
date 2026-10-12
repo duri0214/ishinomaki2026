@@ -6,6 +6,7 @@ import { useState } from "react";
 import { LikeButton } from "@/features/likes/LikeButton";
 import { deletePostAction } from "@/features/posts/actions";
 import { PostBody } from "@/features/posts/PostBody";
+import { ReplyThread } from "@/features/replies/ReplyThread";
 import type { TimelinePost } from "./queries";
 import { patchPostInCaches } from "./useTimeline";
 
@@ -43,6 +44,7 @@ export function PostCard({
   const queryClient = useQueryClient();
   const [error, setError] = useState<string | null>(null);
   const [deleting, setDeleting] = useState(false);
+  const [repliesOpen, setRepliesOpen] = useState(false);
 
   const onDelete = async () => {
     if (!window.confirm("この投稿を削除しますか？")) return;
@@ -64,23 +66,20 @@ export function PostCard({
   };
 
   return (
-    <article
-      className="rounded-[28px] border border-[#ece4ef] bg-white p-4 shadow-[0_10px_28px_-16px_rgba(111,78,142,0.35)]"
-      data-testid="post-card"
-    >
+    <article className="design-card design-post" data-testid="post-card">
       <header className="flex items-center gap-2.5">
         <span
           aria-hidden
-          className={`flex size-9 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br font-serif text-base font-bold text-white ${avatarClass(post.author.displayName)}`}
+          className={`design-avatar flex size-9 shrink-0 items-center justify-center bg-gradient-to-br font-serif text-base font-bold text-white ${avatarClass(post.author.displayName)}`}
         >
           {Array.from(post.author.displayName)[0]}
         </span>
         <div className="min-w-0">
-          <p className="truncate text-sm font-bold leading-tight text-[#3f3158]">
+          <p className="truncate text-sm font-bold leading-tight text-[var(--ui-title)]">
             {post.author.username ? (
               <Link
                 href={`/u/${post.author.username}`}
-                className="hover:text-[#8e6bb0] hover:underline"
+                className="hover:text-[var(--ui-accent)] hover:underline"
               >
                 {post.author.displayName}
               </Link>
@@ -88,12 +87,12 @@ export function PostCard({
               post.author.displayName
             )}
           </p>
-          <p className="truncate text-[11px] leading-tight text-[#a79bb8]">
+          <p className="truncate text-[11px] leading-tight text-[var(--ui-muted)]">
             {showIsland && (
               <>
                 <Link
                   href={`/i/${post.island.slug}`}
-                  className="hover:text-[#8e6bb0] hover:underline"
+                  className="hover:text-[var(--ui-accent)] hover:underline"
                 >
                   {post.island.name}
                 </Link>
@@ -111,6 +110,29 @@ export function PostCard({
       </div>
       <footer className="mt-3 flex items-center gap-2">
         <LikeButton post={post} />
+        <button
+          type="button"
+          onClick={() => setRepliesOpen((open) => !open)}
+          aria-expanded={repliesOpen}
+          aria-label={repliesOpen ? "返信を閉じる" : "返信を表示"}
+          data-testid="reply-toggle"
+          className={`inline-flex items-center gap-1.5 rounded-full px-2 py-1 text-sm transition-colors hover:bg-[var(--ui-hover)] ${
+            repliesOpen ? "text-[var(--ui-accent)]" : "text-[var(--ui-muted)]"
+          }`}
+        >
+          <svg
+            aria-hidden
+            viewBox="0 0 24 24"
+            className="size-6"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.6"
+            strokeLinejoin="round"
+          >
+            <path d="M5 5.5h14a1.5 1.5 0 0 1 1.5 1.5v8a1.5 1.5 0 0 1-1.5 1.5h-7l-4.5 3.5V16.5H5A1.5 1.5 0 0 1 3.5 15V7A1.5 1.5 0 0 1 5 5.5Z" />
+          </svg>
+          <span data-testid="reply-count">{post.replyCount}</span>
+        </button>
         {post.isMine && (
           <button
             type="button"
@@ -118,7 +140,7 @@ export function PostCard({
             disabled={deleting}
             aria-label="削除"
             title="削除"
-            className="ml-auto flex size-8 items-center justify-center rounded-full text-[#a79bb8] hover:bg-[#f6f0fa] hover:text-[#c4456f] disabled:opacity-50"
+            className="ml-auto flex size-8 items-center justify-center rounded-full text-[var(--ui-muted)] hover:bg-[var(--ui-hover)] hover:text-[var(--ui-danger)] disabled:opacity-50"
           >
             <svg
               aria-hidden
@@ -140,6 +162,7 @@ export function PostCard({
           {error}
         </p>
       )}
+      {repliesOpen && <ReplyThread post={post} />}
     </article>
   );
 }

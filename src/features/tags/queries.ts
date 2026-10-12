@@ -57,6 +57,8 @@ export async function getTopTopicTags(
         eq(tags.islandId, islandId),
         eq(tags.kind, "topic"),
         isNull(posts.deletedAt),
+        // 返信はタイムラインに出ないので、タグの順位にも数えない
+        isNull(posts.parentPostId),
         gte(posts.createdAt, since),
       ),
     )

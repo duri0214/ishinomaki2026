@@ -72,8 +72,8 @@ export function LikeButton({ post }: { post: TimelinePost }) {
         onClick={onClick}
         aria-pressed={post.likedByMe}
         aria-label={post.likedByMe ? "いいねを取り消す" : "いいね"}
-        className={`inline-flex items-center gap-1.5 rounded-full px-2 py-1 text-sm transition-colors hover:bg-[#fbeef3] ${
-          post.likedByMe ? "text-[#d6457a]" : "text-[#a79bb8]"
+        className={`inline-flex items-center gap-1.5 rounded-full px-2 py-1 text-sm transition-colors hover:bg-[var(--ui-hover)] ${
+          post.likedByMe ? "text-[var(--ui-accent)]" : "text-[var(--ui-muted)]"
         }`}
       >
         <svg

@@ -24,6 +24,10 @@ export default defineConfig({
     reuseExistingServer: !process.env.CI,
     timeout: 120_000,
     // E2E は必ずローカルのPGliteを使う（.env.local に DATABASE_URL があっても無視する）
-    env: { PGLITE_DIR: ".pglite-e2e", DATABASE_URL: "" },
+    env: {
+      PGLITE_DIR: ".pglite-e2e",
+      DATABASE_URL: "",
+      NEXT_DIST_DIR: ".next-e2e",
+    },
   },
 });

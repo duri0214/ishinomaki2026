@@ -56,6 +56,55 @@ test.describe("アカウント", () => {
     await expect(favorites.getByRole("link", { name: "ARASHI" })).toBeVisible();
     await expect(favorites.getByRole("link", { name: "櫻井翔" })).toBeVisible();
 
+    // フォロー中のアイドル → 公演 → 記録保存。再読込後も残り、プロフィールで編集できる。
+    await page.getByLabel("1. フォロー中のアイドル").selectOption("hoshizora");
+    await expect(
+      page.getByLabel("1. フォロー中のアイドル").locator("option"),
+    ).toHaveCount(2);
+    await page.getByLabel("2. ライブを選択").selectOption({ index: 1 });
+    await page.getByLabel("感想・メモ（任意）").fill("初参戦の思い出");
+    await page.getByRole("button", { name: "参戦記録を保存" }).click();
+    await expect(
+      page.getByText("初参戦の思い出", { exact: true }),
+    ).toBeVisible();
+    await page.reload();
+    await expect(
+      page.getByText("初参戦の思い出", { exact: true }),
+    ).toBeVisible();
+    await page.goto("/i/hoshizora");
+    await expect(
+      page.getByRole("heading", { name: "ライブ参戦記録" }),
+    ).toHaveCount(0);
+    await expect(
+      page.getByRole("button", { name: "記録を編集", exact: true }),
+    ).toHaveCount(0);
+    await expect(page.getByLabel("2. ライブを選択")).toHaveCount(0);
+    await page.goto(`/u/${username}`);
+    await page.getByRole("button", { name: "記録を編集", exact: true }).click();
+    const editor = page.getByRole("listitem").filter({
+      has: page.getByRole("button", { name: "変更内容を保存", exact: true }),
+    });
+    await expect(editor.getByLabel("感想・メモ（任意）")).toHaveValue(
+      "初参戦の思い出",
+    );
+    await editor.getByLabel("感想・メモ（任意）").fill("キャンセルするメモ");
+    await editor.getByRole("button", { name: "キャンセル" }).click();
+    await expect(
+      page.getByText("初参戦の思い出", { exact: true }),
+    ).toBeVisible();
+    await page.getByRole("button", { name: "記録を編集", exact: true }).click();
+    await editor.getByLabel("感想・メモ（任意）").fill("アンコールが最高");
+    await editor
+      .getByRole("button", { name: "変更内容を保存", exact: true })
+      .click();
+    await expect(
+      page.getByText("アンコールが最高", { exact: true }),
+    ).toBeVisible();
+    await page.getByRole("button", { name: "記録を編集", exact: true }).click();
+    page.once("dialog", (d) => d.accept());
+    await page.getByRole("button", { name: "削除", exact: true }).click();
+    await expect(page.getByText("これまでの参戦 · 0公演")).toBeVisible();
+
     // 投稿 → いいね → 取り消し → 削除
     const body = `E2Eテスト ${Date.now()} #e2eタグ`;
     await page.goto("/i/hoshizora");

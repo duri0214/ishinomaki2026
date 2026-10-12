@@ -69,16 +69,16 @@ export function AccountButton() {
       {menuOpen && (
         <div
           role="menu"
-          className="absolute right-0 top-full z-30 mt-2 w-44 rounded-2xl border border-[#ece4ef] bg-white py-1 text-sm text-[#3f3158] shadow-lg lg:bottom-0 lg:left-full lg:right-auto lg:top-auto lg:ml-2 lg:mt-0"
+          className="design-menu absolute right-0 top-full z-30 mt-2 w-44 text-sm shadow-lg lg:bottom-0 lg:left-full lg:right-auto lg:top-auto lg:ml-2 lg:mt-0"
         >
-          <p className="truncate px-3 py-1.5 text-xs text-[#a79bb8]">
+          <p className="truncate px-3 py-1.5 text-xs text-[var(--ui-muted)]">
             @{user.username}
           </p>
           <Link
             role="menuitem"
             href={`/u/${user.username}`}
             onClick={() => setMenuOpen(false)}
-            className="block px-3 py-2 hover:bg-[#f6f0fa]"
+            className="block px-3 py-2 hover:bg-[var(--ui-hover)]"
           >
             プロフィール
           </Link>
@@ -86,7 +86,7 @@ export function AccountButton() {
             role="menuitem"
             type="button"
             onClick={signOut}
-            className="block w-full px-3 py-2 text-left hover:bg-[#f6f0fa]"
+            className="block w-full px-3 py-2 text-left hover:bg-[var(--ui-hover)]"
           >
             ログアウト
           </button>

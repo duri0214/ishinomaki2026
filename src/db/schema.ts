@@ -1,5 +1,7 @@
 import { sql } from "drizzle-orm";
 import {
+  type AnyPgColumn,
+  check,
   foreignKey,
   index,
   jsonb,
@@ -7,6 +9,7 @@ import {
   pgTable,
   primaryKey,
   real,
+  smallint,
   text,
   timestamp,
   unique,
@@ -115,10 +118,15 @@ export const posts = pgTable(
       .notNull()
       .references(() => users.id),
     body: text("body").notNull(),
+    /** 返信先の投稿。NULL なら通常の投稿。返信は1段までで、返信への返信も元の投稿に付ける */
+    parentPostId: uuid("parent_post_id").references(
+      (): AnyPgColumn => posts.id,
+    ),
     createdAt: timestamptz("created_at").notNull().defaultNow(),
     deletedAt: timestamptz("deleted_at"),
   },
   (t) => [
+    index("posts_parent_created_idx").on(t.parentPostId, t.createdAt, t.id),
     index("posts_island_created_idx").on(
       t.islandId,
       t.createdAt.desc().nullsFirst(),
@@ -161,6 +169,25 @@ export const likes = pgTable(
   (t) => [
     primaryKey({ columns: [t.userId, t.postId] }),
     index("likes_post_idx").on(t.postId),
+  ],
+);
+
+/** ユーザー同士のフォロー。自分自身はフォローできない。退会済みユーザーの除外は読み取り側で行う */
+export const userFollows = pgTable(
+  "user_follows",
+  {
+    followerId: uuid("follower_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    followeeId: uuid("followee_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    createdAt: timestamptz("created_at").notNull().defaultNow(),
+  },
+  (t) => [
+    primaryKey({ columns: [t.followerId, t.followeeId] }),
+    index("user_follows_followee_idx").on(t.followeeId),
+    check("user_follows_not_self", sql`${t.followerId} <> ${t.followeeId}`),
   ],
 );
 
@@ -209,7 +236,58 @@ export const userFavoriteMembers = pgTable(
   ],
 );
 
+/**
+ * 島(グループ)の傾向タグ。軸(axis)ごとに 1〜5 の段階を持つ（左のラベルが 1、右が 5）。
+ * 軸の定義は features/traits/constants.ts。未評価の軸は行を持たない。
+ */
+export const islandTraits = pgTable(
+  "island_traits",
+  {
+    islandId: uuid("island_id")
+      .notNull()
+      .references(() => islands.id, { onDelete: "cascade" }),
+    axis: text("axis").notNull(),
+    score: smallint("score").notNull(),
+    updatedAt: timestamptz("updated_at").notNull().defaultNow(),
+  },
+  (t) => [
+    primaryKey({ columns: [t.islandId, t.axis] }),
+    check("island_traits_score_range", sql`${t.score} between 1 and 5`),
+  ],
+);
+
 export type Island = typeof islands.$inferSelect;
 export type User = typeof users.$inferSelect;
 export type Tag = typeof tags.$inferSelect;
 export type Post = typeof posts.$inferSelect;
+
+/** デモを含むライブ公演。グループごとに管理する。 */
+export const liveEvents = pgTable(
+  "live_events",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    islandId: uuid("island_id")
+      .notNull()
+      .references(() => islands.id, { onDelete: "cascade" }),
+    title: text("title").notNull(),
+    venue: text("venue").notNull(),
+    startsAt: timestamptz("starts_at").notNull(),
+  },
+  (t) => [unique("live_events_island_title_uq").on(t.islandId, t.title)],
+);
+
+/** フォロー解除後も参戦記録は残す。本人と公演の組み合わせは一意。 */
+export const liveRecords = pgTable(
+  "live_records",
+  {
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    eventId: uuid("event_id")
+      .notNull()
+      .references(() => liveEvents.id, { onDelete: "cascade" }),
+    note: text("note").notNull().default(""),
+    updatedAt: timestamptz("updated_at").notNull().defaultNow(),
+  },
+  (t) => [primaryKey({ columns: [t.userId, t.eventId] })],
+);

@@ -30,10 +30,11 @@ export default async function IslandPage({ params }: Props) {
   const island = await loadIsland(slug);
   if (!island) notFound();
 
+  const viewerId = await getViewerId();
   const initialPage = await getTimeline(await getDb(), {
     scope: { kind: "island", islandId: island.id },
     limit: TIMELINE_PAGE_SIZE,
-    viewerId: await getViewerId(),
+    viewerId,
   });
   return (
     <>

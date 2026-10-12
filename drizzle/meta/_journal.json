@@ -22,6 +22,34 @@
       "when": 1791702944791,
       "tag": "0002_account",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1791711791603,
+      "tag": "0003_wakeful_overlord",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1791723276011,
+      "tag": "0004_add_island_traits",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1791763330002,
+      "tag": "0005_add_user_follows",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1791764846742,
+      "tag": "0006_add_post_replies",
+      "breakpoints": true
     }
   ]
 }

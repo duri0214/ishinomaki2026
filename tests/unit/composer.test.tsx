@@ -8,6 +8,7 @@ import type { ActionResult } from "@/lib/action";
 const viewer = { signedIn: true };
 const openAuth = vi.fn();
 const createPostAction = vi.fn();
+const createReplyAction = vi.fn();
 
 vi.mock("next/link", () => ({
   default: ({
@@ -24,6 +25,7 @@ vi.mock("@/features/auth/AuthDialog", () => ({
 vi.mock("@/features/auth/viewer", () => ({ useViewer: () => viewer }));
 vi.mock("@/features/posts/actions", () => ({
   createPostAction: (...args: unknown[]) => createPostAction(...args),
+  createReplyAction: (...args: unknown[]) => createReplyAction(...args),
 }));
 
 import { Composer } from "@/features/posts/Composer";
@@ -53,6 +55,7 @@ beforeEach(() => {
   viewer.signedIn = true;
   openAuth.mockReset();
   createPostAction.mockReset();
+  createReplyAction.mockReset();
   fetchMock.mockReset();
   fetchMock.mockImplementation(async () => ({
     ok: true,
@@ -230,5 +233,67 @@ describe("Composer", () => {
     await user.click(screen.getByRole("button", { name: "投稿中…" }));
     expect(createPostAction).toHaveBeenCalledTimes(1);
     resolve({ ok: true, data: {} });
+  });
+});
+
+describe("Composer（返信）", () => {
+  const postId = "11111111-1111-4111-8111-111111111111";
+
+  beforeEach(() => {
+    createReplyAction.mockReset();
+  });
+
+  it("返信先を渡すと返信として送り、返信先の返信数を増やす", async () => {
+    createReplyAction.mockResolvedValue({
+      ok: true,
+      data: {},
+    } satisfies ActionResult<unknown>);
+    const user = userEvent.setup();
+    client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+    client.setQueryData(["timeline", null, null], {
+      pages: [{ posts: [{ id: postId, replyCount: 2 }], nextCursor: null }],
+      pageParams: [null],
+    });
+    render(
+      <QueryClientProvider client={client}>
+        <Composer islandSlug="hoshizora" replyTo={postId} />
+      </QueryClientProvider>,
+    );
+
+    await user.type(
+      screen.getByRole("textbox", { name: "返信の本文" }),
+      "いいね！",
+    );
+    await user.click(screen.getByRole("button", { name: "返信" }));
+
+    await waitFor(() =>
+      expect(createReplyAction).toHaveBeenCalledWith({
+        parentPostId: postId,
+        body: "いいね！",
+      }),
+    );
+    expect(createPostAction).not.toHaveBeenCalled();
+    await waitFor(() => {
+      const data = client.getQueryData<{
+        pages: { posts: { replyCount: number }[] }[];
+      }>(["timeline", null, null]);
+      expect(data?.pages[0]?.posts[0]?.replyCount).toBe(3);
+    });
+  });
+
+  it("未ログインなら、返信用の案内を出す", async () => {
+    viewer.signedIn = false;
+    const user = userEvent.setup();
+    render(
+      <QueryClientProvider client={new QueryClient()}>
+        <Composer islandSlug="hoshizora" replyTo={postId} />
+      </QueryClientProvider>,
+    );
+    await user.click(
+      screen.getByRole("button", { name: "ログイン・新規登録" }),
+    );
+    expect(openAuth).toHaveBeenCalledWith({
+      reason: "返信するにはアカウントが必要です",
+    });
   });
 });
