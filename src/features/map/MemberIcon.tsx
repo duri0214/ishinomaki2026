@@ -1,6 +1,6 @@
 import { useId } from "react";
 import type { MapMode } from "./assets";
-import { textWidth } from "./House";
+import { textWidth, ZOOM_COMP } from "./House";
 import { hashString } from "./shapes";
 import type { MapMember } from "./types";
 
@@ -67,114 +67,116 @@ export function MemberIcon({
   const initial = Array.from(member.name)[0] ?? "?";
   return (
     <g transform={`translate(${member.x} ${member.y})`}>
-      <a
-        href={href}
-        aria-label={`#${member.name}（メンバー）の投稿を見る`}
-        data-testid={`house-${member.normalizedName}`}
-        data-member
-        className="group cursor-pointer outline-none"
-        onClick={(e) => {
-          // 新しいタブで開く操作などはブラウザに任せる
-          if (
-            e.metaKey ||
-            e.ctrlKey ||
-            e.shiftKey ||
-            e.altKey ||
-            e.button !== 0
-          ) {
-            return;
-          }
-          e.preventDefault();
-          onNavigate(href);
-        }}
-        onPointerEnter={() => {
-          onHover(href);
-          onActive(member.normalizedName);
-        }}
-        onPointerLeave={() => onActive(null)}
-        onFocus={() => {
-          onHover(href);
-          onActive(member.normalizedName);
-        }}
-        onBlur={() => onActive(null)}
-      >
-        {/* 地面の影 */}
-        <ellipse
-          cx={0}
-          cy={r * 0.95}
-          rx={r * 0.78}
-          ry={r * 0.2}
-          fill="rgba(40, 28, 60, 0.22)"
-        />
-        <g
-          className="transition-transform duration-150 group-hover:scale-110 group-focus-visible:scale-110"
-          style={{ transformBox: "fill-box", transformOrigin: "center" }}
+      <g style={ZOOM_COMP}>
+        <a
+          href={href}
+          aria-label={`#${member.name}（メンバー）の投稿を見る`}
+          data-testid={`house-${member.normalizedName}`}
+          data-member
+          className="group cursor-pointer outline-none"
+          onClick={(e) => {
+            // 新しいタブで開く操作などはブラウザに任せる
+            if (
+              e.metaKey ||
+              e.ctrlKey ||
+              e.shiftKey ||
+              e.altKey ||
+              e.button !== 0
+            ) {
+              return;
+            }
+            e.preventDefault();
+            onNavigate(href);
+          }}
+          onPointerEnter={() => {
+            onHover(href);
+            onActive(member.normalizedName);
+          }}
+          onPointerLeave={() => onActive(null)}
+          onFocus={() => {
+            onHover(href);
+            onActive(member.normalizedName);
+          }}
+          onBlur={() => onActive(null)}
         >
-          {highlighted && (
-            <circle
-              r={r + ring * 1.6}
-              fill="none"
-              stroke={theme.accent}
-              strokeOpacity={0.45}
-              strokeWidth={ring * 1.6}
-            />
-          )}
-          <circle
-            r={r}
-            fill={theme.fill}
-            stroke={highlighted ? theme.accent : theme.stroke}
-            strokeWidth={ring * (highlighted ? 0.9 : 0.6)}
-            className="group-hover:stroke-sky-400 group-focus-visible:stroke-sky-500"
+          {/* 地面の影 */}
+          <ellipse
+            cx={0}
+            cy={r * 0.95}
+            rx={r * 0.78}
+            ry={r * 0.2}
+            fill="rgba(40, 28, 60, 0.22)"
           />
-          {member.imageUrl ? (
-            <>
-              <clipPath id={clipId}>
-                <circle r={inner} />
-              </clipPath>
-              <image
-                href={member.imageUrl}
-                x={-inner}
-                y={-inner}
-                width={inner * 2}
-                height={inner * 2}
-                preserveAspectRatio="xMidYMid slice"
-                clipPath={`url(#${clipId})`}
+          <g
+            className="transition-transform duration-150 group-hover:scale-110 group-focus-visible:scale-110"
+            style={{ transformBox: "fill-box", transformOrigin: "center" }}
+          >
+            {highlighted && (
+              <circle
+                r={r + ring * 1.6}
+                fill="none"
+                stroke={theme.accent}
+                strokeOpacity={0.45}
+                strokeWidth={ring * 1.6}
               />
-            </>
-          ) : (
-            <>
-              <circle r={inner} fill={color} />
+            )}
+            <circle
+              r={r}
+              fill={theme.fill}
+              stroke={highlighted ? theme.accent : theme.stroke}
+              strokeWidth={ring * (highlighted ? 0.9 : 0.6)}
+              className="group-hover:stroke-sky-400 group-focus-visible:stroke-sky-500"
+            />
+            {member.imageUrl ? (
+              <>
+                <clipPath id={clipId}>
+                  <circle r={inner} />
+                </clipPath>
+                <image
+                  href={member.imageUrl}
+                  x={-inner}
+                  y={-inner}
+                  width={inner * 2}
+                  height={inner * 2}
+                  preserveAspectRatio="xMidYMid slice"
+                  clipPath={`url(#${clipId})`}
+                />
+              </>
+            ) : (
+              <>
+                <circle r={inner} fill={color} />
+                <text
+                  y={inner * 0.36}
+                  textAnchor="middle"
+                  fontSize={inner * 1.02}
+                  fontWeight={800}
+                  fill="#ffffff"
+                >
+                  {initial}
+                </text>
+              </>
+            )}
+            {/* ハッシュタグの印 */}
+            <g transform={`translate(${r * 0.72} ${r * 0.68})`}>
+              <circle
+                r={r * 0.3}
+                fill={theme.accent}
+                stroke="#ffffff"
+                strokeWidth={r * 0.06}
+              />
               <text
-                y={inner * 0.36}
+                y={r * 0.12}
                 textAnchor="middle"
-                fontSize={inner * 1.02}
+                fontSize={r * 0.36}
                 fontWeight={800}
                 fill="#ffffff"
               >
-                {initial}
+                #
               </text>
-            </>
-          )}
-          {/* ハッシュタグの印 */}
-          <g transform={`translate(${r * 0.72} ${r * 0.68})`}>
-            <circle
-              r={r * 0.3}
-              fill={theme.accent}
-              stroke="#ffffff"
-              strokeWidth={r * 0.06}
-            />
-            <text
-              y={r * 0.12}
-              textAnchor="middle"
-              fontSize={r * 0.36}
-              fontWeight={800}
-              fill="#ffffff"
-            >
-              #
-            </text>
+            </g>
           </g>
-        </g>
-      </a>
+        </a>
+      </g>
     </g>
   );
 }
@@ -206,35 +208,42 @@ export function MemberLabel({
       pointerEvents="none"
       data-testid={`member-label-${member.normalizedName}`}
     >
-      <path
-        d={`M ${member.x - tip} ${bottom - 0.5} L ${member.x} ${bottom + tip} L ${member.x + tip} ${bottom - 0.5} Z`}
-        fillOpacity={0.97}
-        style={{ fill: "var(--ui-card,#ffffff)" }}
-        stroke={theme.accent}
-        strokeWidth={fs * 0.1}
-        strokeLinejoin="round"
-      />
-      <rect
-        x={member.x - w / 2}
-        y={bottom - h}
-        width={w}
-        height={h}
-        rx={h / 2}
-        fillOpacity={0.97}
-        style={{ fill: "var(--ui-card,#ffffff)" }}
-        stroke={theme.accent}
-        strokeWidth={fs * 0.1}
-      />
-      <text
-        x={member.x}
-        y={bottom - h * 0.34}
-        textAnchor="middle"
-        fontSize={fs}
-        fontWeight={800}
-        style={{ fill: "var(--ui-title,#553344)" }}
+      <g
+        style={{
+          ...ZOOM_COMP,
+          transformOrigin: `${member.x}px ${member.y}px`,
+        }}
       >
-        {text}
-      </text>
+        <path
+          d={`M ${member.x - tip} ${bottom - 0.5} L ${member.x} ${bottom + tip} L ${member.x + tip} ${bottom - 0.5} Z`}
+          fillOpacity={0.97}
+          style={{ fill: "var(--ui-card,#ffffff)" }}
+          stroke={theme.accent}
+          strokeWidth={fs * 0.1}
+          strokeLinejoin="round"
+        />
+        <rect
+          x={member.x - w / 2}
+          y={bottom - h}
+          width={w}
+          height={h}
+          rx={h / 2}
+          fillOpacity={0.97}
+          style={{ fill: "var(--ui-card,#ffffff)" }}
+          stroke={theme.accent}
+          strokeWidth={fs * 0.1}
+        />
+        <text
+          x={member.x}
+          y={bottom - h * 0.34}
+          textAnchor="middle"
+          fontSize={fs}
+          fontWeight={800}
+          style={{ fill: "var(--ui-title,#553344)" }}
+        >
+          {text}
+        </text>
+      </g>
     </g>
   );
 }
