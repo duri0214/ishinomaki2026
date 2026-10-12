@@ -17,7 +17,7 @@ export default async function AdminPage() {
       </Link>
       <h1 className="mt-3 text-2xl font-bold">管理画面</h1>
       <p className="mt-2 text-slate-600">
-        島の名前や説明、マップ上の位置を登録・修正し、島に所属するアイドルを表すメンバータグと話題タグを続けて整備できます。
+        島の名前や説明、マップ上の位置を登録・修正し、島に所属するアイドルを表すメンバータグ、話題タグ、傾向タグを続けて整備できます。
       </p>
 
       <section className="mt-8">

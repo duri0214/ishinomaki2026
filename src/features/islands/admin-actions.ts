@@ -2,6 +2,11 @@
 
 import { revalidatePath } from "next/cache";
 import { getDb, getTxDb } from "@/db";
+import {
+  type SaveIslandTraitsInput,
+  saveIslandTraits,
+  type TraitScores,
+} from "@/features/traits/service";
 import { type ActionResult, runAction } from "@/lib/action";
 import { requireAdminUser } from "@/lib/admin";
 import {
@@ -49,5 +54,16 @@ export async function saveAdminTopicAction(
     const topic = await saveTopic(await getTxDb(), input);
     revalidateManagedData();
     return { id: topic.id };
+  });
+}
+
+export async function saveAdminIslandTraitsAction(
+  input: SaveIslandTraitsInput,
+): Promise<ActionResult<TraitScores>> {
+  return runAction(async () => {
+    await requireAdminUser();
+    const traits = await saveIslandTraits(await getTxDb(), input);
+    revalidateManagedData();
+    return traits;
   });
 }

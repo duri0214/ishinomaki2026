@@ -4,6 +4,7 @@ import { connection } from "next/server";
 import { getDb } from "@/db";
 import {
   saveAdminIslandAction,
+  saveAdminIslandTraitsAction,
   saveAdminTopicAction,
 } from "@/features/islands/admin-actions";
 import { IslandEditor } from "@/features/islands/IslandEditor";
@@ -11,6 +12,8 @@ import { loadIsland } from "@/features/islands/load";
 import { TopicEditor } from "@/features/islands/TopicEditor";
 import { getMapData } from "@/features/map/data";
 import { listTopicTags } from "@/features/tags/queries";
+import { getIslandTraits } from "@/features/traits/service";
+import { TraitsEditor } from "@/features/traits/TraitsEditor";
 
 export const metadata = { title: "島を編集" };
 
@@ -24,7 +27,11 @@ export default async function AdminIslandPage({
   const [islands, row] = await Promise.all([getMapData(), loadIsland(slug)]);
   const island = islands.find((item) => item.slug === slug);
   if (!island || !row) notFound();
-  const topics = await listTopicTags(await getDb(), row.id);
+  const db = await getDb();
+  const [topics, traits] = await Promise.all([
+    listTopicTags(db, row.id),
+    getIslandTraits(db, row.id),
+  ]);
 
   return (
     <main className="mx-auto min-h-dvh max-w-6xl p-6">
@@ -51,6 +58,19 @@ export default async function AdminIslandPage({
           saveAction={saveAdminTopicAction}
         />
       </div>
+      <section className="mt-8 max-w-3xl">
+        <h2 className="text-lg font-bold">傾向タグ</h2>
+        <p className="mt-1 text-sm text-slate-600">
+          左のラベルが 1、右のラベルが 5
+          です。選んでいない軸は未評価として保存します。
+        </p>
+        <TraitsEditor
+          key={island.id}
+          slug={slug}
+          initial={traits}
+          saveAction={saveAdminIslandTraitsAction}
+        />
+      </section>
     </main>
   );
 }
