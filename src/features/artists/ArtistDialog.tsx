@@ -2,6 +2,7 @@
 
 import { useEffect, useId, useRef } from "react";
 import { GroupImage } from "@/features/layout/GroupImage";
+import { groupPhoto } from "@/features/layout/photos";
 import { useArtistProfile } from "./useArtistProfile";
 
 export function ArtistDialog({
@@ -87,7 +88,7 @@ export function ArtistDialog({
       </div>
       <div className="design-artist-photo relative aspect-[2/1] overflow-hidden bg-[var(--ui-hover)]">
         <GroupImage
-          src={`/photos/${slug}.jpg`}
+          src={groupPhoto({ name, slug })}
           alt={`${displayName}の集合写真`}
           sizes="(max-width: 550px) calc(100vw - 40px), 34rem"
         />

@@ -4,6 +4,7 @@ import { useParams, usePathname } from "next/navigation";
 import { ArtistProfileButton } from "@/features/artists/ArtistProfileButton";
 import { decodeRouteParam } from "@/lib/route-params";
 import { GroupImage } from "./GroupImage";
+import { groupPhoto } from "./photos";
 
 export type PhotoIsland = {
   slug: string;
@@ -21,7 +22,7 @@ const PHOTO_SIZES =
   "(max-width: 550px) calc(100vw - 24px), (max-width: 767px) calc(50vw - 24px), (max-width: 1023px) calc(30vw - 24px), calc((100vw - 4.5rem) * 0.3 - 24px)";
 
 /**
- * タイムライン上部の集合写真。島ごとに `public/photos/<島のslug>.jpg`、
+ * タイムライン上部の集合写真。島ごとの写真（photos.ts の groupPhoto）、
  * 世界地図では `public/photos/world.jpg` を表示する。ファイルがなければ仮の絵に切り替える。
  * タグで絞っているときは、サブタイトルに島名、タイトルにタグ（人なら人名）を出す。
  */
@@ -44,7 +45,7 @@ export function GroupPhoto({ islands }: { islands: PhotoIsland[] }) {
     subtitle = island.name;
   }
 
-  const src = `/photos/${slug ?? "world"}.jpg`;
+  const src = slug ? groupPhoto(island ?? { name: slug, slug }) : groupPhoto();
   return (
     <figure className="design-hero relative h-28 w-full shrink-0 wide:aspect-[2/1] wide:h-auto wide:max-h-[27dvh] overflow-hidden bg-[#efe6f4]">
       <GroupImage
