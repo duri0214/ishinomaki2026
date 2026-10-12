@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { connection } from "next/server";
 import { cache } from "react";
 import { getDb } from "@/db";
+import { getFollowStats } from "@/features/follow/service";
 import { LiveRecords } from "@/features/live/LiveRecords";
 import { getLiveData } from "@/features/live/service";
 import { ProfileView } from "@/features/profile/ProfileView";
@@ -29,13 +30,14 @@ export default async function ProfilePage({ params }: Props) {
   await connection();
   const profile = await loadProfile((await params).username);
   if (!profile) notFound();
+  const db = await getDb();
+  const viewerId = await getViewerId();
+  const follow = await getFollowStats(db, profile.id, viewerId);
   const liveData =
-    (await getViewerId()) === profile.id
-      ? await getLiveData(await getDb(), profile.id)
-      : null;
+    viewerId === profile.id ? await getLiveData(db, profile.id) : null;
   return (
     <div className="min-h-0 flex-1 overflow-y-auto pt-1">
-      <ProfileView profile={profile} />
+      <ProfileView profile={profile} follow={follow} />
       {liveData && <LiveRecords data={liveData} />}
     </div>
   );
