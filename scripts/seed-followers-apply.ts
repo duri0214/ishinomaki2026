@@ -1,4 +1,4 @@
-import { inArray, sql } from "drizzle-orm";
+import { sql } from "drizzle-orm";
 import type { Db } from "../src/db/connect";
 import { islands, userFavoriteIslands, users } from "../src/db/schema";
 import { UNUSABLE_PASSWORD_HASH } from "../src/features/auth/password";
@@ -8,13 +8,13 @@ export const SEED_FAN_PREFIX = "seed_fan_";
 
 /**
  * 島ごとの島民数（推しにしているユーザーの数）の目標。島のレベル（layout.ts の LEVEL_THRESHOLDS）が
- * 島ごとに違って見えるように、Lv2〜Lv5 の境目を少し超える数にしてある
+ * 島ごとに違って見えるように、Lv5・Lv4・Lv3 の境目を少し超える数と、Lv1 のままの島にしてある
  */
 export const DEFAULT_FOLLOWER_TARGETS: Record<string, number> = {
   hoshizora: 10_050, // ARASHI → Lv5（10000人〜）
   shiokaze: 1_200, // TWICE → Lv4（1000人〜）
   tsukiakari: 150, // M!LK → Lv3（100人〜）
-  nijiiro: 25, // FRUITSZIPPER → Lv2（10人〜）
+  nijiiro: 0, // FRUITSZIPPER → Lv1（ダミーの島民なし）
 };
 
 const chunk = <T>(rows: T[], size = 1000) =>
@@ -25,12 +25,16 @@ const chunk = <T>(rows: T[], size = 1000) =>
 /** _ は LIKE のワイルドカードなのでエスケープする */
 const isSeedFan = sql`lower(${users.username}) like ${`${SEED_FAN_PREFIX.replaceAll("_", "\\_")}%`}`;
 
-export type FollowerResult = { slug: string; followers: number }[];
+export type FollowerResult = {
+  slug: string;
+  name: string;
+  followers: number;
+}[];
 
 /**
  * 島民数のテストデータを入れる。前回のダミーユーザー（seed_fan_*）を消してから入れ直すので、何度実行しても同じ状態になる。
  * ダミーユーザーは目標の最大数だけ作り、島ごとに先頭から目標の人数がその島を推しにする（1人が複数の島を推しにしてよい）。
- * 見つからない島（slug）は飛ばす。本物のユーザーの推しはそのまま残る
+ * targets のキーは島の slug か名前。見つからない島は飛ばす。本物のユーザーの推しはそのまま残る
  */
 export async function applyFollowers(
   txDb: Db,
@@ -40,12 +44,15 @@ export async function applyFollowers(
     // 前回のダミーユーザーを消す（推しは外部キーの CASCADE で消える）
     await tx.delete(users).where(isSeedFan);
 
-    const found = await tx
-      .select({ id: islands.id, slug: islands.slug })
-      .from(islands)
-      .where(inArray(islands.slug, Object.keys(targets)));
-    const max = Math.max(0, ...found.map((i) => targets[i.slug] ?? 0));
-    if (max === 0) return [];
+    const all = await tx
+      .select({ id: islands.id, slug: islands.slug, name: islands.name })
+      .from(islands);
+    const found = all
+      .map((i) => ({ ...i, target: targets[i.slug] ?? targets[i.name] }))
+      .filter(
+        (i): i is typeof i & { target: number } => i.target !== undefined,
+      );
+    const max = Math.max(0, ...found.map((i) => i.target));
 
     const ids: string[] = [];
     const rows = Array.from({ length: max }, (_, i) => {
@@ -65,7 +72,7 @@ export async function applyFollowers(
     }
 
     for (const island of found) {
-      const count = Math.min(targets[island.slug] ?? 0, ids.length);
+      const count = Math.min(island.target, ids.length);
       const favorites = ids
         .slice(0, count)
         .map((userId) => ({ userId, islandId: island.id }));
@@ -74,7 +81,7 @@ export async function applyFollowers(
       }
     }
     return found
-      .map((i) => ({ slug: i.slug, followers: targets[i.slug] ?? 0 }))
+      .map((i) => ({ slug: i.slug, name: i.name, followers: i.target }))
       .sort((a, b) => b.followers - a.followers);
   });
 }

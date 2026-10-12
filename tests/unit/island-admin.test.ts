@@ -39,15 +39,20 @@ const save = (
   });
 
 describe("createIsland", () => {
-  it("島を作り、2つ目以降は既存の島と重ならない位置に置く", async () => {
+  it("島を作り、2つ目以降は既存の島と重ならない位置に、2段に並べて置く", async () => {
     const a = await createIsland(conn.db, { slug: "first", name: "最初の島" });
     const b = await createIsland(conn.db, {
       slug: "second",
       name: "二つ目",
       description: "説明",
     });
-    expect(a.worldX).toBe(0);
-    expect(b.worldX - a.worldX).toBeGreaterThanOrEqual(690);
+    const c = await createIsland(conn.db, { slug: "third", name: "三つ目" });
+    expect({ x: a.worldX, y: a.worldY }).toEqual({ x: 0, y: 0 });
+    // 2つ目は1つ目の下の段、3つ目は右の列の上の段
+    expect(b.worldX).toBe(a.worldX);
+    expect(b.worldY).toBeGreaterThanOrEqual(a.worldY + 690);
+    expect(c.worldX).toBeGreaterThanOrEqual(a.worldX + 690);
+    expect(c.worldY).toBeLessThan(b.worldY);
     expect(b.description).toBe("説明");
   });
 

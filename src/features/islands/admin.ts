@@ -1,13 +1,14 @@
-import { and, eq, inArray, max } from "drizzle-orm";
+import { and, eq, inArray } from "drizzle-orm";
 import { z } from "zod";
 import type { Db } from "@/db/connect";
 import { type Island, islands, tags, userFavoriteMembers } from "@/db/schema";
 import { BASE_NAMES } from "@/features/map/assets";
-import { clampToPlaza, ISLAND_RADIUS } from "@/features/map/layout";
+import { clampToPlaza } from "@/features/map/layout";
 import { validateTagName } from "@/features/tags/parse";
 import { AppError } from "@/lib/errors";
 import { islandSlugSchema } from "@/lib/validation";
 import { MAX_MEMBERS } from "./admin-constants";
+import { nextIslandPosition } from "./placement";
 
 export { MAX_MEMBERS };
 
@@ -62,7 +63,7 @@ function isUniqueViolation(err: unknown): boolean {
   return e?.code === "23505" || e?.cause?.code === "23505";
 }
 
-/** 新しい島を作る。世界地図では、今ある島の右隣に重ならないように置く */
+/** 新しい島を作る。世界地図では、2段の並び（placement.ts）の空いている場所に、今ある島と重ならないように置く */
 export async function createIsland(
   db: Db,
   input: z.input<typeof createIslandInputSchema>,
@@ -71,11 +72,10 @@ export async function createIsland(
   if (!parsed.success) {
     throw new AppError("validation", firstIssue(parsed.error));
   }
-  const [edge] = await db.select({ maxX: max(islands.worldX) }).from(islands);
-  const worldX =
-    edge?.maxX === null || edge?.maxX === undefined
-      ? 0
-      : Math.round(edge.maxX + ISLAND_RADIUS * 2 + 120);
+  const existing = await db
+    .select({ worldX: islands.worldX, worldY: islands.worldY })
+    .from(islands);
+  const position = nextIslandPosition(existing);
   try {
     const [row] = await db
       .insert(islands)
@@ -83,8 +83,8 @@ export async function createIsland(
         slug: parsed.data.slug,
         name: parsed.data.name,
         description: parsed.data.description ?? null,
-        worldX,
-        worldY: 0,
+        worldX: position.x,
+        worldY: position.y,
         theme: parsed.data.base ? { base: parsed.data.base } : null,
       })
       .returning();
