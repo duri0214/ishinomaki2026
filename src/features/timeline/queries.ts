@@ -1,4 +1,4 @@
-import { and, desc, eq, isNull, lt, or, type SQL, sql } from "drizzle-orm";
+import { and, asc, desc, eq, isNull, lt, or, type SQL, sql } from "drizzle-orm";
 import type { Db } from "@/db/connect";
 import { islands, posts, postTags, users } from "@/db/schema";
 import { type Cursor, encodeCursor } from "@/lib/cursor";
@@ -23,6 +23,8 @@ export type TimelinePost = {
   island: { slug: string; name: string };
   likeCount: number;
   likedByMe: boolean;
+  /** 削除されていない返信の数 */
+  replyCount: number;
   /** 自分の投稿か（削除ボタンの表示に使う） */
   isMine: boolean;
 };
@@ -51,6 +53,8 @@ function selectPosts(db: Db, viewerId: string | null) {
       likedByMe: viewerId
         ? sql<boolean>`exists (select 1 from likes where likes.post_id = ${posts.id} and likes.user_id = ${viewerId})`
         : sql<boolean>`false`,
+      // 内側の posts は別名にする（外側の posts.id と取り違えないため）
+      replyCount: sql<number>`(select count(*)::int from posts as r where r.parent_post_id = ${posts.id} and r.deleted_at is null)`,
     })
     .from(posts)
     .innerJoin(users, eq(users.id, posts.authorId))
@@ -74,6 +78,7 @@ function toTimelinePost(row: Row, viewerId: string | null): TimelinePost {
     island: { slug: row.islandSlug, name: row.islandName },
     likeCount: Number(row.likeCount),
     likedByMe: Boolean(row.likedByMe),
+    replyCount: Number(row.replyCount),
     isMine: viewerId !== null && row.authorId === viewerId,
   };
 }
@@ -115,6 +120,8 @@ export async function getTimeline(
     .where(
       and(
         isNull(posts.deletedAt),
+        // 返信はタイムラインに流さず、元の投稿のスレッドにだけ表示する
+        isNull(posts.parentPostId),
         scopeCondition(scope),
         cursorCondition(cursor),
       ),
@@ -143,4 +150,29 @@ export async function getTimelinePost(
     .where(and(eq(posts.id, postId), isNull(posts.deletedAt)))
     .limit(1);
   return row ? toTimelinePost(row, viewerId) : undefined;
+}
+
+/** 1つの投稿に表示する返信の上限(古い順に先頭から) */
+export const MAX_REPLIES = 100;
+
+/**
+ * 投稿への返信を古い順に返す。元の投稿が無い・削除済みなら空。
+ * 削除済みの返信と、退会済みユーザーの表示のしかたは通常の投稿と同じ。
+ */
+export async function getReplies(
+  db: Db,
+  postId: string,
+  viewerId: string | null,
+): Promise<TimelinePost[]> {
+  const [parent] = await db
+    .select({ id: posts.id })
+    .from(posts)
+    .where(and(eq(posts.id, postId), isNull(posts.deletedAt)))
+    .limit(1);
+  if (!parent) return [];
+  const rows = await selectPosts(db, viewerId)
+    .where(and(eq(posts.parentPostId, postId), isNull(posts.deletedAt)))
+    .orderBy(asc(posts.createdAt), asc(posts.id))
+    .limit(MAX_REPLIES);
+  return rows.map((r) => toTimelinePost(r, viewerId));
 }

@@ -9,7 +9,7 @@ import {
 import { type ActionResult, runAction } from "@/lib/action";
 import { requireUser } from "@/lib/auth";
 import { AppError } from "@/lib/errors";
-import { createPost, deletePost } from "./service";
+import { createPost, createReply, deletePost } from "./service";
 
 /** 投稿する。認証はここで確認する（Server Action は誰でも直接呼べる公開エンドポイント） */
 export async function createPostAction(input: {
@@ -25,6 +25,24 @@ export async function createPostAction(input: {
     });
     const post = await getTimelinePost(await getDb(), postId, user.id);
     if (!post) throw new Error("作成した投稿を読み込めませんでした");
+    return post;
+  });
+}
+
+/** 投稿に返信する。島は返信先と同じになる */
+export async function createReplyAction(input: {
+  parentPostId: string;
+  body: string;
+}): Promise<ActionResult<TimelinePost>> {
+  return runAction(async () => {
+    const user = await requireUser();
+    const { postId } = await createReply(await getTxDb(), {
+      userId: user.id,
+      parentPostId: String(input?.parentPostId ?? ""),
+      body: String(input?.body ?? ""),
+    });
+    const post = await getTimelinePost(await getDb(), postId, user.id);
+    if (!post) throw new Error("作成した返信を読み込めませんでした");
     return post;
   });
 }

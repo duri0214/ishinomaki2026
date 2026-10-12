@@ -1,5 +1,6 @@
 import { sql } from "drizzle-orm";
 import {
+  type AnyPgColumn,
   check,
   foreignKey,
   index,
@@ -117,10 +118,15 @@ export const posts = pgTable(
       .notNull()
       .references(() => users.id),
     body: text("body").notNull(),
+    /** 返信先の投稿。NULL なら通常の投稿。返信は1段までで、返信への返信も元の投稿に付ける */
+    parentPostId: uuid("parent_post_id").references(
+      (): AnyPgColumn => posts.id,
+    ),
     createdAt: timestamptz("created_at").notNull().defaultNow(),
     deletedAt: timestamptz("deleted_at"),
   },
   (t) => [
+    index("posts_parent_created_idx").on(t.parentPostId, t.createdAt, t.id),
     index("posts_island_created_idx").on(
       t.islandId,
       t.createdAt.desc().nullsFirst(),
@@ -163,6 +169,25 @@ export const likes = pgTable(
   (t) => [
     primaryKey({ columns: [t.userId, t.postId] }),
     index("likes_post_idx").on(t.postId),
+  ],
+);
+
+/** ユーザー同士のフォロー。自分自身はフォローできない。退会済みユーザーの除外は読み取り側で行う */
+export const userFollows = pgTable(
+  "user_follows",
+  {
+    followerId: uuid("follower_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    followeeId: uuid("followee_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    createdAt: timestamptz("created_at").notNull().defaultNow(),
+  },
+  (t) => [
+    primaryKey({ columns: [t.followerId, t.followeeId] }),
+    index("user_follows_followee_idx").on(t.followeeId),
+    check("user_follows_not_self", sql`${t.followerId} <> ${t.followeeId}`),
   ],
 );
 

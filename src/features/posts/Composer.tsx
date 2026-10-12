@@ -4,20 +4,28 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useRef, useState } from "react";
 import { useAuthDialog } from "@/features/auth/AuthDialog";
 import { useViewer } from "@/features/auth/viewer";
+import { repliesQueryKey } from "@/features/replies/useReplies";
 import { codePointLength } from "@/features/tags/normalize";
 import { activeHashtagAt } from "@/features/tags/parse";
 import { useTagSuggestions } from "@/features/tags/useTagSuggestions";
+import { patchPostInCaches } from "@/features/timeline/useTimeline";
 import { MAX_POST_LENGTH } from "@/lib/validation";
-import { createPostAction } from "./actions";
+import { createPostAction, createReplyAction } from "./actions";
 
-/** 投稿フォーム（島ビューにだけ表示する）。`#` を打つと島内のタグを候補に出す */
+/**
+ * 投稿フォーム（島ビューにだけ表示する）。`#` を打つと島内のタグを候補に出す。
+ * `replyTo` を渡すと、その投稿への返信フォームになる（投稿カードのスレッドで使う）。
+ */
 export function Composer({
   islandSlug,
   initialText = "",
+  replyTo,
 }: {
   islandSlug: string;
   /** タグページで開いたときは ` #タグ名` を入力済みにする */
   initialText?: string;
+  /** 返信先の投稿のID */
+  replyTo?: string;
 }) {
   const viewer = useViewer();
   const openAuth = useAuthDialog();
@@ -42,17 +50,23 @@ export function Composer({
 
   if (!viewer.signedIn) {
     return (
-      <div className="mx-4 mb-2 rounded-[var(--ui-radius-surface)] bg-[var(--ui-hover)] px-4 py-2.5 text-sm text-[var(--ui-text)]">
+      <div
+        className={`rounded-[var(--ui-radius-surface)] bg-[var(--ui-hover)] px-4 py-2.5 text-sm text-[var(--ui-text)] ${replyTo ? "" : "mx-4 mb-2"}`}
+      >
         <button
           type="button"
           onClick={() =>
-            openAuth({ reason: "投稿するにはアカウントが必要です" })
+            openAuth({
+              reason: replyTo
+                ? "返信するにはアカウントが必要です"
+                : "投稿するにはアカウントが必要です",
+            })
           }
           className="font-bold text-[var(--ui-accent)] underline"
         >
           ログイン・新規登録
         </button>
-        すると投稿やいいねができます
+        {replyTo ? "すると返信できます" : "すると投稿やいいねができます"}
       </div>
     );
   }
@@ -81,11 +95,24 @@ export function Composer({
     setPending(true);
     setError(null);
     try {
-      const result = await createPostAction({ islandSlug, body: text });
+      const result = replyTo
+        ? await createReplyAction({ parentPostId: replyTo, body: text })
+        : await createPostAction({ islandSlug, body: text });
       if (result.ok) {
         setText(initialText);
         setCaret(0);
-        await queryClient.invalidateQueries({ queryKey: ["timeline"] });
+        if (replyTo) {
+          // 返信はタイムラインに流れないので、元の投稿の返信数だけ増やす
+          patchPostInCaches(queryClient, replyTo, (p) => ({
+            ...p,
+            replyCount: p.replyCount + 1,
+          }));
+          await queryClient.invalidateQueries({
+            queryKey: repliesQueryKey(replyTo),
+          });
+        } else {
+          await queryClient.invalidateQueries({ queryKey: ["timeline"] });
+        }
       } else {
         setError(result.message);
         // セッションが切れていたら、ログインへ誘導する（本文は残す）
@@ -94,7 +121,9 @@ export function Composer({
         }
       }
     } catch {
-      setError("投稿できませんでした。通信状況を確認してください");
+      setError(
+        `${replyTo ? "返信" : "投稿"}できませんでした。通信状況を確認してください`,
+      );
     } finally {
       setPending(false);
     }
@@ -134,7 +163,7 @@ export function Composer({
 
   return (
     <form
-      className="design-composer relative mx-4 mb-2"
+      className={`design-composer relative ${replyTo ? "" : "mx-4 mb-2"}`}
       onSubmit={(e) => {
         e.preventDefault();
         submit();
@@ -146,8 +175,10 @@ export function Composer({
           value={text}
           rows={2}
           maxLength={MAX_POST_LENGTH * 2}
-          placeholder="いまどうしてる？ #タグ をつけて投稿しよう"
-          aria-label="投稿の本文"
+          placeholder={
+            replyTo ? "返信を書く" : "いまどうしてる？ #タグ をつけて投稿しよう"
+          }
+          aria-label={replyTo ? "返信の本文" : "投稿の本文"}
           className="design-field w-full resize-none p-3 text-[15px] leading-6 outline-none"
           onChange={(e) => {
             setText(e.target.value);
@@ -204,7 +235,13 @@ export function Composer({
             disabled={pending || overLimit || text.trim() === ""}
             className="ml-auto rounded-[var(--ui-radius-inner)] bg-[var(--ui-accent)] px-5 py-1.5 text-sm font-bold text-[var(--ui-on-accent)] hover:bg-[var(--ui-accent-hover)] disabled:bg-[var(--ui-disabled)]"
           >
-            {pending ? "投稿中…" : "投稿"}
+            {replyTo
+              ? pending
+                ? "返信中…"
+                : "返信"
+              : pending
+                ? "投稿中…"
+                : "投稿"}
           </button>
         </div>
       </div>

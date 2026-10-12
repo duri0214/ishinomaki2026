@@ -5,11 +5,19 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useProfileOptions } from "@/features/auth/AuthDialog";
 import { useViewer } from "@/features/auth/viewer";
+import { FollowButton } from "@/features/follow/FollowButton";
+import type { FollowStats } from "@/features/follow/service";
 import { ProfileEditor } from "./ProfileEditor";
 import type { Profile } from "./service";
 
 /** プロフィール（表示名・推しグループ・推しメンバー）。本人なら編集できる */
-export function ProfileView({ profile }: { profile: Profile }) {
+export function ProfileView({
+  profile,
+  follow,
+}: {
+  profile: Profile;
+  follow: FollowStats;
+}) {
   const { user } = useViewer();
   const options = useProfileOptions();
   const router = useRouter();
@@ -42,7 +50,30 @@ export function ProfileView({ profile }: { profile: Profile }) {
             編集
           </button>
         )}
+        {!isMe && (
+          <FollowButton
+            userId={profile.id}
+            initialFollowing={follow.followedByMe}
+          />
+        )}
       </header>
+
+      <p className="mt-3 flex gap-4 text-sm text-[var(--ui-muted)]">
+        <Link
+          href={`/u/${profile.username}/following`}
+          className="hover:underline"
+        >
+          <b className="text-[var(--ui-title)]">{follow.followingCount}</b>{" "}
+          フォロー中
+        </Link>
+        <Link
+          href={`/u/${profile.username}/followers`}
+          className="hover:underline"
+        >
+          <b className="text-[var(--ui-title)]">{follow.followerCount}</b>{" "}
+          フォロワー
+        </Link>
+      </p>
 
       <div className="mt-4">
         {editing ? (
