@@ -172,6 +172,25 @@ export const likes = pgTable(
   ],
 );
 
+/** ユーザー同士のフォロー。自分自身はフォローできない。退会済みユーザーの除外は読み取り側で行う */
+export const userFollows = pgTable(
+  "user_follows",
+  {
+    followerId: uuid("follower_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    followeeId: uuid("followee_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    createdAt: timestamptz("created_at").notNull().defaultNow(),
+  },
+  (t) => [
+    primaryKey({ columns: [t.followerId, t.followeeId] }),
+    index("user_follows_followee_idx").on(t.followeeId),
+    check("user_follows_not_self", sql`${t.followerId} <> ${t.followeeId}`),
+  ],
+);
+
 /** 推しグループ（島） */
 export const userFavoriteIslands = pgTable(
   "user_favorite_islands",

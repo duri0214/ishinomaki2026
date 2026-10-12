@@ -40,8 +40,15 @@
     {
       "idx": 5,
       "version": "7",
-      "when": 1791763632261,
-      "tag": "0005_add_post_replies",
+      "when": 1791763330002,
+      "tag": "0005_add_user_follows",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1791764846742,
+      "tag": "0006_add_post_replies",
       "breakpoints": true
     }
   ]

@@ -116,6 +116,12 @@ DATABASE_URL="postgresql://USER:PASSWORD@HOST/DBNAME?sslmode=require"
 
 `src/app`（ルート）、`src/features/*`（map / timeline / posts / tags / likes / users / islands / auth）、`src/db`（スキーマと接続）、`src/lib`、`scripts`（seed・migrate）、`drizzle`（マイグレーション）、`tests/unit`、`tests/e2e`。
 
+## ユーザーのフォロー
+
+他のユーザーのプロフィール（`/u/<username>`）でフォロー・解除できます。自分自身はフォローできません（DBの CHECK 制約でも拒否）。フォローは「望む状態」を送るので、連打・再送しても結果が変わりません。プロフィールにフォロー中・フォロワーの数を表示し、`/u/<username>/following` と `/u/<username>/followers` で一覧を見られます。退会済みのユーザーは数にも一覧にも含めません。推しグループ・推しメンバー（`user_favorite_*`）とは別のもので、ライブ参戦記録の「フォロー中のアイドル」は変わりません。
+
+`user_follows` に関係を保存します。既存DBには `bun run db:migrate` で追加します。
+
 ## ライブ参戦記録
 
 自分のプロフィールで「フォロー中のアイドル（推しグループ）」→「ライブ」の順に選び、参戦記録と2000文字以内のメモを保存できます。登録・編集・削除は自分のプロフィールのみで行えます。アイドルのページには参戦記録の操作UIを表示しません。記録は本人だけに表示し、フォローを外しても残ります。同じ公演の再保存は更新となります。
