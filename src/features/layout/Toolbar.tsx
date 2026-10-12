@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { AccountButton } from "@/features/auth/AccountButton";
 import { DesignSwitch } from "@/features/design/DesignSwitch";
+import { AdminLink } from "./AdminLink";
 import { ToolbarIslands } from "./ToolbarIslands";
 
 /** 左端のツールバー（狭い画面では上端の横並び）。世界へ戻る・島の切り替え・デザイン・アカウント */
@@ -22,6 +23,7 @@ export function Toolbar({
       <span aria-hidden className="h-6 w-px bg-white/15 lg:h-px lg:w-8" />
       <ToolbarIslands islands={islands} />
       <div className="ml-auto flex shrink-0 items-center gap-2 lg:ml-0 lg:mt-auto lg:flex-col">
+        <AdminLink />
         <DesignSwitch />
         <AccountButton />
       </div>

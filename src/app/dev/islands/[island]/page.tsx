@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { connection } from "next/server";
+import { saveIslandAction } from "@/features/islands/dev-actions";
 import { IslandEditor } from "@/features/islands/IslandEditor";
 import { loadIsland } from "@/features/islands/load";
 import { getMapData } from "@/features/map/data";
@@ -51,6 +52,7 @@ export default async function DevIslandPage({
         island={island}
         initialDescription={row.description ?? ""}
         allIslands={islands}
+        saveAction={saveIslandAction}
       />
     </main>
   );

@@ -11,11 +11,15 @@ import {
 import { MapCanvas } from "@/features/map/MapCanvas";
 import type { MapFocus, MapIslandData } from "@/features/map/types";
 import { normalizeTagName } from "@/features/tags/normalize";
+import type { ActionResult } from "@/lib/action";
+import type { SaveIslandInput } from "./admin";
 import { MAX_MEMBERS } from "./admin-constants";
-import { saveIslandAction } from "./dev-actions";
 
 type DraftMember = { key: string; name: string; x: number; y: number };
 type Point = { x: number; y: number };
+type SaveIslandAction = (
+  input: SaveIslandInput,
+) => Promise<ActionResult<{ slug: string }>>;
 
 const round = (n: number) => Math.round(n);
 
@@ -186,10 +190,12 @@ export function IslandEditor({
   island,
   initialDescription,
   allIslands,
+  saveAction,
 }: {
   island: MapIslandData;
   initialDescription: string;
   allIslands: MapIslandData[];
+  saveAction: SaveIslandAction;
 }) {
   const router = useRouter();
   const [name, setName] = useState(island.name);
@@ -258,7 +264,7 @@ export function IslandEditor({
     setSaving(true);
     setStatus(null);
     try {
-      const result = await saveIslandAction({
+      const result = await saveAction({
         slug: island.slug,
         name,
         description,

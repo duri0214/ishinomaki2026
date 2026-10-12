@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import type { ActionResult } from "@/lib/action";
 import {
   TRAIT_AXES,
   TRAIT_CATEGORIES,
@@ -8,21 +9,26 @@ import {
   TRAIT_MIN,
   type TraitKey,
 } from "./constants";
-import { saveIslandTraitsAction } from "./dev-actions";
-import type { TraitScores } from "./service";
+import type { SaveIslandTraitsInput, TraitScores } from "./service";
+
+type SaveTraitsAction = (
+  input: SaveIslandTraitsInput,
+) => Promise<ActionResult<TraitScores>>;
 
 const STEPS = Array.from(
   { length: TRAIT_MAX - TRAIT_MIN + 1 },
   (_, i) => TRAIT_MIN + i,
 );
 
-/** 島の傾向タグ（全軸）を 1〜5 で選んで保存するデバッグ用フォーム。未評価に戻すこともできる */
+/** 島の傾向タグ（全軸）を 1〜5 で選んで保存するフォーム。未評価に戻すこともできる */
 export function TraitsEditor({
   slug,
   initial,
+  saveAction,
 }: {
   slug: string;
   initial: TraitScores;
+  saveAction: SaveTraitsAction;
 }) {
   const [scores, setScores] = useState<TraitScores>(initial);
   const [message, setMessage] = useState<{ ok: boolean; text: string } | null>(
@@ -48,7 +54,7 @@ export function TraitsEditor({
       const payload = Object.fromEntries(
         TRAIT_AXES.map((a) => [a.key, scores[a.key] ?? null]),
       );
-      const result = await saveIslandTraitsAction({ slug, scores: payload });
+      const result = await saveAction({ slug, scores: payload });
       if (result.ok) {
         setScores(result.data);
         setMessage({ ok: true, text: "保存しました" });

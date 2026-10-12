@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { connection } from "next/server";
 import { getDb } from "@/db";
 import { loadIsland } from "@/features/islands/load";
+import { saveIslandTraitsAction } from "@/features/traits/dev-actions";
 import { getIslandTraits } from "@/features/traits/service";
 import { TraitsEditor } from "@/features/traits/TraitsEditor";
 
@@ -35,7 +36,12 @@ export default async function DevTraitsPage({
       <p className="mt-1 text-sm text-slate-600">
         左のラベルが 1、右のラベルが 5 です（ローカル専用）。
       </p>
-      <TraitsEditor key={island.id} slug={slug} initial={traits} />
+      <TraitsEditor
+        key={island.id}
+        slug={slug}
+        initial={traits}
+        saveAction={saveIslandTraitsAction}
+      />
     </main>
   );
 }
