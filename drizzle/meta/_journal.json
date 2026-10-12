@@ -54,15 +54,22 @@
     {
       "idx": 7,
       "version": "7",
-      "when": 1791766565584,
-      "tag": "0007_add_direct_messages",
+      "when": 1791766346046,
+      "tag": "0007_cheerful_white_queen",
       "breakpoints": true
     },
     {
       "idx": 8,
       "version": "7",
-      "when": 1791768485309,
-      "tag": "0008_add_dm_read_state",
+      "when": 1791769340117,
+      "tag": "0008_add_related_users_indexes",
+      "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1791769903355,
+      "tag": "0009_add_direct_messages",
       "breakpoints": true
     }
   ]

@@ -73,7 +73,7 @@ export function LiveRecords({ data }: { data: LiveData }) {
     <section className="design-post mx-4 mb-4 border border-[var(--ui-border)] bg-[var(--ui-card)] p-4 text-[var(--ui-title)]">
       <h2 className="font-serif text-lg font-bold">ライブ参戦記録</h2>
       <p className="mt-1 text-xs text-[var(--ui-text)]">
-        自分だけの記録です。公演一覧はデモ用の架空のライブです。
+        感想・メモは自分だけが見られます。同じ公演に参戦したユーザーには、公演名が共通点として表示されます。公演一覧はデモ用の架空のライブです。
       </p>
       <form
         className="mt-4 space-y-3"

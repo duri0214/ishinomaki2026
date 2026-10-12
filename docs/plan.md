@@ -1,6 +1,6 @@
 # 実装計画: アイドルファン向け 島マップSNS（MVP）
 
-最終更新: 2026-10-11
+最終更新: 2026-10-12
 
 ## 0. 決定事項のまとめ
 
@@ -9,7 +9,7 @@
 | 項目 | 決定 |
 | --- | --- |
 | MVP機能 | テキスト投稿、タイムライン、タグ絞り込み、島マップ、いいね |
-| MVPに入れないもの | 画像添付、プッシュ通知、通報、NGワード（返信・1対1テキストDMとその新着通知は追加済み） |
+| MVPに入れないもの | プッシュ通知、通報、NGワード（返信・画像添付・1対1テキストDMとその新着通知は追加済み） |
 | 島 | 1グループ＝1島。本番での島の追加はDBを直接操作する |
 | トップページ `/` | 海に島が並ぶ世界地図。島をクリックするとその島へズームする |
 | タグ | 島ごとに独立（島Aの「自己紹介」と島Bの「自己紹介」は別レコード） |
@@ -23,6 +23,7 @@
 | 家・島の絵 | SVGを手続き生成する（Claude作成）。後でAI生成画像に差し替えられるよう `image_url` 列を用意する |
 | リアルタイム更新 | DMは表示中のタブで5秒間隔の新着確認。タイムラインは手動更新と無限スクロールで対応する |
 | 閲覧 / 投稿 | 閲覧はログイン不要。投稿といいねはログインが必要（ユーザー名＋パスワード。詳細は [plan-account.md](plan-account.md)） |
+| 関連ユーザー | 右側のタイムラインに「投稿」「関連ユーザー」のタブを置く。自分と共通点のあるユーザーを、推しメンバー > ライブ > 推しグループの優先順位で表示する。詳しくは「関連ユーザー」 |
 | 削除 | 論理削除（`deleted_at`） |
 | 言語 | 日本語のみ |
 | 規模 | 10ユーザー、1日100投稿。集計は都度 `COUNT` で行い、キャッシュで十分とする |
@@ -99,6 +100,19 @@
 
 スマホでも同じ縦並びで崩れない程度に対応する。スマホ向けの最適化は後で行う。
 
+### 関連ユーザー（共通点のあるユーザー）
+
+右側のタイムライン（`/`、`/i/[island]`、`/i/[island]/t/[tag]`）の上部に「投稿」と「関連ユーザー」のタブを置く。「投稿」は従来の投稿フォームとタイムライン。
+
+- **タブの状態**: `(main)/layout.tsx` の `TimelineTabProvider` が保つ。ページを移動しても（ページ側のタブは作り直される）選んだタブが変わらず、閲覧者が変わる（ログイン・ログアウト）と「投稿」に戻る。「投稿」の中身はタブを切り替えても作り直さず、隠すだけにする（スクロール位置と入力中の本文を保つ）。
+- **未ログイン**: 「関連ユーザー」を押すと、切り替えずに認証モーダルを開く。
+- **共通点の優先順位**: 1. 推しメンバー（`user_favorite_members` の同じタグ）→ 2. ライブ（`live_records` の同じ公演）→ 3. 推しグループ（`user_favorite_islands` の同じ島）。
+- **並び順**: 最も優先順位の高い共通点の種類 → その種類の共通点の数 → 共通点の合計 → ユーザーID。推しメンバーが共通する島の推しグループは、メンバーの共通点に含まれるので数えず、別のバッジにもしない。共通点のないユーザー、自分、退会済み、フォロー済みのユーザーは出さない。
+- **バッジ**: 共通点の名前（メンバー名・公演名とグループ名・グループ名）を「◯◯を推しています」「◯◯に参戦しています」と表示し、優先順位の高い順に最大3件。残りは「他N件」。参戦記録のメモや、共通しない推しは返さない。
+- **取得**: `GET /api/related-users`（要ログイン、未ログインは401）。対象はセッションのユーザーで、パラメータは受け取らない。上位50人を1回で返し、画面は10人ずつ表示する（「もっと見る」では追加の取得をしない）。`Cache-Control: private, no-store`。タブを開くたびに取り直し、「↻ 更新」でも取り直す。自動更新はしない。
+- **クライアントのキャッシュ**: TanStack Query のキーに閲覧者のIDを含める。ログイン・ログアウトでキャッシュごと消す。
+- **計算**: 推しメンバー・ライブ・推しグループの3種類を、閲覧者の行との自己結合で取り出す（クエリ数は固定）。並べ替えはメモリ上で行う（`features/related-users/rank.ts`）。規模が大きくなったら、SQLで集計して上位だけを取る形に替える。
+
 ## 2. 遷移をスムーズにする仕組み
 
 ページを移動してもマップを作り直さないことが一番重要。
@@ -157,6 +171,10 @@ post_tags
 
 likes
   user_id FK, post_id FK, created_at, PK(user_id, post_id), INDEX(post_id)
+
+user_favorite_islands / user_favorite_members / live_records
+  + INDEX(island_id) / INDEX(tag_id) / INDEX(event_id)
+    -- 同じ対象を持つ他のユーザーを引く（関連ユーザー）
 ```
 
 - **ページング**: `(created_at, id)` を組にしたカーソル方式。カーソル文字列は base64 でエンコードする。
@@ -185,6 +203,7 @@ src/
     dev/islands/...            島エディタ
     api/timeline/route.ts      GET ?island&tag&cursor
     api/tags/search/route.ts   GET ?island&q
+    api/related-users/route.ts GET（要ログイン）
     api/webhooks/clerk/route.ts
   features/
     map/        MapCanvas, World, Island, House, camera.ts, layout.ts(スロット計算), shapes.ts(手続き生成)
@@ -192,6 +211,7 @@ src/
     posts/      Composer, HashtagSuggest, PostBody(本文のタグをリンク化), actions.ts, queries.ts
     tags/       parse.ts(ハッシュタグ解析), normalize.ts, queries.ts(ランキング/検索), TagSearch
     likes/      LikeButton, actions.ts
+    related-users/  TimelineTabs(タブと状態), RelatedUsers, CommonBadge, rank.ts(並び順), service.ts, useRelatedUsers
     users/      ensureUser.ts, sync.ts
   db/           schema.ts, client.ts
   lib/          env.ts(Zodで検証), cursor.ts, validation.ts

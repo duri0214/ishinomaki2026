@@ -1,6 +1,7 @@
 import { and, asc, desc, eq, isNull, lt, or, type SQL, sql } from "drizzle-orm";
 import type { Db } from "@/db/connect";
-import { islands, posts, postTags, users } from "@/db/schema";
+import { islands, postImages, posts, postTags, users } from "@/db/schema";
+import type { PostImage } from "@/features/posts/image-limits";
 import { type Cursor, encodeCursor } from "@/lib/cursor";
 
 export type TimelineScope =
@@ -11,6 +12,7 @@ export type TimelineScope =
 export type TimelinePost = {
   id: string;
   body: string;
+  images?: PostImage[];
   /** ISO 8601 */
   createdAt: string;
   author: {
@@ -41,6 +43,9 @@ function selectPosts(db: Db, viewerId: string | null) {
     .select({
       id: posts.id,
       body: posts.body,
+      images: sql<
+        PostImage[]
+      >`coalesce((select json_agg(json_build_object('url', pi.url, 'width', pi.width, 'height', pi.height) order by pi.position) from ${postImages} pi where pi.post_id = ${posts.id}), '[]'::json)`,
       createdAt: posts.createdAt,
       authorId: users.id,
       authorUsername: users.username,
@@ -68,6 +73,7 @@ function toTimelinePost(row: Row, viewerId: string | null): TimelinePost {
   return {
     id: row.id,
     body: row.body,
+    images: row.images,
     createdAt: row.createdAt.toISOString(),
     author: {
       id: row.authorId,

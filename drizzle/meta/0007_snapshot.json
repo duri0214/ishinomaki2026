@@ -1,210 +1,9 @@
 {
-  "id": "a02a1c27-a192-40a3-a91a-93681bbd0764",
+  "id": "51b6c479-0bfc-415d-9053-609f584caee0",
   "prevId": "726c8f87-1159-4eeb-8588-f9d4d1809eb2",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
-    "public.dm_conversations": {
-      "name": "dm_conversations",
-      "schema": "",
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "uuid",
-          "primaryKey": true,
-          "notNull": true,
-          "default": "gen_random_uuid()"
-        },
-        "user_low_id": {
-          "name": "user_low_id",
-          "type": "uuid",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "user_high_id": {
-          "name": "user_high_id",
-          "type": "uuid",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "created_at": {
-          "name": "created_at",
-          "type": "timestamp (3) with time zone",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "now()"
-        }
-      },
-      "indexes": {
-        "dm_conversations_high_idx": {
-          "name": "dm_conversations_high_idx",
-          "columns": [
-            {
-              "expression": "user_high_id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        }
-      },
-      "foreignKeys": {
-        "dm_conversations_user_low_id_users_id_fk": {
-          "name": "dm_conversations_user_low_id_users_id_fk",
-          "tableFrom": "dm_conversations",
-          "tableTo": "users",
-          "columnsFrom": [
-            "user_low_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
-        },
-        "dm_conversations_user_high_id_users_id_fk": {
-          "name": "dm_conversations_user_high_id_users_id_fk",
-          "tableFrom": "dm_conversations",
-          "tableTo": "users",
-          "columnsFrom": [
-            "user_high_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
-        }
-      },
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {
-        "dm_conversations_pair_uq": {
-          "name": "dm_conversations_pair_uq",
-          "nullsNotDistinct": false,
-          "columns": [
-            "user_low_id",
-            "user_high_id"
-          ]
-        }
-      },
-      "policies": {},
-      "checkConstraints": {
-        "dm_conversations_ordered_pair": {
-          "name": "dm_conversations_ordered_pair",
-          "value": "\"dm_conversations\".\"user_low_id\" < \"dm_conversations\".\"user_high_id\""
-        }
-      },
-      "isRLSEnabled": false
-    },
-    "public.dm_messages": {
-      "name": "dm_messages",
-      "schema": "",
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "uuid",
-          "primaryKey": true,
-          "notNull": true,
-          "default": "gen_random_uuid()"
-        },
-        "conversation_id": {
-          "name": "conversation_id",
-          "type": "uuid",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "sender_id": {
-          "name": "sender_id",
-          "type": "uuid",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "body": {
-          "name": "body",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "created_at": {
-          "name": "created_at",
-          "type": "timestamp (3) with time zone",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "now()"
-        }
-      },
-      "indexes": {
-        "dm_messages_conversation_created_idx": {
-          "name": "dm_messages_conversation_created_idx",
-          "columns": [
-            {
-              "expression": "conversation_id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            },
-            {
-              "expression": "created_at",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            },
-            {
-              "expression": "id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        }
-      },
-      "foreignKeys": {
-        "dm_messages_conversation_id_dm_conversations_id_fk": {
-          "name": "dm_messages_conversation_id_dm_conversations_id_fk",
-          "tableFrom": "dm_messages",
-          "tableTo": "dm_conversations",
-          "columnsFrom": [
-            "conversation_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
-        },
-        "dm_messages_sender_id_users_id_fk": {
-          "name": "dm_messages_sender_id_users_id_fk",
-          "tableFrom": "dm_messages",
-          "tableTo": "users",
-          "columnsFrom": [
-            "sender_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
-        }
-      },
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
-      "policies": {},
-      "checkConstraints": {
-        "dm_messages_body_length": {
-          "name": "dm_messages_body_length",
-          "value": "char_length(\"dm_messages\".\"body\") between 1 and 280"
-        }
-      },
-      "isRLSEnabled": false
-    },
     "public.island_traits": {
       "name": "island_traits",
       "schema": "",
@@ -622,6 +421,86 @@
       "foreignKeys": {},
       "compositePrimaryKeys": {},
       "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.post_images": {
+      "name": "post_images",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "post_id": {
+          "name": "post_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "url": {
+          "name": "url",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "width": {
+          "name": "width",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "height": {
+          "name": "height",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "position": {
+          "name": "position",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp (3) with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "post_images_post_id_posts_id_fk": {
+          "name": "post_images_post_id_posts_id_fk",
+          "tableFrom": "post_images",
+          "tableTo": "posts",
+          "columnsFrom": [
+            "post_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "post_images_post_position_uq": {
+          "name": "post_images_post_position_uq",
+          "nullsNotDistinct": false,
+          "columns": [
+            "post_id",
+            "position"
+          ]
+        }
+      },
       "policies": {},
       "checkConstraints": {},
       "isRLSEnabled": false

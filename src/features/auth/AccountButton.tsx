@@ -4,6 +4,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
+import { RELATED_USERS_KEY } from "@/features/related-users/constants";
 import { useAuthDialog } from "./AuthDialog";
 import { signOutAction } from "./actions";
 import { useViewer } from "./viewer";
@@ -50,10 +51,13 @@ export function AccountButton() {
     setMenuOpen(false);
     const result = await signOutAction();
     if (!result.ok) return;
-    // 非表示のページや進行中の取得を含め、前のアカウントの私的データを破棄する。
-    queryClient.clear();
+    // 私的なDMだけを中断・破棄し、公開タイムラインは再取得して維持する。
+    await queryClient.cancelQueries({ queryKey: ["messages"] });
+    queryClient.removeQueries({ queryKey: ["messages"] });
     router.refresh();
     queryClient.invalidateQueries({ queryKey: ["timeline"] });
+    // 前のユーザーの関連ユーザーを、画面にもキャッシュにも残さない
+    queryClient.removeQueries({ queryKey: [RELATED_USERS_KEY] });
   };
 
   return (

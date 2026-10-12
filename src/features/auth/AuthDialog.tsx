@@ -15,6 +15,7 @@ import {
   ProfileEditor,
   type ProfileIslandOption,
 } from "@/features/profile/ProfileEditor";
+import { RELATED_USERS_KEY } from "@/features/related-users/constants";
 import { signInAction, signUpAction } from "./actions";
 import { PASSWORD_MIN, USERNAME_MAX, USERNAME_MIN } from "./validation";
 
@@ -111,6 +112,8 @@ function AuthDialog({
     queryClient.removeQueries({ queryKey: ["messages"] });
     router.refresh();
     queryClient.invalidateQueries({ queryKey: ["timeline"] });
+    // 前のユーザーの関連ユーザーをキャッシュに残さない
+    queryClient.removeQueries({ queryKey: [RELATED_USERS_KEY] });
   }, [router, queryClient]);
 
   const title =

@@ -18,14 +18,33 @@ export const islandSlugSchema = z
   );
 
 /** 本文: ハッシュタグを含めて1〜280文字（コードポイント単位）。改行は \n にそろえる */
-export const postBodySchema = z
+const optionalPostBodySchema = z
   .string()
   .transform((s) => s.replace(/\r\n?/g, "\n").trim())
-  .refine((s) => s.length > 0, "本文を入力してください")
   .refine(
     (s) => codePointLength(s) <= MAX_POST_LENGTH,
     `本文は${MAX_POST_LENGTH}文字以内で入力してください`,
   );
+
+export const postBodySchema = optionalPostBodySchema.refine(
+  (s) => s.length > 0,
+  "本文を入力してください",
+);
+const attachmentFields = {
+  body: optionalPostBodySchema,
+  images: z
+    .array(
+      z.object({
+        url: z.string().min(1),
+        width: z.number().int().positive(),
+        height: z.number().int().positive(),
+      }),
+    )
+    .max(4)
+    .default([]),
+};
+const hasContent = (input: { body: string; images: unknown[] }) =>
+  input.body.length > 0 || input.images.length > 0;
 
 /** URL などで受け取ったタグ名。島内で一意にする正規化名にそろえる */
 export const tagParamSchema = z
@@ -77,15 +96,19 @@ export const tagSearchQuerySchema = z.object({
 });
 export type TagSearchQuery = z.infer<typeof tagSearchQuerySchema>;
 
-export const createPostInputSchema = z.object({
-  islandSlug: islandSlugSchema,
-  body: postBodySchema,
-});
+export const createPostInputSchema = z
+  .object({
+    islandSlug: islandSlugSchema,
+    ...attachmentFields,
+  })
+  .refine(hasContent, "本文または画像を入力してください");
 
-export const createReplyInputSchema = z.object({
-  parentPostId: z.uuid(),
-  body: postBodySchema,
-});
+export const createReplyInputSchema = z
+  .object({
+    parentPostId: z.uuid(),
+    ...attachmentFields,
+  })
+  .refine(hasContent, "本文または画像を入力してください");
 
 export const setLikeInputSchema = z.object({
   postId: z.uuid(),

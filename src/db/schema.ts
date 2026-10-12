@@ -4,6 +4,7 @@ import {
   check,
   foreignKey,
   index,
+  integer,
   jsonb,
   pgEnum,
   pgTable,
@@ -139,6 +140,22 @@ export const posts = pgTable(
   ],
 );
 
+export const postImages = pgTable(
+  "post_images",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    postId: uuid("post_id")
+      .notNull()
+      .references(() => posts.id, { onDelete: "cascade" }),
+    url: text("url").notNull(),
+    width: integer("width").notNull(),
+    height: integer("height").notNull(),
+    position: integer("position").notNull(),
+    createdAt: timestamptz("created_at").notNull().defaultNow(),
+  },
+  (t) => [unique("post_images_post_position_uq").on(t.postId, t.position)],
+);
+
 export const postTags = pgTable(
   "post_tags",
   {
@@ -257,7 +274,11 @@ export const userFavoriteIslands = pgTable(
       .references(() => islands.id, { onDelete: "cascade" }),
     createdAt: timestamptz("created_at").notNull().defaultNow(),
   },
-  (t) => [primaryKey({ columns: [t.userId, t.islandId] })],
+  (t) => [
+    primaryKey({ columns: [t.userId, t.islandId] }),
+    // 同じ推しグループを持つ他のユーザーを探す（共通点のあるユーザー）
+    index("user_favorite_islands_island_idx").on(t.islandId),
+  ],
 );
 
 /**
@@ -274,6 +295,8 @@ export const userFavoriteMembers = pgTable(
   },
   (t) => [
     primaryKey({ columns: [t.userId, t.tagId] }),
+    // 同じ推しメンバーを持つ他のユーザーを探す（共通点のあるユーザー）
+    index("user_favorite_members_tag_idx").on(t.tagId),
     foreignKey({
       name: "user_favorite_members_island_fk",
       columns: [t.userId, t.islandId],
@@ -343,5 +366,9 @@ export const liveRecords = pgTable(
     note: text("note").notNull().default(""),
     updatedAt: timestamptz("updated_at").notNull().defaultNow(),
   },
-  (t) => [primaryKey({ columns: [t.userId, t.eventId] })],
+  (t) => [
+    primaryKey({ columns: [t.userId, t.eventId] }),
+    // 同じ公演に参戦した他のユーザーを探す（共通点のあるユーザー）
+    index("live_records_event_idx").on(t.eventId),
+  ],
 );

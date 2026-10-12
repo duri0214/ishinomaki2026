@@ -11,6 +11,7 @@ import { useTagSuggestions } from "@/features/tags/useTagSuggestions";
 import { patchPostInCaches } from "@/features/timeline/useTimeline";
 import { MAX_POST_LENGTH } from "@/lib/validation";
 import { createPostAction, createReplyAction } from "./actions";
+import { ImagePicker, validateSelection } from "./ImagePicker";
 
 /**
  * 投稿フォーム（島ビューにだけ表示する）。`#` を打つと島内のタグを候補に出す。
@@ -30,6 +31,8 @@ export function Composer({
   const viewer = useViewer();
   const openAuth = useAuthDialog();
   const queryClient = useQueryClient();
+  const [files, setFiles] = useState<File[]>([]);
+  const [dragging, setDragging] = useState(false);
   const [text, setText] = useState(initialText);
   const [caret, setCaret] = useState(0);
   const [error, setError] = useState<string | null>(null);
@@ -91,14 +94,26 @@ export function Composer({
   };
 
   const submit = async () => {
-    if (pending || overLimit || text.trim() === "") return;
+    if (pending || overLimit || (text.trim() === "" && files.length === 0))
+      return;
     setPending(true);
     setError(null);
     try {
+      const attachments = new FormData();
+      for (const file of files) attachments.append("images", file);
       const result = replyTo
-        ? await createReplyAction({ parentPostId: replyTo, body: text })
-        : await createPostAction({ islandSlug, body: text });
+        ? await createReplyAction({
+            parentPostId: replyTo,
+            body: text,
+            ...(files.length ? { attachments } : {}),
+          })
+        : await createPostAction({
+            islandSlug,
+            body: text,
+            ...(files.length ? { attachments } : {}),
+          });
       if (result.ok) {
+        setFiles([]);
         setText(initialText);
         setCaret(0);
         if (replyTo) {
@@ -164,13 +179,94 @@ export function Composer({
   return (
     <form
       className={`design-composer relative ${replyTo ? "" : "mx-4 mb-2"}`}
+      onDragOver={(e) => {
+        if (!pending && e.dataTransfer.types.includes("Files")) {
+          e.preventDefault();
+          e.dataTransfer.dropEffect = "copy";
+          setDragging(true);
+        }
+      }}
+      onDragLeave={(e) => {
+        if (!e.currentTarget.contains(e.relatedTarget as Node | null))
+          setDragging(false);
+      }}
+      onDrop={(e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        setDragging(false);
+        if (pending) return;
+        const next = [...files, ...Array.from(e.dataTransfer.files)];
+        const problem = validateSelection(next);
+        setError(problem);
+        if (!problem) setFiles(next);
+      }}
       onSubmit={(e) => {
         e.preventDefault();
         submit();
       }}
     >
+      {dragging && (
+        <div
+          className="pointer-events-none absolute inset-0 z-40 flex items-center justify-center rounded-[var(--ui-radius-surface)] bg-black/55 p-4"
+          data-testid="image-drop-overlay"
+        >
+          <div
+            role="status"
+            className="flex w-full flex-col items-center gap-2 rounded-2xl border-2 border-dashed border-[var(--ui-accent)] bg-white/95 px-4 py-5 text-center text-[var(--ui-accent)] shadow-xl"
+          >
+            <svg
+              aria-hidden="true"
+              viewBox="0 0 120 92"
+              className="h-20 w-28"
+              fill="none"
+            >
+              <rect
+                x="20"
+                y="17"
+                width="66"
+                height="62"
+                rx="10"
+                fill="currentColor"
+                opacity=".12"
+                transform="rotate(-12 53 48)"
+              />
+              <rect
+                x="35"
+                y="12"
+                width="66"
+                height="62"
+                rx="10"
+                fill="currentColor"
+                opacity=".12"
+                transform="rotate(12 68 43)"
+              />
+              <rect
+                x="29"
+                y="8"
+                width="62"
+                height="76"
+                rx="10"
+                fill="white"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeDasharray="5 5"
+              />
+              <circle cx="60" cy="46" r="19" fill="currentColor" opacity=".1" />
+              <path
+                d="M60 35v22M49 46h22"
+                stroke="currentColor"
+                strokeWidth="5"
+                strokeLinecap="round"
+              />
+            </svg>
+            <p className="text-base font-bold">ここに画像をドロップ</p>
+            <p className="text-xs">最大4枚・合計4MB</p>
+          </div>
+        </div>
+      )}
       <div>
         <textarea
+          disabled={pending}
           ref={textareaRef}
           value={text}
           rows={2}
@@ -189,6 +285,19 @@ export function Composer({
           onSelect={(e) => setCaret(e.currentTarget.selectionStart)}
           onKeyDown={onKeyDown}
         />
+        <div
+          className="mt-1 text-right text-xs"
+          data-testid="post-text-counter"
+        >
+          <span
+            className={
+              overLimit ? "font-bold text-rose-600" : "text-[var(--ui-muted)]"
+            }
+            aria-live="polite"
+          >
+            {length}/{MAX_POST_LENGTH}
+          </span>
+        </div>
         {items.length > 0 && (
           <ul
             aria-label="タグの候補"
@@ -216,15 +325,16 @@ export function Composer({
             ))}
           </ul>
         )}
+        <ImagePicker
+          files={files}
+          disabled={pending}
+          onChange={(next) => {
+            const problem = validateSelection(next);
+            setError(problem);
+            if (!problem) setFiles(next);
+          }}
+        />
         <div className="mt-1 flex items-center gap-3 text-xs">
-          <span
-            className={
-              overLimit ? "font-bold text-rose-600" : "text-[var(--ui-muted)]"
-            }
-            aria-live="polite"
-          >
-            {length}/{MAX_POST_LENGTH}
-          </span>
           {error && (
             <span role="alert" className="text-rose-600">
               {error}
@@ -232,7 +342,9 @@ export function Composer({
           )}
           <button
             type="submit"
-            disabled={pending || overLimit || text.trim() === ""}
+            disabled={
+              pending || overLimit || (text.trim() === "" && files.length === 0)
+            }
             className="ml-auto rounded-[var(--ui-radius-inner)] bg-[var(--ui-accent)] px-5 py-1.5 text-sm font-bold text-[var(--ui-on-accent)] hover:bg-[var(--ui-accent-hover)] disabled:bg-[var(--ui-disabled)]"
           >
             {replyTo

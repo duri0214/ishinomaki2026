@@ -2,9 +2,21 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { createIslandAction } from "./dev-actions";
+import type { ActionResult } from "@/lib/action";
 
-export function CreateIslandForm() {
+type CreateIslandAction = (input: {
+  slug: string;
+  name: string;
+  description?: string;
+}) => Promise<ActionResult<{ slug: string }>>;
+
+export function CreateIslandForm({
+  createAction,
+  destination = "/dev/islands",
+}: {
+  createAction: CreateIslandAction;
+  destination?: string;
+}) {
   const router = useRouter();
   const [slug, setSlug] = useState("");
   const [name, setName] = useState("");
@@ -17,9 +29,9 @@ export function CreateIslandForm() {
     setPending(true);
     setError(null);
     try {
-      const result = await createIslandAction({ slug, name, description });
+      const result = await createAction({ slug, name, description });
       if (result.ok) {
-        router.push(`/dev/islands/${result.data.slug}`);
+        router.push(`${destination}/${result.data.slug}`);
       } else {
         setError(result.message);
       }
