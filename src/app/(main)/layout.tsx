@@ -7,6 +7,7 @@ import { Toolbar } from "@/features/layout/Toolbar";
 import { Breadcrumb } from "@/features/map/Breadcrumb";
 import { getMapData } from "@/features/map/data";
 import { MapCanvas } from "@/features/map/MapCanvas";
+import { MessageNotificationsProvider } from "@/features/messages/MessageNotifications";
 import type { ProfileIslandOption } from "@/features/profile/ProfileEditor";
 import { TimelineTabProvider } from "@/features/related-users/TimelineTabs";
 import { TagSearch } from "@/features/tags/TagSearch";
@@ -54,31 +55,35 @@ export default async function MainLayout({
   );
 
   return (
-    <QueryProvider>
+    <QueryProvider viewerId={viewer?.id ?? null}>
       <ViewerProvider user={viewer}>
-        <AuthDialogProvider profileOptions={profileOptions}>
-          <TimelineTabProvider>
-            <div className="flex min-h-dvh flex-col wide:grid wide:h-dvh wide:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] wide:grid-rows-[auto_minmax(0,1fr)] wide:md:grid-cols-[minmax(0,7fr)_minmax(0,3fr)] wide:lg:grid-cols-[4.5rem_minmax(0,7fr)_minmax(0,3fr)] wide:lg:grid-rows-1">
-              <Toolbar islands={islandNames} />
-              <section
-                aria-label="マップ"
-                className="h-[38dvh] min-h-[220px] min-w-0 shrink-0 wide:h-auto wide:min-h-0 wide:shrink"
-              >
-                <MapCanvas islands={islands} />
-              </section>
-              <aside className="design-panel flex min-w-0 flex-1 flex-col bg-[var(--ui-panel)] wide:min-h-0">
-                <GroupPhoto islands={photoIslands} />
-                <div className="flex shrink-0 items-center gap-2 px-4 pb-1 pt-3">
-                  <div className="min-w-0 flex-1">
-                    <Breadcrumb islands={islandNames} />
+        <MessageNotificationsProvider>
+          <AuthDialogProvider profileOptions={profileOptions}>
+            <TimelineTabProvider>
+              <div className="flex min-h-dvh flex-col wide:grid wide:h-dvh wide:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] wide:grid-rows-[auto_minmax(0,1fr)] wide:md:grid-cols-[minmax(0,7fr)_minmax(0,3fr)] wide:lg:grid-cols-[4.5rem_minmax(0,7fr)_minmax(0,3fr)] wide:lg:grid-rows-1">
+                <Toolbar islands={islandNames} />
+                <section
+                  aria-label="マップ"
+                  className="h-[38dvh] min-h-[220px] min-w-0 shrink-0 wide:h-auto wide:min-h-0 wide:shrink"
+                >
+                  <MapCanvas islands={islands} />
+                </section>
+                <aside className="design-panel flex min-w-0 flex-1 flex-col bg-[var(--ui-panel)] wide:min-h-0">
+                  <GroupPhoto islands={photoIslands} />
+                  <div className="flex shrink-0 items-center gap-2 px-4 pb-1 pt-3">
+                    <div className="min-w-0 flex-1">
+                      <Breadcrumb islands={islandNames} />
+                    </div>
+                    <TagSearch />
                   </div>
-                  <TagSearch />
-                </div>
-                <main className="flex min-h-0 flex-1 flex-col">{children}</main>
-              </aside>
-            </div>
-          </TimelineTabProvider>
-        </AuthDialogProvider>
+                  <main className="flex min-h-0 flex-1 flex-col">
+                    {children}
+                  </main>
+                </aside>
+              </div>
+            </TimelineTabProvider>
+          </AuthDialogProvider>
+        </MessageNotificationsProvider>
       </ViewerProvider>
     </QueryProvider>
   );

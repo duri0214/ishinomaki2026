@@ -29,9 +29,13 @@ beforeEach(() => {
 
 afterEach(() => cleanup());
 
-it("ログアウトすると、そのユーザーの関連ユーザーをキャッシュから消し、タイムラインは取り直す", async () => {
+it("ログアウトするとDM・関連ユーザーをキャッシュから消し、タイムラインは取り直す", async () => {
   const client = new QueryClient();
   const relatedKey = [RELATED_USERS_KEY, "u1"];
+  const messagesKey = ["messages", "u1", "conversation"];
+  const notificationsKey = ["messages", "u1", "notifications"];
+  client.setQueryData(messagesKey, { body: "秘密のDM" });
+  client.setQueryData(notificationsKey, { unreadCount: 1 });
   client.setQueryData(relatedKey, { users: [], hasCriteria: true });
   client.setQueryData(["timeline", null, null], { pages: [], pageParams: [] });
   const user = userEvent.setup();
@@ -46,6 +50,8 @@ it("ログアウトすると、そのユーザーの関連ユーザーをキャ�
 
   await waitFor(() => expect(signOutAction).toHaveBeenCalledTimes(1));
   await waitFor(() => expect(client.getQueryData(relatedKey)).toBeUndefined());
+  expect(client.getQueryData(messagesKey)).toBeUndefined();
+  expect(client.getQueryData(notificationsKey)).toBeUndefined();
   expect(refresh).toHaveBeenCalled();
   // タイムラインは消さずに、古いものとして取り直す
   expect(client.getQueryState(["timeline", null, null])?.isInvalidated).toBe(

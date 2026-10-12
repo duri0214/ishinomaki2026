@@ -19,7 +19,8 @@ export default defineConfig({
     trace: "retain-on-failure",
   },
   webServer: {
-    command: `bun run db:reset-e2e && bun x next dev --port ${port}`,
+    command: "bun scripts/e2e-server.ts",
+    gracefulShutdown: { signal: "SIGTERM", timeout: 15_000 },
     url: `http://localhost:${port}`,
     reuseExistingServer: !process.env.CI,
     timeout: 120_000,

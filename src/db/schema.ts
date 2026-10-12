@@ -208,6 +208,60 @@ export const userFollows = pgTable(
   ],
 );
 
+/** 1対1のDM。UUIDを昇順に並べ、同じ2人の会話が重複しないようにする。 */
+export const dmConversations = pgTable(
+  "dm_conversations",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    userLowId: uuid("user_low_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    userHighId: uuid("user_high_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    createdAt: timestamptz("created_at").notNull().defaultNow(),
+  },
+  (t) => [
+    unique("dm_conversations_pair_uq").on(t.userLowId, t.userHighId),
+    check(
+      "dm_conversations_ordered_pair",
+      sql`${t.userLowId} < ${t.userHighId}`,
+    ),
+    index("dm_conversations_high_idx").on(t.userHighId),
+  ],
+);
+
+export const dmMessages = pgTable(
+  "dm_messages",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    conversationId: uuid("conversation_id")
+      .notNull()
+      .references(() => dmConversations.id, { onDelete: "cascade" }),
+    senderId: uuid("sender_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    body: text("body").notNull(),
+    createdAt: timestamptz("created_at").notNull().defaultNow(),
+    /** 受信者の通知を消すための内部状態。送信者へ既読情報は公開しない。 */
+    readAt: timestamptz("read_at"),
+  },
+  (t) => [
+    index("dm_messages_conversation_created_idx").on(
+      t.conversationId,
+      t.createdAt,
+      t.id,
+    ),
+    index("dm_messages_unread_idx")
+      .on(t.conversationId, t.senderId)
+      .where(sql`${t.readAt} is null`),
+    check(
+      "dm_messages_body_length",
+      sql`char_length(${t.body}) between 1 and 280`,
+    ),
+  ],
+);
+
 /** 推しグループ（島） */
 export const userFavoriteIslands = pgTable(
   "user_favorite_islands",
