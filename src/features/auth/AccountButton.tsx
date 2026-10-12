@@ -4,6 +4,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
+import { RELATED_USERS_KEY } from "@/features/related-users/constants";
 import { useAuthDialog } from "./AuthDialog";
 import { signOutAction } from "./actions";
 import { useViewer } from "./viewer";
@@ -51,6 +52,8 @@ export function AccountButton() {
     await signOutAction();
     router.refresh();
     queryClient.invalidateQueries({ queryKey: ["timeline"] });
+    // 前のユーザーの関連ユーザーを、画面にもキャッシュにも残さない
+    queryClient.removeQueries({ queryKey: [RELATED_USERS_KEY] });
   };
 
   return (
