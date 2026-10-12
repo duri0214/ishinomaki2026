@@ -6,6 +6,7 @@ import { useState } from "react";
 import { deletePostAction } from "@/features/posts/actions";
 import { Composer } from "@/features/posts/Composer";
 import { PostBody } from "@/features/posts/PostBody";
+import { PostImages } from "@/features/posts/PostImages";
 import type { TimelinePost } from "@/features/timeline/queries";
 import { patchPostInCaches } from "@/features/timeline/useTimeline";
 import { repliesQueryKey, useReplies } from "./useReplies";
@@ -88,6 +89,7 @@ function ReplyItem({
       </p>
       <div className="mt-1 text-sm">
         <PostBody body={reply.body} islandSlug={reply.island.slug} />
+        <PostImages images={reply.images} />
       </div>
       {error && (
         <p role="alert" className="mt-1 text-xs text-rose-600">

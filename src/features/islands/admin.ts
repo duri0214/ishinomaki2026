@@ -1,14 +1,12 @@
-import { and, eq, inArray } from "drizzle-orm";
+import { and, eq, inArray, max } from "drizzle-orm";
 import { z } from "zod";
 import type { Db } from "@/db/connect";
 import { type Island, islands, tags, userFavoriteMembers } from "@/db/schema";
-import { BASE_NAMES } from "@/features/map/assets";
-import { clampToPlaza } from "@/features/map/layout";
+import { clampToPlaza, ISLAND_RADIUS } from "@/features/map/layout";
 import { validateTagName } from "@/features/tags/parse";
 import { AppError } from "@/lib/errors";
 import { islandSlugSchema } from "@/lib/validation";
 import { MAX_MEMBERS } from "./admin-constants";
-import { nextIslandPosition } from "./placement";
 
 export { MAX_MEMBERS };
 
@@ -27,11 +25,6 @@ export const createIslandInputSchema = z.object({
   slug: islandSlugSchema,
   name: nameSchema,
   description: descriptionSchema.optional(),
-  /** マップの土台（base-01 など）。省略すると作成順に割り当てる */
-  base: z
-    .string()
-    .refine((b) => BASE_NAMES.includes(b), "その土台はありません")
-    .optional(),
 });
 
 const coord = z.number().finite().min(-COORD_LIMIT).max(COORD_LIMIT);
@@ -54,6 +47,19 @@ export const saveIslandInputSchema = z.object({
 });
 export type SaveIslandInput = z.input<typeof saveIslandInputSchema>;
 
+export const saveTopicInputSchema = z.object({
+  islandSlug: islandSlugSchema,
+  id: z.uuid().optional(),
+  name: z.string().trim().min(1),
+});
+export type SaveTopicInput = z.input<typeof saveTopicInputSchema>;
+
+export const createTopicsInputSchema = z.object({
+  islandSlug: islandSlugSchema,
+  names: z.array(z.string().trim().min(1)).min(1).max(50),
+});
+export type CreateTopicsInput = z.input<typeof createTopicsInputSchema>;
+
 function firstIssue(error: z.ZodError): string {
   return error.issues[0]?.message ?? "入力が不正です";
 }
@@ -63,7 +69,7 @@ function isUniqueViolation(err: unknown): boolean {
   return e?.code === "23505" || e?.cause?.code === "23505";
 }
 
-/** 新しい島を作る。世界地図では、2段の並び（placement.ts）の空いている場所に、今ある島と重ならないように置く */
+/** 新しい島を作る。世界地図では、今ある島の右隣に重ならないように置く */
 export async function createIsland(
   db: Db,
   input: z.input<typeof createIslandInputSchema>,
@@ -72,10 +78,11 @@ export async function createIsland(
   if (!parsed.success) {
     throw new AppError("validation", firstIssue(parsed.error));
   }
-  const existing = await db
-    .select({ worldX: islands.worldX, worldY: islands.worldY })
-    .from(islands);
-  const position = nextIslandPosition(existing);
+  const [edge] = await db.select({ maxX: max(islands.worldX) }).from(islands);
+  const worldX =
+    edge?.maxX === null || edge?.maxX === undefined
+      ? 0
+      : Math.round(edge.maxX + ISLAND_RADIUS * 2 + 120);
   try {
     const [row] = await db
       .insert(islands)
@@ -83,9 +90,8 @@ export async function createIsland(
         slug: parsed.data.slug,
         name: parsed.data.name,
         description: parsed.data.description ?? null,
-        worldX: position.x,
-        worldY: position.y,
-        theme: parsed.data.base ? { base: parsed.data.base } : null,
+        worldX,
+        worldY: 0,
       })
       .returning();
     if (!row) throw new Error("島を作成できませんでした");
@@ -183,64 +189,131 @@ export async function saveIsland(
   });
 }
 
-/** 島の土台（マップの絵。base-01 など）を選ぶ。islands.theme.base に保存する（DBの列は増やさない） */
-export async function setIslandBase(
-  db: Db,
-  slug: string,
-  base: string,
-): Promise<Island> {
-  if (!BASE_NAMES.includes(base)) {
-    throw new AppError("validation", "その土台はありません");
+/**
+ * 話題タグを追加または更新する。id を指定しない場合は同名タグを再利用するため、
+ * 投稿との紐付けを持つ既存タグをメンバーから話題へ戻す操作にも使える。
+ */
+export async function saveTopic(txDb: Db, input: SaveTopicInput) {
+  const parsed = saveTopicInputSchema.safeParse(input);
+  if (!parsed.success) {
+    throw new AppError("validation", firstIssue(parsed.error));
   }
-  const [current] = await db
-    .select({ theme: islands.theme })
-    .from(islands)
-    .where(eq(islands.slug, slug))
-    .limit(1);
-  if (!current) throw new AppError("island_not_found", "島が見つかりません");
-  const [island] = await db
-    .update(islands)
-    .set({ theme: { ...(current.theme ?? {}), base } })
-    .where(eq(islands.slug, slug))
-    .returning();
-  if (!island) throw new AppError("island_not_found", "島が見つかりません");
-  return island;
+  const data = parsed.data;
+  const topic = validateTagName(data.name);
+  if (!topic) {
+    throw new AppError("validation", "有効な話題タグ名を入力してください");
+  }
+
+  return txDb.transaction(async (tx) => {
+    const [island] = await tx
+      .select({ id: islands.id })
+      .from(islands)
+      .where(eq(islands.slug, data.islandSlug))
+      .limit(1);
+    if (!island) throw new AppError("island_not_found", "島が見つかりません");
+
+    try {
+      if (data.id) {
+        const [saved] = await tx
+          .update(tags)
+          .set({
+            name: topic.name,
+            normalizedName: topic.normalizedName,
+            kind: "topic",
+            position: null,
+          })
+          .where(and(eq(tags.id, data.id), eq(tags.islandId, island.id)))
+          .returning();
+        if (!saved) {
+          throw new AppError("validation", "話題タグが見つかりません");
+        }
+        await tx
+          .delete(userFavoriteMembers)
+          .where(eq(userFavoriteMembers.tagId, saved.id));
+        return saved;
+      }
+
+      const [saved] = await tx
+        .insert(tags)
+        .values({
+          islandId: island.id,
+          name: topic.name,
+          normalizedName: topic.normalizedName,
+          kind: "topic",
+          position: null,
+        })
+        .onConflictDoUpdate({
+          target: [tags.islandId, tags.normalizedName],
+          set: { name: topic.name, kind: "topic", position: null },
+        })
+        .returning();
+      if (!saved) throw new Error("話題タグを保存できませんでした");
+      await tx
+        .delete(userFavoriteMembers)
+        .where(eq(userFavoriteMembers.tagId, saved.id));
+      return saved;
+    } catch (err) {
+      if (isUniqueViolation(err)) {
+        throw new AppError("validation", "同じ名前のタグがすでにあります");
+      }
+      throw err;
+    }
+  });
 }
 
-/**
- * 家（話題タグ）を新しく建てる。投稿がまだなくても、上位10件に空きがあればマップに家が出る。
- * すでに同じ名前のタグがあるときはエラー。
- */
-export async function createTopicTag(
-  db: Db,
-  slug: string,
-  name: string,
-): Promise<{ normalizedName: string }> {
-  const tag = validateTagName(name.trim().replace(/^[#＃]/, ""));
-  if (!tag) {
-    throw new AppError(
-      "validation",
-      `「${name}」はタグ名として使えません（空白・記号を含まない30文字以内の名前にしてください）`,
-    );
+/** 空白で区切って入力された複数の話題タグを、すべて検証してから一括で保存する。 */
+export async function createTopics(txDb: Db, input: CreateTopicsInput) {
+  const parsed = createTopicsInputSchema.safeParse(input);
+  if (!parsed.success) {
+    throw new AppError("validation", firstIssue(parsed.error));
   }
-  const [island] = await db
-    .select({ id: islands.id })
-    .from(islands)
-    .where(eq(islands.slug, slug))
-    .limit(1);
-  if (!island) throw new AppError("island_not_found", "島が見つかりません");
-  const inserted = await db
-    .insert(tags)
-    .values({
-      islandId: island.id,
-      name: tag.name,
-      normalizedName: tag.normalizedName,
-      kind: "topic",
-    })
-    .onConflictDoNothing({ target: [tags.islandId, tags.normalizedName] })
-    .returning({ normalizedName: tags.normalizedName });
-  if (inserted.length === 0) {
-    throw new AppError("validation", `#${tag.name} はこの島にすでにあります`);
+  const data = parsed.data;
+  const topics = data.names.map((name) => {
+    const topic = validateTagName(name);
+    if (!topic) {
+      throw new AppError(
+        "validation",
+        `「${name}」は有効な話題タグ名ではありません`,
+      );
+    }
+    return topic;
+  });
+  if (
+    new Set(topics.map((topic) => topic.normalizedName)).size !== topics.length
+  ) {
+    throw new AppError("validation", "同じ話題タグが重複しています");
   }
-  return { normalizedName: tag.normalizedName };
+
+  return txDb.transaction(async (tx) => {
+    const [island] = await tx
+      .select({ id: islands.id })
+      .from(islands)
+      .where(eq(islands.slug, data.islandSlug))
+      .limit(1);
+    if (!island) throw new AppError("island_not_found", "島が見つかりません");
+
+    const savedTopics = [];
+    for (const topic of topics) {
+      const [saved] = await tx
+        .insert(tags)
+        .values({
+          islandId: island.id,
+          name: topic.name,
+          normalizedName: topic.normalizedName,
+          kind: "topic",
+          position: null,
+        })
+        .onConflictDoUpdate({
+          target: [tags.islandId, tags.normalizedName],
+          set: { name: topic.name, kind: "topic", position: null },
+        })
+        .returning();
+      if (!saved) throw new Error("話題タグを保存できませんでした");
+      await tx
+        .delete(userFavoriteMembers)
+        .where(eq(userFavoriteMembers.tagId, saved.id));
+      savedTopics.push(saved);
+    }
+    return savedTopics;
+  });
 }

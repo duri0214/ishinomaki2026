@@ -1,17 +1,10 @@
 "use server";
 
-import { revalidatePath, updateTag } from "next/cache";
+import { revalidatePath } from "next/cache";
 import { getDb, getTxDb } from "@/db";
-import { NEW_TOPIC_TAGS_CACHE_TAG } from "@/features/map/data";
 import { type ActionResult, runAction } from "@/lib/action";
 import { assertDevEditor } from "@/lib/dev-only";
-import {
-  createIsland,
-  createTopicTag,
-  type SaveIslandInput,
-  saveIsland,
-  setIslandBase,
-} from "./admin";
+import { createIsland, type SaveIslandInput, saveIsland } from "./admin";
 
 /** 島エディタの Server Action。どれも開発環境でしか動かない（本番では forbidden） */
 
@@ -19,7 +12,6 @@ export async function createIslandAction(input: {
   slug: string;
   name: string;
   description?: string;
-  base?: string;
 }): Promise<ActionResult<{ slug: string }>> {
   return runAction(async () => {
     assertDevEditor();
@@ -38,31 +30,5 @@ export async function saveIslandAction(
     // マップのデータは (main)/layout で取得しているので、レイアウトごと再取得させる
     revalidatePath("/", "layout");
     return { slug: island.slug };
-  });
-}
-
-export async function setIslandBaseAction(
-  slug: string,
-  base: string,
-): Promise<ActionResult<{ slug: string }>> {
-  return runAction(async () => {
-    assertDevEditor();
-    const island = await setIslandBase(await getDb(), slug, base);
-    revalidatePath("/", "layout");
-    return { slug: island.slug };
-  });
-}
-
-export async function createTopicTagAction(
-  slug: string,
-  name: string,
-): Promise<ActionResult<{ normalizedName: string }>> {
-  return runAction(async () => {
-    assertDevEditor();
-    const tag = await createTopicTag(await getDb(), slug, name);
-    // 建てた家がすぐマップに出るように、新しい話題タグのキャッシュを消す
-    updateTag(NEW_TOPIC_TAGS_CACHE_TAG);
-    revalidatePath("/", "layout");
-    return tag;
   });
 }

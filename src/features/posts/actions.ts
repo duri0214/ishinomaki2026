@@ -9,20 +9,34 @@ import {
 import { type ActionResult, runAction } from "@/lib/action";
 import { requireUser } from "@/lib/auth";
 import { AppError } from "@/lib/errors";
+import { removeImages, storeImages } from "./image-storage";
 import { createPost, createReply, deletePost } from "./service";
 
 /** 投稿する。認証はここで確認する（Server Action は誰でも直接呼べる公開エンドポイント） */
 export async function createPostAction(input: {
   islandSlug: string;
   body: string;
+  attachments?: FormData;
 }): Promise<ActionResult<TimelinePost>> {
   return runAction(async () => {
     const user = await requireUser();
-    const { postId } = await createPost(await getTxDb(), {
-      userId: user.id,
-      islandSlug: String(input?.islandSlug ?? ""),
-      body: String(input?.body ?? ""),
-    });
+    const images = await storeImages(
+      (input.attachments?.getAll("images") ?? []).filter(
+        (file): file is File => file instanceof File,
+      ),
+    );
+    let postId: string;
+    try {
+      ({ postId } = await createPost(await getTxDb(), {
+        userId: user.id,
+        islandSlug: String(input?.islandSlug ?? ""),
+        body: String(input?.body ?? ""),
+        images,
+      }));
+    } catch (error) {
+      await removeImages(images);
+      throw error;
+    }
     const post = await getTimelinePost(await getDb(), postId, user.id);
     if (!post) throw new Error("作成した投稿を読み込めませんでした");
     return post;
@@ -33,14 +47,27 @@ export async function createPostAction(input: {
 export async function createReplyAction(input: {
   parentPostId: string;
   body: string;
+  attachments?: FormData;
 }): Promise<ActionResult<TimelinePost>> {
   return runAction(async () => {
     const user = await requireUser();
-    const { postId } = await createReply(await getTxDb(), {
-      userId: user.id,
-      parentPostId: String(input?.parentPostId ?? ""),
-      body: String(input?.body ?? ""),
-    });
+    const images = await storeImages(
+      (input.attachments?.getAll("images") ?? []).filter(
+        (file): file is File => file instanceof File,
+      ),
+    );
+    let postId: string;
+    try {
+      ({ postId } = await createReply(await getTxDb(), {
+        userId: user.id,
+        parentPostId: String(input?.parentPostId ?? ""),
+        body: String(input?.body ?? ""),
+        images,
+      }));
+    } catch (error) {
+      await removeImages(images);
+      throw error;
+    }
     const post = await getTimelinePost(await getDb(), postId, user.id);
     if (!post) throw new Error("作成した返信を読み込めませんでした");
     return post;

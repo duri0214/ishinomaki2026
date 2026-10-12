@@ -36,7 +36,7 @@ export default async function ProfilePage({ params }: Props) {
   const liveData =
     viewerId === profile.id ? await getLiveData(db, profile.id) : null;
   return (
-    <div className="min-h-0 flex-1 overflow-y-auto pt-1">
+    <div className="flex-1 pt-1 wide:min-h-0 wide:overflow-y-auto">
       <ProfileView profile={profile} follow={follow} />
       {liveData && <LiveRecords data={liveData} />}
     </div>

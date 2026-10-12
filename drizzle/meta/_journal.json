@@ -50,6 +50,20 @@
       "when": 1791764846742,
       "tag": "0006_add_post_replies",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1791766346046,
+      "tag": "0007_cheerful_white_queen",
+      "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1791769340117,
+      "tag": "0008_add_related_users_indexes",
+      "breakpoints": true
     }
   ]
 }

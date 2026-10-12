@@ -4,9 +4,9 @@ import type { Connection } from "@/db/connect";
 import { islands, postTags, tags, userFavoriteMembers } from "@/db/schema";
 import {
   createIsland,
-  createTopicTag,
+  createTopics,
   saveIsland,
-  setIslandBase,
+  saveTopic,
 } from "@/features/islands/admin";
 import { getFavorites, updateProfile } from "@/features/profile/service";
 import { validateTagName } from "@/features/tags/parse";
@@ -39,20 +39,15 @@ const save = (
   });
 
 describe("createIsland", () => {
-  it("島を作り、2つ目以降は既存の島と重ならない位置に、2段に並べて置く", async () => {
+  it("島を作り、2つ目以降は既存の島と重ならない位置に置く", async () => {
     const a = await createIsland(conn.db, { slug: "first", name: "最初の島" });
     const b = await createIsland(conn.db, {
       slug: "second",
       name: "二つ目",
       description: "説明",
     });
-    const c = await createIsland(conn.db, { slug: "third", name: "三つ目" });
-    expect({ x: a.worldX, y: a.worldY }).toEqual({ x: 0, y: 0 });
-    // 2つ目は1つ目の下の段、3つ目は右の列の上の段
-    expect(b.worldX).toBe(a.worldX);
-    expect(b.worldY).toBeGreaterThanOrEqual(a.worldY + 690);
-    expect(c.worldX).toBeGreaterThanOrEqual(a.worldX + 690);
-    expect(c.worldY).toBeLessThan(b.worldY);
+    expect(a.worldX).toBe(0);
+    expect(b.worldX - a.worldX).toBeGreaterThanOrEqual(690);
     expect(b.description).toBe("説明");
   });
 
@@ -244,6 +239,75 @@ describe("saveIsland", () => {
   });
 });
 
+describe("saveTopic", () => {
+  it("話題タグを追加・更新し、同じタグの投稿との紐付けを維持する", async () => {
+    const island = await createIsland(conn.db, {
+      slug: "topics",
+      name: "話題島",
+    });
+    const user = await insertUser(conn.db);
+    const topic = await saveTopic(conn.txDb, {
+      islandSlug: island.slug,
+      name: "最初の話題",
+    });
+    const post = await insertPost(conn.db, {
+      islandId: island.id,
+      authorId: user.id,
+    });
+    await conn.db.insert(postTags).values({ postId: post.id, tagId: topic.id });
+
+    const saved = await saveTopic(conn.txDb, {
+      islandSlug: island.slug,
+      id: topic.id,
+      name: "更新後の話題",
+    });
+
+    expect(saved).toMatchObject({
+      id: topic.id,
+      name: "更新後の話題",
+      kind: "topic",
+      position: null,
+    });
+    expect(
+      await conn.db.select().from(postTags).where(eq(postTags.tagId, topic.id)),
+    ).toHaveLength(1);
+  });
+});
+
+describe("createTopics", () => {
+  it("複数の話題タグをまとめて保存する", async () => {
+    const island = await createIsland(conn.db, {
+      slug: "many-topics",
+      name: "複数話題島",
+    });
+
+    const topics = await createTopics(conn.txDb, {
+      islandSlug: island.slug,
+      names: ["ライブ", "新曲", "ツアー"],
+    });
+
+    expect(topics.map((topic) => topic.name)).toEqual([
+      "ライブ",
+      "新曲",
+      "ツアー",
+    ]);
+  });
+
+  it("同じ話題タグをまとめて保存しない", async () => {
+    const island = await createIsland(conn.db, {
+      slug: "duplicate-topics",
+      name: "重複話題島",
+    });
+
+    await expect(
+      createTopics(conn.txDb, {
+        islandSlug: island.slug,
+        names: ["ライブ", "ライブ"],
+      }),
+    ).rejects.toMatchObject({ code: "validation" });
+  });
+});
+
 describe("validateTagName", () => {
   it("全体がひとつの有効なタグ名のときだけ返す", () => {
     expect(validateTagName("みさき")).toEqual({
@@ -278,49 +342,5 @@ describe("開発環境ガード", () => {
     } finally {
       (process.env as Record<string, string | undefined>).NODE_ENV = original;
     }
-  });
-});
-
-describe("setIslandBase / createTopicTag", () => {
-  it("島を作るときに土台を選べる（theme.base）。ない土台はエラー", async () => {
-    const island = await createIsland(conn.db, {
-      slug: "with-base",
-      name: "土台つきの島",
-      base: "base-07",
-    });
-    expect(island.theme).toMatchObject({ base: "base-07" });
-    await expect(
-      createIsland(conn.db, { slug: "bad-base", name: "島", base: "base-99" }),
-    ).rejects.toThrow("その土台はありません");
-  });
-
-  it("土台を選ぶと theme.base に保存し、ない土台はエラー", async () => {
-    await createIsland(conn.db, { slug: "base-test", name: "土台の島" });
-    const island = await setIslandBase(conn.db, "base-test", "base-05");
-    expect(island.theme).toMatchObject({ base: "base-05" });
-    await expect(
-      setIslandBase(conn.db, "base-test", "base-99"),
-    ).rejects.toThrow("その土台はありません");
-    await expect(setIslandBase(conn.db, "nope", "base-01")).rejects.toThrow(
-      "島が見つかりません",
-    );
-  });
-
-  it("家（話題タグ）を建てる。# は付けても付けなくてもよく、同じ名前は2回建てられない", async () => {
-    await createIsland(conn.db, { slug: "house-test", name: "家の島" });
-    expect(await createTopicTag(conn.db, "house-test", "#新しい家")).toEqual({
-      normalizedName: "新しい家",
-    });
-    await expect(
-      createTopicTag(conn.db, "house-test", "新しい家"),
-    ).rejects.toThrow("すでにあります");
-    await expect(
-      createTopicTag(conn.db, "house-test", "空白 あり"),
-    ).rejects.toThrow("タグ名として使えません");
-    const [row] = await conn.db
-      .select()
-      .from(tags)
-      .where(eq(tags.normalizedName, "新しい家"));
-    expect(row?.kind).toBe("topic");
   });
 });

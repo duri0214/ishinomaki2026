@@ -2,15 +2,25 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { BASE_NAMES, baseAsset } from "@/features/map/assets";
-import { createIslandAction } from "./dev-actions";
+import type { ActionResult } from "@/lib/action";
 
-export function CreateIslandForm() {
+type CreateIslandAction = (input: {
+  slug: string;
+  name: string;
+  description?: string;
+}) => Promise<ActionResult<{ slug: string }>>;
+
+export function CreateIslandForm({
+  createAction,
+  destination = "/dev/islands",
+}: {
+  createAction: CreateIslandAction;
+  destination?: string;
+}) {
   const router = useRouter();
   const [slug, setSlug] = useState("");
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
-  const [base, setBase] = useState<string>(BASE_NAMES[0] ?? "");
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
 
@@ -19,14 +29,9 @@ export function CreateIslandForm() {
     setPending(true);
     setError(null);
     try {
-      const result = await createIslandAction({
-        slug,
-        name,
-        description,
-        base,
-      });
+      const result = await createAction({ slug, name, description });
       if (result.ok) {
-        router.push(`/dev/islands/${result.data.slug}`);
+        router.push(`${destination}/${result.data.slug}`);
       } else {
         setError(result.message);
       }
@@ -68,35 +73,6 @@ export function CreateIslandForm() {
           onChange={(e) => setDescription(e.target.value)}
         />
       </label>
-      <fieldset className="text-sm">
-        <legend>島の土台（マップの絵）</legend>
-        <div className="mt-1 flex flex-wrap gap-2">
-          {BASE_NAMES.map((b) => (
-            <label
-              key={b}
-              className={`flex cursor-pointer flex-col items-center rounded border-2 p-1 text-xs ${base === b ? "border-sky-500 bg-sky-50" : "border-transparent hover:border-slate-300"}`}
-            >
-              <input
-                type="radio"
-                name="base"
-                value={b}
-                checked={base === b}
-                onChange={() => setBase(b)}
-                className="sr-only"
-              />
-              {/* biome-ignore lint/performance/noImgElement: 開発用エディタの小さな見本なので next/image は使わない */}
-              <img
-                src={baseAsset(b).src}
-                alt=""
-                width={72}
-                height={72}
-                className="size-18 object-contain"
-              />
-              {b}
-            </label>
-          ))}
-        </div>
-      </fieldset>
       {error && (
         <p role="alert" className="text-sm text-rose-600">
           {error}

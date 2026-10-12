@@ -4,6 +4,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
+import { RELATED_USERS_KEY } from "@/features/related-users/constants";
 import { useAuthDialog } from "./AuthDialog";
 import { signOutAction } from "./actions";
 import { useViewer } from "./viewer";
@@ -39,7 +40,7 @@ export function AccountButton() {
       <button
         type="button"
         onClick={() => openAuth({ mode: "signup" })}
-        className="rounded-full bg-[#fffcf8] px-2.5 py-1 text-[11px] font-bold text-[#3f3158] hover:bg-white lg:px-2"
+        className="rounded-full bg-[#fffcf8] px-2.5 py-1 text-[11px] font-bold text-[#3f3158] hover:bg-white wide:lg:px-2"
       >
         ログイン
       </button>
@@ -51,6 +52,8 @@ export function AccountButton() {
     await signOutAction();
     router.refresh();
     queryClient.invalidateQueries({ queryKey: ["timeline"] });
+    // 前のユーザーの関連ユーザーを、画面にもキャッシュにも残さない
+    queryClient.removeQueries({ queryKey: [RELATED_USERS_KEY] });
   };
 
   return (
@@ -69,7 +72,7 @@ export function AccountButton() {
       {menuOpen && (
         <div
           role="menu"
-          className="design-menu absolute right-0 top-full z-30 mt-2 w-44 text-sm shadow-lg lg:bottom-0 lg:left-full lg:right-auto lg:top-auto lg:ml-2 lg:mt-0"
+          className="design-menu absolute right-0 top-full z-30 mt-2 w-44 text-sm shadow-lg wide:lg:bottom-0 wide:lg:left-full wide:lg:right-auto wide:lg:top-auto wide:lg:ml-2 wide:lg:mt-0"
         >
           <p className="truncate px-3 py-1.5 text-xs text-[var(--ui-muted)]">
             @{user.username}
