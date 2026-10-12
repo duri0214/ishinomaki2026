@@ -6,6 +6,7 @@ import { useState } from "react";
 import { LikeButton } from "@/features/likes/LikeButton";
 import { deletePostAction } from "@/features/posts/actions";
 import { PostBody } from "@/features/posts/PostBody";
+import { PostImages } from "@/features/posts/PostImages";
 import { ReplyThread } from "@/features/replies/ReplyThread";
 import type { TimelinePost } from "./queries";
 import { patchPostInCaches } from "./useTimeline";
@@ -107,6 +108,7 @@ export function PostCard({
       </header>
       <div className="mt-2">
         <PostBody body={post.body} islandSlug={post.island.slug} />
+        <PostImages images={post.images} />
       </div>
       <footer className="mt-3 flex items-center gap-2">
         <LikeButton post={post} />

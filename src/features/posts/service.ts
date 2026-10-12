@@ -1,6 +1,6 @@
 import { and, eq, inArray, isNull } from "drizzle-orm";
 import type { Db } from "@/db/connect";
-import { posts, postTags, tags } from "@/db/schema";
+import { postImages, posts, postTags, tags } from "@/db/schema";
 import { getIslandBySlug } from "@/features/islands/queries";
 import { parseHashtags } from "@/features/tags/parse";
 import { AppError } from "@/lib/errors";
@@ -8,6 +8,7 @@ import {
   createPostInputSchema,
   createReplyInputSchema,
 } from "@/lib/validation";
+import type { PostImage } from "./image-limits";
 
 type Tx = Parameters<Parameters<Db["transaction"]>[0]>[0];
 
@@ -22,6 +23,7 @@ async function insertPostWithTags(
     authorId: string;
     body: string;
     parentPostId: string | null;
+    images: PostImage[];
   },
 ): Promise<{ postId: string }> {
   const { tags: parsedTags } = parseHashtags(input.body);
@@ -36,6 +38,15 @@ async function insertPostWithTags(
     .returning({ id: posts.id });
   if (!post) throw new Error("投稿の作成に失敗しました");
 
+  if (input.images.length > 0) {
+    await tx.insert(postImages).values(
+      input.images.map((image, position) => ({
+        ...image,
+        postId: post.id,
+        position,
+      })),
+    );
+  }
   if (parsedTags.length > 0) {
     await tx
       .insert(tags)
@@ -78,11 +89,17 @@ async function insertPostWithTags(
  */
 export async function createPost(
   txDb: Db,
-  input: { userId: string; islandSlug: string; body: string },
+  input: {
+    userId: string;
+    islandSlug: string;
+    body: string;
+    images?: PostImage[];
+  },
 ): Promise<{ postId: string }> {
   const parsed = createPostInputSchema.safeParse({
     islandSlug: input.islandSlug,
     body: input.body,
+    images: input.images,
   });
   if (!parsed.success) {
     throw new AppError(
@@ -99,6 +116,7 @@ export async function createPost(
       islandId: island.id,
       authorId: input.userId,
       body,
+      images: parsed.data.images,
       parentPostId: null,
     });
   });
@@ -111,11 +129,17 @@ export async function createPost(
  */
 export async function createReply(
   txDb: Db,
-  input: { userId: string; parentPostId: string; body: string },
+  input: {
+    userId: string;
+    parentPostId: string;
+    body: string;
+    images?: PostImage[];
+  },
 ): Promise<{ postId: string }> {
   const parsed = createReplyInputSchema.safeParse({
     parentPostId: input.parentPostId,
     body: input.body,
+    images: input.images,
   });
   if (!parsed.success) {
     throw new AppError(
@@ -139,6 +163,7 @@ export async function createReply(
       islandId: root.islandId,
       authorId: input.userId,
       body,
+      images: parsed.data.images,
       parentPostId: root.id,
     });
   });
