@@ -100,7 +100,7 @@ export function ProfileEditor({
           value={displayName}
           onChange={(e) => setDisplayName(e.target.value)}
           maxLength={DISPLAY_NAME_MAX * 2}
-          className="rounded-xl border border-[var(--ui-border)] bg-[var(--ui-panel)] px-3 py-2 text-[15px] font-normal text-[var(--ui-text)] outline-none focus:ring-2 focus:ring-[var(--ui-accent)]"
+          className="design-field px-3 py-2 text-[15px] font-normal outline-none"
         />
       </label>
 
@@ -116,10 +116,7 @@ export function ProfileEditor({
         {options.map((island) => {
           const members = selected.get(island.slug);
           return (
-            <div
-              key={island.slug}
-              className="rounded-2xl border border-[var(--ui-border)] bg-[var(--ui-panel)] px-3 py-2"
-            >
+            <div key={island.slug} className="design-favorite">
               <label className="flex items-center gap-2 text-sm font-bold text-[var(--ui-title)]">
                 <input
                   type="checkbox"
@@ -142,7 +139,7 @@ export function ProfileEditor({
                         type="button"
                         aria-pressed={on}
                         onClick={() => toggleMember(island.slug, m.id)}
-                        className={`rounded-full px-3 py-1 text-xs font-bold transition-colors ${
+                        className={`rounded-[var(--ui-radius-inner)] px-3 py-1 text-xs font-bold transition-colors ${
                           on
                             ? "bg-[var(--ui-accent)] text-[var(--ui-on-accent)]"
                             : "bg-[var(--ui-hover)] text-[var(--ui-text)] hover:bg-[var(--ui-border)]"
@@ -169,7 +166,7 @@ export function ProfileEditor({
           <button
             type="button"
             onClick={onCancel}
-            className="rounded-full px-4 py-1.5 text-sm text-[var(--ui-text)] hover:bg-[var(--ui-hover)]"
+            className="rounded-[var(--ui-radius-inner)] px-4 py-1.5 text-sm text-[var(--ui-text)] hover:bg-[var(--ui-hover)]"
           >
             {cancelLabel}
           </button>
@@ -177,7 +174,7 @@ export function ProfileEditor({
         <button
           type="submit"
           disabled={pending}
-          className="rounded-full bg-[var(--ui-accent)] px-5 py-1.5 text-sm font-bold text-[var(--ui-on-accent)] hover:bg-[var(--ui-accent-hover)] disabled:bg-[var(--ui-disabled)]"
+          className="rounded-[var(--ui-radius-inner)] bg-[var(--ui-accent)] px-5 py-1.5 text-sm font-bold text-[var(--ui-on-accent)] hover:bg-[var(--ui-accent-hover)] disabled:bg-[var(--ui-disabled)]"
         >
           {pending ? "保存中…" : submitLabel}
         </button>

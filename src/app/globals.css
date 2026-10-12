@@ -4,6 +4,35 @@
   --background: #f4f9fc;
   --foreground: #12222e;
   --sea: #cfe8f3;
+  /* 形状は全テーマ共通。外側の角丸 = 内側の角丸 + padding + 枠線。 */
+  --ui-radius-inner: 12px;
+  --ui-radius-option: 8px;
+  --ui-border-width: 1px;
+  --ui-inset-option: 3px;
+  --ui-inset-compact: 4px;
+  --ui-inset-surface: 12px;
+  --ui-inset-card: 16px;
+  --ui-inset-dialog: 20px;
+  --ui-radius: calc(
+    var(--ui-radius-inner) +
+    var(--ui-inset-card) +
+    var(--ui-border-width)
+  );
+  --ui-radius-surface: calc(
+    var(--ui-radius-inner) +
+    var(--ui-inset-surface) +
+    var(--ui-border-width)
+  );
+  --ui-radius-dialog: calc(
+    var(--ui-radius-inner) +
+    var(--ui-inset-dialog) +
+    var(--ui-border-width)
+  );
+  --ui-radius-menu: calc(
+    var(--ui-radius-inner) +
+    var(--ui-inset-compact) +
+    var(--ui-border-width)
+  );
 }
 
 @theme inline {
@@ -40,7 +69,7 @@ body {
   }
 }
 
-/* Shared theme colors and artwork. */
+/* テーマで切り替えるのは配色のみ。角丸・余白・寸法は :root で共有する。 */
 :root,
 [data-design="kawaii"] {
   --sea: #f1e4f2;
@@ -63,7 +92,6 @@ body {
   --ui-rail-button: #704357;
   --ui-rail-hover: #86556c;
   --ui-rail-text: #ffe6ef;
-  --ui-radius: 28px;
   --ui-hero: radial-gradient(ellipse at 70% 40%, #fff4cb, #f3d5e6 65%, #dfcde9);
 }
 
@@ -88,18 +116,47 @@ body {
   --ui-rail-button: #1b2c46;
   --ui-rail-hover: #2a4261;
   --ui-rail-text: #c0eafa;
-  --ui-radius: 10px;
   --ui-hero: radial-gradient(ellipse at 70% 40%, #305477, #1d294d 65%, #11182b);
 }
 
-.design-panel {
+.design-panel,
+.design-dialog {
   color: var(--ui-text);
 }
+.design-card,
 .design-post {
+  border: var(--ui-border-width) solid var(--ui-border);
   border-radius: var(--ui-radius);
+  background: var(--ui-card);
+  padding: var(--ui-inset-card);
   box-shadow: 0 8px 24px -18px var(--ui-accent);
 }
+.design-avatar,
+.design-field,
+.design-notice {
+  border-radius: var(--ui-radius-inner);
+}
+.design-composer {
+  border: var(--ui-border-width) solid var(--ui-border);
+  border-radius: var(--ui-radius-surface);
+  background: var(--ui-card);
+  padding: var(--ui-inset-surface);
+  box-shadow: 0 8px 24px -18px var(--ui-accent);
+}
+.design-composer textarea {
+  display: block;
+  background: var(--ui-hover);
+}
+.design-favorite {
+  border: var(--ui-border-width) solid var(--ui-border);
+  border-radius: var(--ui-radius-surface);
+  background: var(--ui-card);
+  padding: var(--ui-inset-surface);
+}
 .design-hero {
+  width: calc(100% - 2 * var(--ui-inset-surface));
+  margin: var(--ui-inset-surface) var(--ui-inset-surface) 0;
+  border-radius: var(--ui-radius-surface);
   background: var(--ui-hero);
 }
 .design-eyebrow {
@@ -107,25 +164,94 @@ body {
   background: color-mix(in srgb, var(--ui-rail) 80%, transparent);
   border: 1px solid var(--ui-rail-hover);
 }
-.design-panel :is(input, textarea) {
+.design-field {
+  border: var(--ui-border-width) solid var(--ui-border);
   background: var(--ui-card);
   color: var(--ui-text);
-  border-color: var(--ui-border);
 }
-.design-panel :is(input, textarea)::placeholder {
+.design-field::placeholder {
   color: var(--ui-muted);
 }
-.design-panel :is(button, a, input, textarea):focus-visible {
+.design-field:disabled {
+  background: var(--ui-hover);
+}
+.design-panel :is(button, a, input, textarea):focus-visible,
+.design-dialog :is(button, a, input, textarea):focus-visible,
+.design-map-controls button:focus-visible {
   outline: 2px solid var(--ui-accent);
   outline-offset: 3px;
+}
+.design-dialog {
+  overflow: hidden;
+  border: var(--ui-border-width) solid var(--ui-border);
+  border-radius: var(--ui-radius-dialog);
+  background: var(--ui-panel);
+}
+.design-dialog-content {
+  padding: var(--ui-inset-dialog);
+}
+.design-artist-dialog {
+  overflow-y: auto;
+}
+.design-artist-photo {
+  width: calc(100% - 2 * var(--ui-inset-dialog));
+  margin: var(--ui-inset-dialog) var(--ui-inset-dialog) 0;
+  border-radius: var(--ui-radius-inner);
+}
+.design-segmented,
+.design-suggestions,
+.design-menu,
+.design-map-controls {
+  gap: var(--ui-inset-compact);
+  border: var(--ui-border-width) solid var(--ui-border);
+  border-radius: var(--ui-radius-menu);
+  background: var(--ui-card);
+  padding: var(--ui-inset-compact);
+  color: var(--ui-text);
+}
+.design-segmented {
+  background: var(--ui-hover);
+}
+.design-segment,
+.design-suggestions button,
+.design-menu [role="menuitem"],
+.design-map-controls button {
+  border-radius: var(--ui-radius-inner);
+}
+.design-segment {
+  color: var(--ui-muted);
+}
+.design-segment[aria-selected="true"] {
+  background: var(--ui-card);
+  color: var(--ui-title);
+  box-shadow: 0 1px 4px var(--ui-shadow);
+}
+.design-map-controls button {
+  background: var(--ui-card);
+  color: var(--ui-title);
+}
+.design-map-controls button:hover {
+  background: var(--ui-hover);
+}
+
+@media (max-width: 550px) {
+  /* 全画面の詳細表示には外側の余白がないため、外枠の角丸を付けない。 */
+  .design-artist-dialog {
+    border: 0;
+    border-radius: 0;
+  }
 }
 
 .design-options {
   display: flex;
-  gap: 3px;
-  padding: 3px;
-  border: 1px solid var(--ui-rail-hover);
-  border-radius: 12px;
+  gap: var(--ui-inset-option);
+  padding: var(--ui-inset-option);
+  border: var(--ui-border-width) solid var(--ui-rail-hover);
+  border-radius: calc(
+    var(--ui-radius-option) +
+    var(--ui-inset-option) +
+    var(--ui-border-width)
+  );
   background: var(--ui-rail-button);
 }
 .design-option {
@@ -136,7 +262,7 @@ body {
   min-width: 55px;
   min-height: 42px;
   padding: 4px;
-  border-radius: 8px;
+  border-radius: var(--ui-radius-option);
   color: var(--ui-rail-text);
   font-size: 10px;
   font-weight: 700;

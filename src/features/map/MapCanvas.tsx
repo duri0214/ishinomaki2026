@@ -300,12 +300,12 @@ export function MapCanvas({
         </p>
       )}
 
-      <div className="absolute right-2 top-2 flex flex-col gap-1">
+      <div className="design-map-controls absolute right-3 top-3 flex flex-col shadow-sm">
         <button
           type="button"
           aria-label="拡大"
           onClick={() => zoomBy(1.6)}
-          className="size-8 rounded-md bg-white/90 text-lg shadow hover:bg-white"
+          className="size-8 text-lg"
         >
           ＋
         </button>
@@ -313,7 +313,7 @@ export function MapCanvas({
           type="button"
           aria-label="縮小"
           onClick={() => zoomBy(1 / 1.6)}
-          className="size-8 rounded-md bg-white/90 text-lg shadow hover:bg-white"
+          className="size-8 text-lg"
         >
           －
         </button>
@@ -323,7 +323,7 @@ export function MapCanvas({
           onClick={() =>
             animateTo(cameraFor(focus, islands, viewRef.current), false)
           }
-          className="size-8 rounded-md bg-white/90 text-sm shadow hover:bg-white"
+          className="size-8 text-sm"
         >
           ⌖
         </button>

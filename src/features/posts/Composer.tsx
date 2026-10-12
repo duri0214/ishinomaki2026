@@ -51,7 +51,7 @@ export function Composer({
   if (!viewer.signedIn) {
     return (
       <div
-        className={`rounded-2xl bg-[var(--ui-hover)] px-4 py-2.5 text-sm text-[var(--ui-text)] ${replyTo ? "" : "mx-4 mb-2"}`}
+        className={`rounded-[var(--ui-radius-surface)] bg-[var(--ui-hover)] px-4 py-2.5 text-sm text-[var(--ui-text)] ${replyTo ? "" : "mx-4 mb-2"}`}
       >
         <button
           type="button"
@@ -163,11 +163,7 @@ export function Composer({
 
   return (
     <form
-      className={
-        replyTo
-          ? "relative rounded-2xl border border-[var(--ui-border)] bg-[var(--ui-card)] p-2"
-          : "relative mx-4 mb-2 rounded-[28px] border border-[var(--ui-border)] bg-[var(--ui-card)] p-3 shadow-[0_10px_28px_-16px_var(--ui-shadow)]"
-      }
+      className={`design-composer relative ${replyTo ? "" : "mx-4 mb-2"}`}
       onSubmit={(e) => {
         e.preventDefault();
         submit();
@@ -183,7 +179,7 @@ export function Composer({
             replyTo ? "返信を書く" : "いまどうしてる？ #タグ をつけて投稿しよう"
           }
           aria-label={replyTo ? "返信の本文" : "投稿の本文"}
-          className="w-full resize-none rounded-2xl bg-[#faf6fb] p-3 text-[15px] leading-6 text-[#4b3d63] outline-none placeholder:text-[#b3a8c4] focus:ring-2 focus:ring-[#c9a5e0]"
+          className="design-field w-full resize-none p-3 text-[15px] leading-6 outline-none"
           onChange={(e) => {
             setText(e.target.value);
             setCaret(e.target.selectionStart);
@@ -196,7 +192,7 @@ export function Composer({
         {items.length > 0 && (
           <ul
             aria-label="タグの候補"
-            className="absolute z-20 mt-1 max-h-48 w-64 overflow-auto rounded-2xl border border-[var(--ui-border)] bg-[var(--ui-card)] py-1 text-sm shadow-lg"
+            className="design-suggestions absolute z-20 mt-1 max-h-48 w-64 max-w-[calc(100%_-_1.5rem)] overflow-auto text-sm shadow-lg"
           >
             {items.map((item, i) => (
               <li key={item.normalizedName}>
@@ -237,7 +233,7 @@ export function Composer({
           <button
             type="submit"
             disabled={pending || overLimit || text.trim() === ""}
-            className="ml-auto rounded-full bg-[var(--ui-accent)] px-5 py-1.5 text-sm font-bold text-[var(--ui-on-accent)] hover:bg-[var(--ui-accent-hover)] disabled:bg-[var(--ui-disabled)]"
+            className="ml-auto rounded-[var(--ui-radius-inner)] bg-[var(--ui-accent)] px-5 py-1.5 text-sm font-bold text-[var(--ui-on-accent)] hover:bg-[var(--ui-accent-hover)] disabled:bg-[var(--ui-disabled)]"
           >
             {replyTo
               ? pending

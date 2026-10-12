@@ -113,7 +113,7 @@ export function TimelineSkeleton() {
         {["a", "b", "c", "d"].map((k) => (
           <div
             key={k}
-            className="h-32 animate-pulse rounded-[28px] bg-[#f1e9f3]"
+            className="h-32 animate-pulse rounded-[var(--ui-radius)] bg-[var(--ui-hover)]"
           />
         ))}
       </div>
