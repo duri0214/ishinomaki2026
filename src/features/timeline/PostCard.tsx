@@ -64,14 +64,11 @@ export function PostCard({
   };
 
   return (
-    <article
-      className="design-post border border-[var(--ui-border)] bg-[var(--ui-card)] p-4 shadow-[0_10px_28px_-16px_var(--ui-shadow)]"
-      data-testid="post-card"
-    >
+    <article className="design-card design-post" data-testid="post-card">
       <header className="flex items-center gap-2.5">
         <span
           aria-hidden
-          className={`flex size-9 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br font-serif text-base font-bold text-white ${avatarClass(post.author.displayName)}`}
+          className={`design-avatar flex size-9 shrink-0 items-center justify-center bg-gradient-to-br font-serif text-base font-bold text-white ${avatarClass(post.author.displayName)}`}
         >
           {Array.from(post.author.displayName)[0]}
         </span>

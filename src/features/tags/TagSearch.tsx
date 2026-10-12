@@ -33,7 +33,7 @@ export function TagSearch() {
         disabled={!island}
         placeholder={island ? "タグを検索" : "島を選んで検索"}
         aria-label="タグを検索"
-        className="w-36 rounded-full border border-[var(--ui-border)] bg-[var(--ui-card)] px-3 py-1 text-sm text-[var(--ui-title)] outline-none placeholder:text-[var(--ui-muted)] focus:border-[var(--ui-accent)] disabled:bg-[var(--ui-hover)] xl:w-48"
+        className="design-field w-36 px-3 py-1 text-sm outline-none focus:border-[var(--ui-accent)] disabled:bg-[var(--ui-hover)] xl:w-48"
         onChange={(e) => {
           setValue(e.target.value);
           setOpen(true);
@@ -62,7 +62,7 @@ export function TagSearch() {
       {open && items.length > 0 && (
         <ul
           aria-label="タグの候補"
-          className="absolute right-0 z-30 mt-1 max-h-60 w-60 overflow-auto rounded-lg border border-[var(--ui-border)] bg-[var(--ui-card)] py-1 text-sm shadow-lg"
+          className="design-suggestions absolute right-0 z-30 mt-1 max-h-60 w-60 overflow-auto text-sm shadow-lg"
         >
           {items.map((item, i) => (
             <li key={item.normalizedName}>

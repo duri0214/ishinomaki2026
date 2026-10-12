@@ -2,7 +2,6 @@
 
 import { useParams } from "next/navigation";
 import { ArtistProfileButton } from "@/features/artists/ArtistProfileButton";
-import { useDesign } from "@/features/design/useDesign";
 import { decodeRouteParam } from "@/lib/route-params";
 import { GroupImage } from "./GroupImage";
 
@@ -16,10 +15,10 @@ export type PhotoIsland = {
 /**
  * 集合写真の表示幅。`(main)/layout.tsx` のグリッドに合わせる。
  * 550px以下は全幅、551〜767pxは2列の右半分、768〜1023pxは右30%、
- * 1024px以上は左のツールバー（4.5rem）を除いた領域の30%。
+ * 1024px以上は左のツールバー（4.5rem）を除いた領域の30%。左右の余白24pxを差し引く。
  */
 const PHOTO_SIZES =
-  "(max-width: 550px) 100vw, (max-width: 767px) 50vw, (max-width: 1023px) 30vw, calc((100vw - 4.5rem) * 0.3)";
+  "(max-width: 550px) calc(100vw - 24px), (max-width: 767px) calc(50vw - 24px), (max-width: 1023px) calc(30vw - 24px), calc((100vw - 4.5rem) * 0.3 - 24px)";
 
 /**
  * タイムライン上部の集合写真。島ごとに `public/photos/<島のslug>.jpg`、
@@ -27,7 +26,6 @@ const PHOTO_SIZES =
  * タグで絞っているときは、サブタイトルに島名、タイトルにタグ（人なら人名）を出す。
  */
 export function GroupPhoto({ islands }: { islands: PhotoIsland[] }) {
-  const { design } = useDesign();
   const { island: slug, tag: rawTag } = useParams<{
     island?: string;
     tag?: string;
@@ -53,7 +51,7 @@ export function GroupPhoto({ islands }: { islands: PhotoIsland[] }) {
         sizes={PHOTO_SIZES}
       />
       <span className="design-eyebrow absolute left-4 top-3 rounded-full px-2.5 py-1 text-[10px] font-bold tracking-[0.18em]">
-        {design === "cool" ? "IDOL KINGDOM / COOL" : "IDOL KINGDOM / KAWAII"}
+        IDOL KINGDOM
       </span>
       {island && !rawTag && (
         <ArtistProfileButton

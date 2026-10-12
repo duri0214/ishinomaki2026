@@ -67,62 +67,65 @@ export function ArtistDialog({
         )
           close();
       }}
-      className="fixed inset-0 m-auto max-h-[90dvh] w-[calc(100%_-_2rem)] max-w-xl overflow-y-auto rounded-[28px] border border-[#e3d9ec] bg-[#fffcf8] p-0 text-[#443354] shadow-2xl backdrop:bg-[#23172f]/50 backdrop:backdrop-blur-sm max-[550px]:h-dvh max-[550px]:max-h-dvh max-[550px]:w-full max-[550px]:max-w-none max-[550px]:rounded-none max-[550px]:border-0"
+      className="design-dialog design-artist-dialog fixed inset-0 m-auto max-h-[90dvh] w-[calc(100%_-_2rem)] max-w-xl p-0 shadow-2xl backdrop:bg-[#23172f]/50 backdrop:backdrop-blur-sm max-[550px]:h-dvh max-[550px]:max-h-dvh max-[550px]:w-full max-[550px]:max-w-none"
     >
-      <div className="sticky top-0 z-10 flex items-center justify-between border-b border-[#eee6f3] bg-[#fffcf8] px-5 py-3">
-        <h2 id={titleId} className="text-sm font-bold tracking-wide">
+      <div className="sticky top-0 z-10 flex items-center justify-between border-b border-[var(--ui-border)] bg-[var(--ui-panel)] px-5 py-3">
+        <h2
+          id={titleId}
+          className="text-sm font-bold tracking-wide text-[var(--ui-title)]"
+        >
           アーティスト詳細
         </h2>
         <button
           type="button"
           aria-label="アーティスト詳細を閉じる"
           onClick={close}
-          className="flex size-11 items-center justify-center rounded-full bg-[#f3ecf7] text-xl hover:bg-[#e9ddf1] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#72519b]"
+          className="flex size-11 items-center justify-center rounded-full bg-[var(--ui-hover)] text-xl hover:bg-[var(--ui-border)]"
         >
           <span aria-hidden="true">×</span>
         </button>
       </div>
-      <div className="relative aspect-[2/1] w-full overflow-hidden bg-[#efe6f4]">
+      <div className="design-artist-photo relative aspect-[2/1] overflow-hidden bg-[var(--ui-hover)]">
         <GroupImage
           src={`/photos/${slug}.jpg`}
           alt={`${displayName}の集合写真`}
-          sizes="(max-width: 550px) 100vw, 36rem"
+          sizes="(max-width: 550px) calc(100vw - 40px), 34rem"
         />
       </div>
-      <div className="space-y-6 px-6 pb-10 pt-7 md:px-8">
+      <div className="design-dialog-content space-y-6">
         <div>
-          <p className="mb-2 text-xs font-medium tracking-widest text-[#8a7d9d]">
+          <p className="mb-2 text-xs font-medium tracking-widest text-[var(--ui-muted)]">
             プロフィール
           </p>
-          <h3 className="break-words font-serif text-2xl font-bold leading-relaxed">
+          <h3 className="break-words font-serif text-2xl font-bold leading-relaxed text-[var(--ui-title)]">
             {displayName}
           </h3>
         </div>
         {query.isPending ? (
-          <p role="status" className="text-sm text-[#8a7d9d]">
+          <p role="status" className="text-sm text-[var(--ui-muted)]">
             プロフィールを読み込み中…
           </p>
         ) : query.isError ? (
           <div
             role="alert"
-            className="rounded-2xl border border-[#e3d9ec] bg-[#f6f0fa] p-5 text-sm leading-7"
+            className="design-notice border border-[var(--ui-border)] bg-[var(--ui-hover)] p-5 text-sm leading-7"
           >
             <p>アーティスト情報を読み込めませんでした。</p>
             <button
               type="button"
               disabled={query.isFetching}
               onClick={() => query.refetch()}
-              className="mt-3 rounded-full bg-white px-4 py-2 font-medium text-[#72519b] hover:bg-[#ede3f4] disabled:opacity-50"
+              className="mt-3 rounded-[var(--ui-radius-inner)] bg-[var(--ui-card)] px-4 py-2 font-medium text-[var(--ui-accent)] hover:bg-[var(--ui-border)] disabled:opacity-50"
             >
               {query.isFetching ? "読み込み中…" : "もう一度試す"}
             </button>
           </div>
         ) : description ? (
-          <p className="whitespace-pre-wrap break-words text-sm leading-8 text-[#6a5c7d]">
+          <p className="whitespace-pre-wrap break-words text-sm leading-8">
             {description}
           </p>
         ) : (
-          <p className="rounded-2xl bg-[#f3ecf7] p-5 text-sm leading-7 text-[#8a7d9d]">
+          <p className="design-notice bg-[var(--ui-hover)] p-5 text-sm leading-7 text-[var(--ui-muted)]">
             プロフィールはまだ登録されていません。
           </p>
         )}

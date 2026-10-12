@@ -17,11 +17,11 @@ export function ProfileView({ profile }: { profile: Profile }) {
   const isMe = user?.id === profile.id;
 
   return (
-    <section className="design-post mx-4 mb-4 border border-[var(--ui-border)] bg-[var(--ui-card)] p-4 shadow-[0_10px_28px_-16px_var(--ui-shadow)]">
+    <section className="design-card mx-4 mb-4">
       <header className="flex items-center gap-3">
         <span
           aria-hidden
-          className="flex size-12 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-[#c9a5e0] to-[#8f6ab3] font-serif text-xl font-bold text-white"
+          className="design-avatar flex size-12 shrink-0 items-center justify-center bg-gradient-to-br from-[#c9a5e0] to-[#8f6ab3] font-serif text-xl font-bold text-white"
         >
           {Array.from(profile.displayName)[0]}
         </span>
@@ -37,7 +37,7 @@ export function ProfileView({ profile }: { profile: Profile }) {
           <button
             type="button"
             onClick={() => setEditing(true)}
-            className="rounded-full bg-[var(--ui-hover)] px-4 py-1.5 text-sm font-bold text-[var(--ui-text)] hover:bg-[var(--ui-border)]"
+            className="rounded-[var(--ui-radius-inner)] bg-[var(--ui-hover)] px-4 py-1.5 text-sm font-bold text-[var(--ui-text)] hover:bg-[var(--ui-border)]"
           >
             編集
           </button>
@@ -84,7 +84,7 @@ export function ProfileView({ profile }: { profile: Profile }) {
                       <li key={m.id}>
                         <Link
                           href={`/i/${f.island.slug}/t/${encodeURIComponent(m.normalizedName)}`}
-                          className="inline-block rounded-full bg-[var(--ui-hover)] px-3 py-1 text-xs font-bold text-[var(--ui-text)] hover:bg-[var(--ui-border)]"
+                          className="inline-block rounded-[var(--ui-radius-inner)] bg-[var(--ui-hover)] px-3 py-1 text-xs font-bold text-[var(--ui-text)] hover:bg-[var(--ui-border)]"
                         >
                           {m.name}
                         </Link>
