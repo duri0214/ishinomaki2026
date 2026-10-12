@@ -5,7 +5,10 @@ import { PostCard } from "./PostCard";
 import type { TimelinePage } from "./queries";
 import { type TimelineScopeKey, useTimeline } from "./useTimeline";
 
-/** 無限スクロールのタイムライン。この領域だけがスクロールする */
+/**
+ * 無限スクロールのタイムライン。横並びのレイアウトではこの領域だけがスクロールし、
+ * スマホではページ全体がスクロールする（`(main)/layout.tsx`）。
+ */
 export function Timeline({
   scope,
   initialPage,
@@ -17,6 +20,7 @@ export function Timeline({
 }) {
   const query = useTimeline(scope, initialPage);
   const containerRef = useRef<HTMLDivElement>(null);
+  const contentRef = useRef<HTMLDivElement>(null);
   const {
     hasNextPage,
     isFetchingNextPage,
@@ -24,20 +28,35 @@ export function Timeline({
     fetchNextPage,
   } = query;
 
-  // 下端まで400px以内になったら続きを読み込む。
+  // 一覧の下端が、見えている範囲の下端から400px以内になったら続きを読み込む。
   // 内容が領域より短いときにも読み込めるよう、描画のたびに確認する
   const loadMoreIfNearEnd = useCallback(() => {
     const el = containerRef.current;
-    if (!el || !hasNextPage || isFetchingNextPage) return;
+    const content = contentRef.current;
+    if (!el || !content || !hasNextPage || isFetchingNextPage) return;
     // 続きの取得に失敗したら、自動では再試行しない（「もっと見る」ボタンで再試行する）
     if (isFetchNextPageError) return;
     // 非表示のタイムライン（戻る操作用に残っている前のページ）は読み込まない
     if (el.clientHeight === 0) return;
-    if (el.scrollHeight - el.scrollTop - el.clientHeight < 400) fetchNextPage();
+    // この領域がスクロールするときはその下端、ページ全体がスクロールするときは画面の下端まで見えている
+    const visibleBottom = Math.min(
+      el.getBoundingClientRect().bottom,
+      window.innerHeight,
+    );
+    if (content.getBoundingClientRect().bottom - visibleBottom < 400)
+      fetchNextPage();
   }, [hasNextPage, isFetchingNextPage, isFetchNextPageError, fetchNextPage]);
   useEffect(() => {
     loadMoreIfNearEnd();
   });
+  useEffect(() => {
+    window.addEventListener("scroll", loadMoreIfNearEnd, { passive: true });
+    window.addEventListener("resize", loadMoreIfNearEnd);
+    return () => {
+      window.removeEventListener("scroll", loadMoreIfNearEnd);
+      window.removeEventListener("resize", loadMoreIfNearEnd);
+    };
+  }, [loadMoreIfNearEnd]);
 
   const posts = query.data?.pages.flatMap((p) => p.posts) ?? [];
 
@@ -45,10 +64,10 @@ export function Timeline({
     <div
       ref={containerRef}
       onScroll={loadMoreIfNearEnd}
-      className="min-h-0 flex-1 overflow-y-auto px-4 pb-8"
+      className="flex-1 px-4 pb-8 wide:min-h-0 wide:overflow-y-auto"
       data-testid="timeline"
     >
-      <div className="flex flex-col gap-4 py-2">
+      <div ref={contentRef} className="flex flex-col gap-4 py-2">
         <div className="flex items-center justify-between text-xs text-[var(--ui-muted)]">
           <span>新しい順</span>
           <button
@@ -108,7 +127,7 @@ export function Timeline({
 
 export function TimelineSkeleton() {
   return (
-    <div className="min-h-0 flex-1 overflow-hidden px-4 py-2" aria-hidden>
+    <div className="flex-1 overflow-hidden px-4 py-2 wide:min-h-0" aria-hidden>
       <div className="flex flex-col gap-4">
         {["a", "b", "c", "d"].map((k) => (
           <div

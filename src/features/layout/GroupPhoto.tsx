@@ -46,7 +46,7 @@ export function GroupPhoto({ islands }: { islands: PhotoIsland[] }) {
 
   const src = `/photos/${slug ?? "world"}.jpg`;
   return (
-    <figure className="design-hero relative h-28 w-full shrink-0 min-[551px]:aspect-[2/1] min-[551px]:h-auto min-[551px]:max-h-[27dvh] overflow-hidden bg-[#efe6f4]">
+    <figure className="design-hero relative h-28 w-full shrink-0 wide:aspect-[2/1] wide:h-auto wide:max-h-[27dvh] overflow-hidden bg-[#efe6f4]">
       <GroupImage
         key={src}
         src={src}
