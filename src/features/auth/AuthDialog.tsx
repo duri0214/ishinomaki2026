@@ -11,6 +11,7 @@ import {
   useRef,
   useState,
 } from "react";
+import { HorizontalLogo } from "@/features/layout/BrandLogo";
 import {
   ProfileEditor,
   type ProfileIslandOption,
@@ -146,22 +147,23 @@ function AuthDialog({
       className="design-dialog m-auto w-[min(26rem,calc(100vw-2rem))] p-0 shadow-2xl backdrop:bg-[#2b2140]/50"
     >
       <div className="design-dialog-content flex max-h-[85dvh] flex-col gap-4 overflow-y-auto">
-        <div className="flex items-start justify-between gap-2">
-          <h2
-            id={titleId}
-            className="font-serif text-lg font-bold text-[var(--ui-title)]"
-          >
-            {title}
-          </h2>
+        <div className="relative flex justify-center px-8">
+          <HorizontalLogo className="h-auto w-56 max-w-full" />
           <button
             type="button"
             onClick={onClose}
             aria-label="閉じる"
-            className="flex size-8 items-center justify-center rounded-full text-[var(--ui-muted)] hover:bg-[var(--ui-hover)]"
+            className="absolute top-0 right-0 flex size-8 items-center justify-center rounded-full text-[var(--ui-muted)] hover:bg-[var(--ui-hover)]"
           >
             ×
           </button>
         </div>
+        <h2
+          id={titleId}
+          className="font-serif text-lg font-bold text-[var(--ui-title)]"
+        >
+          {title}
+        </h2>
 
         {state.step === "credentials" ? (
           <>

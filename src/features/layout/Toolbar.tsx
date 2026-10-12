@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 import { AccountButton } from "@/features/auth/AccountButton";
 import { DesignSwitch } from "@/features/design/DesignSwitch";
@@ -16,9 +17,18 @@ export function Toolbar({
         href="/"
         aria-label="世界地図へ"
         title="世界地図へ"
-        className="flex size-11 shrink-0 items-center justify-center rounded-2xl bg-[var(--ui-rail-button)] text-2xl hover:bg-[var(--ui-rail-hover)]"
+        className="flex size-11 shrink-0 items-center justify-center rounded-2xl bg-[#fffcf8] hover:bg-white"
       >
-        <span aria-hidden>🏝</span>
+        {/* 線が濃紺のエンブレムなので、暗いツールバーでは明るい下地に載せる */}
+        <Image
+          src="/logos/emblem.png"
+          alt=""
+          width={256}
+          height={236}
+          sizes="2.25rem"
+          loading="eager"
+          className="w-9"
+        />
       </Link>
       <span
         aria-hidden
