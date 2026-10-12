@@ -2,7 +2,7 @@ import { eq } from "drizzle-orm";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import type { Connection } from "@/db/connect";
 import { islands, postTags, tags, userFavoriteMembers } from "@/db/schema";
-import { createIsland, saveIsland } from "@/features/islands/admin";
+import { createIsland, saveIsland, saveTopic } from "@/features/islands/admin";
 import { getFavorites, updateProfile } from "@/features/profile/service";
 import { validateTagName } from "@/features/tags/parse";
 import { listMemberTags } from "@/features/tags/queries";
@@ -231,6 +231,41 @@ describe("saveIsland", () => {
     await expect(save({ slug: "coords", worldY: 1e9 })).rejects.toMatchObject({
       code: "validation",
     });
+  });
+});
+
+describe("saveTopic", () => {
+  it("話題タグを追加・更新し、同じタグの投稿との紐付けを維持する", async () => {
+    const island = await createIsland(conn.db, {
+      slug: "topics",
+      name: "話題島",
+    });
+    const user = await insertUser(conn.db);
+    const topic = await saveTopic(conn.txDb, {
+      islandSlug: island.slug,
+      name: "最初の話題",
+    });
+    const post = await insertPost(conn.db, {
+      islandId: island.id,
+      authorId: user.id,
+    });
+    await conn.db.insert(postTags).values({ postId: post.id, tagId: topic.id });
+
+    const saved = await saveTopic(conn.txDb, {
+      islandSlug: island.slug,
+      id: topic.id,
+      name: "更新後の話題",
+    });
+
+    expect(saved).toMatchObject({
+      id: topic.id,
+      name: "更新後の話題",
+      kind: "topic",
+      position: null,
+    });
+    expect(
+      await conn.db.select().from(postTags).where(eq(postTags.tagId, topic.id)),
+    ).toHaveLength(1);
   });
 });
 

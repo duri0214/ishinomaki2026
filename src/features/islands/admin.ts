@@ -47,6 +47,13 @@ export const saveIslandInputSchema = z.object({
 });
 export type SaveIslandInput = z.input<typeof saveIslandInputSchema>;
 
+export const saveTopicInputSchema = z.object({
+  islandSlug: islandSlugSchema,
+  id: z.uuid().optional(),
+  name: z.string().trim().min(1),
+});
+export type SaveTopicInput = z.input<typeof saveTopicInputSchema>;
+
 function firstIssue(error: z.ZodError): string {
   return error.issues[0]?.message ?? "入力が不正です";
 }
@@ -173,5 +180,77 @@ export async function saveIsland(
         });
     }
     return island;
+  });
+}
+
+/**
+ * 話題タグを追加または更新する。id を指定しない場合は同名タグを再利用するため、
+ * 投稿との紐付けを持つ既存タグをメンバーから話題へ戻す操作にも使える。
+ */
+export async function saveTopic(txDb: Db, input: SaveTopicInput) {
+  const parsed = saveTopicInputSchema.safeParse(input);
+  if (!parsed.success) {
+    throw new AppError("validation", firstIssue(parsed.error));
+  }
+  const data = parsed.data;
+  const topic = validateTagName(data.name);
+  if (!topic) {
+    throw new AppError("validation", "有効な話題タグ名を入力してください");
+  }
+
+  return txDb.transaction(async (tx) => {
+    const [island] = await tx
+      .select({ id: islands.id })
+      .from(islands)
+      .where(eq(islands.slug, data.islandSlug))
+      .limit(1);
+    if (!island) throw new AppError("island_not_found", "島が見つかりません");
+
+    try {
+      if (data.id) {
+        const [saved] = await tx
+          .update(tags)
+          .set({
+            name: topic.name,
+            normalizedName: topic.normalizedName,
+            kind: "topic",
+            position: null,
+          })
+          .where(and(eq(tags.id, data.id), eq(tags.islandId, island.id)))
+          .returning();
+        if (!saved) {
+          throw new AppError("validation", "話題タグが見つかりません");
+        }
+        await tx
+          .delete(userFavoriteMembers)
+          .where(eq(userFavoriteMembers.tagId, saved.id));
+        return saved;
+      }
+
+      const [saved] = await tx
+        .insert(tags)
+        .values({
+          islandId: island.id,
+          name: topic.name,
+          normalizedName: topic.normalizedName,
+          kind: "topic",
+          position: null,
+        })
+        .onConflictDoUpdate({
+          target: [tags.islandId, tags.normalizedName],
+          set: { name: topic.name, kind: "topic", position: null },
+        })
+        .returning();
+      if (!saved) throw new Error("話題タグを保存できませんでした");
+      await tx
+        .delete(userFavoriteMembers)
+        .where(eq(userFavoriteMembers.tagId, saved.id));
+      return saved;
+    } catch (err) {
+      if (isUniqueViolation(err)) {
+        throw new AppError("validation", "同じ名前のタグがすでにあります");
+      }
+      throw err;
+    }
   });
 }
