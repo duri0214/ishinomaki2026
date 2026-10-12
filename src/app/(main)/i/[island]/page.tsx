@@ -4,6 +4,7 @@ import { connection } from "next/server";
 import { getDb } from "@/db";
 import { loadIsland } from "@/features/islands/load";
 import { Composer } from "@/features/posts/Composer";
+import { TimelineTabs } from "@/features/related-users/TimelineTabs";
 import { getTimeline } from "@/features/timeline/queries";
 import { Timeline } from "@/features/timeline/Timeline";
 import { getViewerId } from "@/lib/auth";
@@ -37,13 +38,13 @@ export default async function IslandPage({ params }: Props) {
     viewerId,
   });
   return (
-    <>
+    <TimelineTabs>
       <Composer islandSlug={island.slug} />
       <Timeline
         scope={{ island: island.slug }}
         initialPage={initialPage}
         emptyMessage="この島にはまだ投稿がありません。最初の投稿をしてみよう"
       />
-    </>
+    </TimelineTabs>
   );
 }

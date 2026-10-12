@@ -19,6 +19,7 @@ vi.mock("@/features/profile/actions", () => ({
 }));
 
 import { AuthDialogProvider, useAuthDialog } from "@/features/auth/AuthDialog";
+import { RELATED_USERS_KEY } from "@/features/related-users/constants";
 
 const options = [
   {
@@ -44,8 +45,7 @@ function Opener() {
   );
 }
 
-function renderDialog() {
-  const client = new QueryClient();
+function renderDialog(client = new QueryClient()) {
   return render(
     <QueryClientProvider client={client}>
       <AuthDialogProvider profileOptions={options}>
@@ -169,5 +169,21 @@ describe("AuthDialog", () => {
     await u.click(screen.getByRole("button", { name: "ログインする" }));
     await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
     expect(refresh).toHaveBeenCalled();
+  });
+
+  it("ログインに成功したら、前のユーザーの関連ユーザーをキャッシュから消す", async () => {
+    signInAction.mockResolvedValueOnce({ ok: true, data: user });
+    const client = new QueryClient();
+    const key = [RELATED_USERS_KEY, "previous-user"];
+    client.setQueryData(key, { users: [], hasCriteria: true });
+    const u = userEvent.setup();
+    renderDialog(client);
+    await u.click(screen.getByRole("button", { name: "開く" }));
+    await u.click(screen.getByRole("tab", { name: "ログイン" }));
+    await u.type(screen.getByLabelText("ユーザー名"), "neru");
+    await u.type(screen.getByLabelText("パスワード"), "password-1");
+    await u.click(screen.getByRole("button", { name: "ログインする" }));
+    await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
+    expect(client.getQueryData(key)).toBeUndefined();
   });
 });

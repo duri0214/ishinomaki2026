@@ -4,6 +4,7 @@ import { connection } from "next/server";
 import { getDb } from "@/db";
 import { loadIsland } from "@/features/islands/load";
 import { Composer } from "@/features/posts/Composer";
+import { TimelineTabs } from "@/features/related-users/TimelineTabs";
 import { getTagByNormalizedName } from "@/features/tags/queries";
 import { getTimeline } from "@/features/timeline/queries";
 import { Timeline } from "@/features/timeline/Timeline";
@@ -60,7 +61,7 @@ export default async function TagPage({ params }: Props) {
   const key = `${island.slug}:${normalized}`;
 
   return (
-    <>
+    <TimelineTabs>
       <Composer
         key={`composer:${key}`}
         islandSlug={island.slug}
@@ -72,6 +73,6 @@ export default async function TagPage({ params }: Props) {
         initialPage={initialPage}
         emptyMessage={`#${displayName} の投稿はまだありません`}
       />
-    </>
+    </TimelineTabs>
   );
 }
