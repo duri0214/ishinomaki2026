@@ -45,6 +45,7 @@ const ISLANDS = [
     worldX: -430,
     worldY: -400,
     members: ["大野智", "櫻井翔", "相葉雅紀", "二宮和也", "松本潤"],
+    topics: ["Love so sweet", "5x20", "ARASHI_LIVE", "A.RA.SHI"],
   },
   {
     slug: SEED_ISLAND_SLUGS[1],
@@ -64,6 +65,7 @@ const ISLANDS = [
       "チェヨン",
       "ツウィ",
     ],
+    topics: ["TT", "ONCE", "Feel Special", "ドームツアー"],
   },
   {
     slug: SEED_ISLAND_SLUGS[2],
@@ -73,6 +75,7 @@ const ISLANDS = [
     worldX: -430,
     worldY: 420,
     members: ["佐野勇斗", "塩崎大智", "曽野舜太", "山中柔太朗", "吉田仁人"],
+    topics: ["イイじゃん", "MILK_LIVE", "ミルクティー", "ラジオ"],
   },
   {
     slug: SEED_ISLAND_SLUGS[3],
@@ -90,6 +93,7 @@ const ISLANDS = [
       "松本かれん",
       "真中まな",
     ],
+    topics: ["わたしの一番かわいいところ", "ジッパー", "KAWAII", "ファンミ"],
   },
 ] as const;
 
@@ -242,7 +246,7 @@ export function generateSeed(now: Date): SeedData {
       return row;
     });
     // 島ごとに少し順番を変えて、上位の顔ぶれが島ごとに違うようにする
-    const topicNames = [...TOPIC_TAGS];
+    const topicNames = [...spec.topics, ...TOPIC_TAGS];
     const shift = rnd.int(topicNames.length);
     const topics = topicNames
       .map((_, k) => topicNames[(k + shift) % topicNames.length] as string)
