@@ -1,0 +1,2 @@
+ALTER TABLE "dm_messages" ADD COLUMN "read_at" timestamp (3) with time zone;--> statement-breakpoint
+CREATE INDEX "dm_messages_unread_idx" ON "dm_messages" USING btree ("conversation_id","sender_id") WHERE "dm_messages"."read_at" is null;

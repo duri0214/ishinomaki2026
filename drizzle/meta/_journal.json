@@ -50,6 +50,20 @@
       "when": 1791764846742,
       "tag": "0006_add_post_replies",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1791766565584,
+      "tag": "0007_add_direct_messages",
+      "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1791768485309,
+      "tag": "0008_add_dm_read_state",
+      "breakpoints": true
     }
   ]
 }

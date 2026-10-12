@@ -1,0 +1,161 @@
+"use client";
+
+import {
+  type InfiniteData,
+  type QueryClient,
+  useInfiniteQuery,
+  useQuery,
+} from "@tanstack/react-query";
+import type { ConversationSummary, MessagePage } from "./types";
+
+export const MESSAGES_KEY = "messages";
+
+export class PrivateMessageError extends Error {
+  constructor(
+    message: string,
+    readonly status: number,
+  ) {
+    super(message);
+  }
+}
+
+export async function readPrivate<T>(
+  url: string,
+  viewerId: string,
+  signal: AbortSignal,
+): Promise<T> {
+  const response = await fetch(url, { cache: "no-store", signal });
+  const data = await response.json();
+  if (!response.ok)
+    throw new PrivateMessageError(
+      data.error ?? "メッセージを読み込めませんでした",
+      response.status,
+    );
+  // 別タブでアカウントが切り替わっていても、別人の応答を現在の画面へ渡さない。
+  if (data.viewerId !== viewerId)
+    throw new PrivateMessageError(
+      "ログイン状態が変わりました。画面を更新してください",
+      401,
+    );
+  return data;
+}
+
+type MessageHistory = InfiniteData<MessagePage, string | null>;
+
+/** 新着を最新1ページから取り込み、取得済みの過去の履歴・カーソルを維持する。 */
+export function mergeLatestMessages(
+  old: MessageHistory | undefined,
+  latest: MessagePage,
+): MessageHistory {
+  const first = old?.pages[0];
+  if (!first || first.messages.length === 0)
+    return { pages: [latest], pageParams: [null] };
+  const previousNewest = first.messages[first.messages.length - 1];
+  const currentNewest = latest.messages[latest.messages.length - 1];
+  if (!currentNewest) return old;
+  if (
+    previousNewest &&
+    (currentNewest.createdAt < previousNewest.createdAt ||
+      (currentNewest.createdAt === previousNewest.createdAt &&
+        currentNewest.id < previousNewest.id))
+  )
+    return old;
+  // 非表示中などに20件以上届いた場合は最新から読み直し、途中の履歴を欠落させない。
+  if (!latest.messages.some((m) => m.id === previousNewest?.id))
+    return { pages: [latest], pageParams: [null] };
+  const messages = Array.from(
+    new Map(
+      [...first.messages, ...latest.messages].map((m) => [m.id, m]),
+    ).values(),
+  ).sort(
+    (a, b) =>
+      a.createdAt.localeCompare(b.createdAt) || a.id.localeCompare(b.id),
+  );
+  return {
+    ...old,
+    pages: [
+      { ...first, conversation: latest.conversation, messages },
+      ...old.pages.slice(1),
+    ],
+  };
+}
+
+export async function refreshActiveConversation(
+  client: QueryClient,
+  viewerId: string,
+  conversationId: string,
+  expectedLatestId?: string,
+) {
+  const key = [MESSAGES_KEY, viewerId, conversationId];
+  const cached = client.getQueryCache().find({ queryKey: key, exact: true });
+  if (!cached?.isActive() || cached.state.fetchStatus === "fetching") return;
+  const history = client.getQueryData<MessageHistory>(key);
+  if (!history) return;
+  if (
+    expectedLatestId &&
+    history.pages[0]?.messages.at(-1)?.id === expectedLatestId
+  )
+    return;
+  try {
+    const latest = await client.fetchQuery({
+      queryKey: [...key, "latest"],
+      queryFn: ({ signal }) =>
+        readPrivate<MessagePage>(
+          `/api/messages/${conversationId}`,
+          viewerId,
+          signal,
+        ),
+      staleTime: 0,
+      gcTime: 0,
+      retry: false,
+    });
+    // ログアウトや別ページへの移動で破棄されたキャッシュを復活させない。
+    if (client.getQueryCache().find({ queryKey: key, exact: true })?.isActive())
+      client.setQueryData<MessageHistory>(key, (old) =>
+        mergeLatestMessages(old, latest),
+      );
+  } catch (error) {
+    if (
+      error instanceof PrivateMessageError &&
+      [401, 403, 404].includes(error.status)
+    )
+      await client.resetQueries({ queryKey: key, exact: true });
+  }
+}
+
+export function useConversations(viewerId: string) {
+  return useQuery({
+    queryKey: [MESSAGES_KEY, viewerId, "list"],
+    queryFn: ({ signal }) =>
+      readPrivate<{ conversations: ConversationSummary[] }>(
+        "/api/messages",
+        viewerId,
+        signal,
+      ),
+    staleTime: 0,
+    gcTime: 0,
+    retry: false,
+    refetchOnWindowFocus: true,
+  });
+}
+
+export function useMessages(viewerId: string, conversationId: string) {
+  return useInfiniteQuery({
+    queryKey: [MESSAGES_KEY, viewerId, conversationId],
+    queryFn: ({ signal, pageParam }) => {
+      const params = new URLSearchParams();
+      if (pageParam) params.set("cursor", pageParam);
+      return readPrivate<MessagePage>(
+        `/api/messages/${conversationId}?${params}`,
+        viewerId,
+        signal,
+      );
+    },
+    initialPageParam: null as string | null,
+    getNextPageParam: (last) => last.nextCursor,
+    staleTime: 0,
+    gcTime: 0,
+    retry: false,
+    refetchOnWindowFocus: true,
+  });
+}

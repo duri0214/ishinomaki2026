@@ -48,7 +48,10 @@ export function AccountButton() {
 
   const signOut = async () => {
     setMenuOpen(false);
-    await signOutAction();
+    const result = await signOutAction();
+    if (!result.ok) return;
+    // 非表示のページや進行中の取得を含め、前のアカウントの私的データを破棄する。
+    queryClient.clear();
     router.refresh();
     queryClient.invalidateQueries({ queryKey: ["timeline"] });
   };

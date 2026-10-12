@@ -108,6 +108,7 @@ function AuthDialog({
 
   /** ログイン状態が変わったので、サーバーの描画とタイムライン（いいね済み・削除ボタン）を取り直す */
   const refresh = useCallback(() => {
+    queryClient.removeQueries({ queryKey: ["messages"] });
     router.refresh();
     queryClient.invalidateQueries({ queryKey: ["timeline"] });
   }, [router, queryClient]);

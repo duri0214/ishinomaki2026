@@ -1,6 +1,6 @@
 "use client";
 
-import { useParams } from "next/navigation";
+import { useParams, usePathname } from "next/navigation";
 import { ArtistProfileButton } from "@/features/artists/ArtistProfileButton";
 import { decodeRouteParam } from "@/lib/route-params";
 import { GroupImage } from "./GroupImage";
@@ -26,12 +26,15 @@ const PHOTO_SIZES =
  * タグで絞っているときは、サブタイトルに島名、タイトルにタグ（人なら人名）を出す。
  */
 export function GroupPhoto({ islands }: { islands: PhotoIsland[] }) {
+  const pathname = usePathname();
   const { island: slug, tag: rawTag } = useParams<{
     island?: string;
     tag?: string;
   }>();
   const island = islands.find((i) => i.slug === slug);
   const tagName = rawTag ? decodeRouteParam(rawTag) : undefined;
+
+  if (pathname?.startsWith("/messages")) return null;
 
   let title = island?.name ?? "島マップ";
   let subtitle: string | undefined;
