@@ -1,0 +1,617 @@
+{
+  "islandSize": 690,
+  "bases": {
+    "base-01": {
+      "src": "/map/base/base-01.webp",
+      "width": 1254,
+      "height": 1254,
+      "palette": "blue",
+      "custom": true,
+      "modes": {
+        "cool": {
+          "src": "/map/base/base-01-cool.webp",
+          "width": 1254,
+          "height": 1254
+        }
+      }
+    },
+    "base-03": {
+      "src": "/map/base/base-03.webp",
+      "width": 1254,
+      "height": 1254,
+      "palette": "green",
+      "custom": true,
+      "modes": {
+        "cool": {
+          "src": "/map/base/base-03-cool.webp",
+          "width": 1254,
+          "height": 1254
+        }
+      }
+    },
+    "base-05": {
+      "src": "/map/base/base-05.webp",
+      "width": 1254,
+      "height": 1254,
+      "palette": "pink",
+      "custom": true,
+      "modes": {
+        "cool": {
+          "src": "/map/base/base-05-cool.webp",
+          "width": 1254,
+          "height": 1254
+        }
+      }
+    },
+    "base-07": {
+      "src": "/map/base/base-07.webp",
+      "width": 1254,
+      "height": 1254,
+      "palette": "purple",
+      "custom": true,
+      "modes": {
+        "cool": {
+          "src": "/map/base/base-07-cool.webp",
+          "width": 1254,
+          "height": 1254
+        }
+      }
+    }
+  },
+  "modes": {
+    "cool": {
+      "blue": {
+        "house-member": {
+          "src": "/map/cool/blue/house-member.webp",
+          "width": 449,
+          "height": 512,
+          "anchor": [0.4995, 0.9958]
+        },
+        "house-cafe": {
+          "src": "/map/cool/blue/house-cafe.webp",
+          "width": 509,
+          "height": 512,
+          "anchor": [0.4996, 0.9966]
+        },
+        "house-music": {
+          "src": "/map/cool/blue/house-music.webp",
+          "width": 512,
+          "height": 471,
+          "anchor": [0.4996, 0.9953]
+        },
+        "house-shop": {
+          "src": "/map/cool/blue/house-shop.webp",
+          "width": 423,
+          "height": 512,
+          "anchor": [0.4995, 0.9957]
+        },
+        "house-cottage": {
+          "src": "/map/cool/blue/house-cottage.webp",
+          "width": 469,
+          "height": 512,
+          "anchor": [0.4995, 0.9957]
+        },
+        "tree": {
+          "src": "/map/cool/blue/tree.webp",
+          "width": 438,
+          "height": 448,
+          "anchor": [0.4991, 0.9958]
+        },
+        "penlight": {
+          "src": "/map/cool/blue/penlight.webp",
+          "width": 177,
+          "height": 256,
+          "anchor": [0.535, 0.9967]
+        },
+        "stage": {
+          "src": "/map/cool/blue/stage.webp",
+          "width": 435,
+          "height": 512,
+          "anchor": [0.4995, 0.9967]
+        },
+        "castle": {
+          "src": "/map/cool/blue/castle.webp",
+          "width": 721,
+          "height": 768,
+          "anchor": [0.5004, 0.9968]
+        }
+      },
+      "green": {
+        "house-member": {
+          "src": "/map/cool/green/house-member.webp",
+          "width": 449,
+          "height": 512,
+          "anchor": [0.4995, 0.9958]
+        },
+        "house-cafe": {
+          "src": "/map/cool/green/house-cafe.webp",
+          "width": 509,
+          "height": 512,
+          "anchor": [0.4996, 0.9966]
+        },
+        "house-music": {
+          "src": "/map/cool/green/house-music.webp",
+          "width": 512,
+          "height": 471,
+          "anchor": [0.4996, 0.9953]
+        },
+        "house-shop": {
+          "src": "/map/cool/green/house-shop.webp",
+          "width": 423,
+          "height": 512,
+          "anchor": [0.4995, 0.9957]
+        },
+        "house-cottage": {
+          "src": "/map/cool/green/house-cottage.webp",
+          "width": 469,
+          "height": 512,
+          "anchor": [0.4995, 0.9957]
+        },
+        "tree": {
+          "src": "/map/cool/green/tree.webp",
+          "width": 448,
+          "height": 446,
+          "anchor": [0.4836, 0.9819]
+        },
+        "penlight": {
+          "src": "/map/cool/green/penlight.webp",
+          "width": 123,
+          "height": 256,
+          "anchor": [0.5164, 0.9956]
+        },
+        "stage": {
+          "src": "/map/cool/green/stage.webp",
+          "width": 441,
+          "height": 512,
+          "anchor": [0.4995, 0.9958]
+        },
+        "castle": {
+          "src": "/map/cool/green/castle.webp",
+          "width": 768,
+          "height": 738,
+          "anchor": [0.4996, 0.9958]
+        }
+      },
+      "pink": {
+        "house-member": {
+          "src": "/map/cool/pink/house-member.webp",
+          "width": 449,
+          "height": 512,
+          "anchor": [0.4995, 0.9958]
+        },
+        "house-cafe": {
+          "src": "/map/cool/pink/house-cafe.webp",
+          "width": 509,
+          "height": 512,
+          "anchor": [0.4996, 0.9966]
+        },
+        "house-music": {
+          "src": "/map/cool/pink/house-music.webp",
+          "width": 512,
+          "height": 471,
+          "anchor": [0.4996, 0.9953]
+        },
+        "house-shop": {
+          "src": "/map/cool/pink/house-shop.webp",
+          "width": 423,
+          "height": 512,
+          "anchor": [0.4995, 0.9957]
+        },
+        "house-cottage": {
+          "src": "/map/cool/pink/house-cottage.webp",
+          "width": 469,
+          "height": 512,
+          "anchor": [0.4995, 0.9957]
+        },
+        "tree": {
+          "src": "/map/cool/pink/tree.webp",
+          "width": 448,
+          "height": 437,
+          "anchor": [0.5, 0.9958]
+        },
+        "penlight": {
+          "src": "/map/cool/pink/penlight.webp",
+          "width": 126,
+          "height": 256,
+          "anchor": [0.5153, 0.9956]
+        },
+        "stage": {
+          "src": "/map/cool/pink/stage.webp",
+          "width": 462,
+          "height": 512,
+          "anchor": [0.4995, 0.9957]
+        },
+        "castle": {
+          "src": "/map/cool/pink/castle.webp",
+          "width": 766,
+          "height": 768,
+          "anchor": [0.4996, 0.9968]
+        }
+      },
+      "purple": {
+        "house-member": {
+          "src": "/map/cool/purple/house-member.webp",
+          "width": 449,
+          "height": 512,
+          "anchor": [0.4995, 0.9958]
+        },
+        "house-cafe": {
+          "src": "/map/cool/purple/house-cafe.webp",
+          "width": 509,
+          "height": 512,
+          "anchor": [0.4996, 0.9966]
+        },
+        "house-music": {
+          "src": "/map/cool/purple/house-music.webp",
+          "width": 512,
+          "height": 471,
+          "anchor": [0.4996, 0.9953]
+        },
+        "house-shop": {
+          "src": "/map/cool/purple/house-shop.webp",
+          "width": 423,
+          "height": 512,
+          "anchor": [0.4995, 0.9957]
+        },
+        "house-cottage": {
+          "src": "/map/cool/purple/house-cottage.webp",
+          "width": 469,
+          "height": 512,
+          "anchor": [0.4995, 0.9957]
+        },
+        "tree": {
+          "src": "/map/cool/purple/tree.webp",
+          "width": 448,
+          "height": 446,
+          "anchor": [0.5, 0.9957]
+        },
+        "penlight": {
+          "src": "/map/cool/purple/penlight.webp",
+          "width": 126,
+          "height": 256,
+          "anchor": [0.5153, 0.9956]
+        },
+        "stage": {
+          "src": "/map/cool/purple/stage.webp",
+          "width": 462,
+          "height": 512,
+          "anchor": [0.4995, 0.9957]
+        },
+        "castle": {
+          "src": "/map/cool/purple/castle.webp",
+          "width": 766,
+          "height": 768,
+          "anchor": [0.4996, 0.9968]
+        }
+      }
+    },
+    "kawaii": {
+      "blue": {
+        "house-member": {
+          "src": "/map/kawaii/blue/house-member.webp",
+          "width": 446,
+          "height": 512,
+          "anchor": [0.4995, 0.9966]
+        },
+        "house-cafe": {
+          "src": "/map/kawaii/blue/house-cafe.webp",
+          "width": 481,
+          "height": 512,
+          "anchor": [0.4996, 0.996]
+        },
+        "house-music": {
+          "src": "/map/kawaii/blue/house-music.webp",
+          "width": 499,
+          "height": 512,
+          "anchor": [0.5, 0.9956]
+        },
+        "house-shop": {
+          "src": "/map/kawaii/blue/house-shop.webp",
+          "width": 414,
+          "height": 512,
+          "anchor": [0.4989, 0.9957]
+        },
+        "house-cottage": {
+          "src": "/map/kawaii/blue/house-cottage.webp",
+          "width": 495,
+          "height": 512,
+          "anchor": [0.4995, 0.9954]
+        },
+        "tree": {
+          "src": "/map/kawaii/blue/tree.webp",
+          "width": 448,
+          "height": 448,
+          "anchor": [0.4996, 0.994]
+        },
+        "penlight": {
+          "src": "/map/kawaii/blue/penlight.webp",
+          "width": 112,
+          "height": 256,
+          "anchor": [0.499, 0.9957]
+        },
+        "stage": {
+          "src": "/map/kawaii/blue/stage.webp",
+          "width": 401,
+          "height": 512,
+          "anchor": [0.4989, 0.9965]
+        },
+        "castle": {
+          "src": "/map/kawaii/blue/castle.webp",
+          "width": 737,
+          "height": 768,
+          "anchor": [0.4996, 0.9959]
+        }
+      },
+      "green": {
+        "house-member": {
+          "src": "/map/kawaii/green/house-member.webp",
+          "width": 446,
+          "height": 512,
+          "anchor": [0.4995, 0.9966]
+        },
+        "house-cafe": {
+          "src": "/map/kawaii/green/house-cafe.webp",
+          "width": 481,
+          "height": 512,
+          "anchor": [0.4996, 0.996]
+        },
+        "house-music": {
+          "src": "/map/kawaii/green/house-music.webp",
+          "width": 499,
+          "height": 512,
+          "anchor": [0.5, 0.9956]
+        },
+        "house-shop": {
+          "src": "/map/kawaii/green/house-shop.webp",
+          "width": 414,
+          "height": 512,
+          "anchor": [0.4989, 0.9957]
+        },
+        "house-cottage": {
+          "src": "/map/kawaii/green/house-cottage.webp",
+          "width": 495,
+          "height": 512,
+          "anchor": [0.4995, 0.9954]
+        },
+        "tree": {
+          "src": "/map/kawaii/green/tree.webp",
+          "width": 448,
+          "height": 423,
+          "anchor": [0.4992, 0.9948]
+        },
+        "penlight": {
+          "src": "/map/kawaii/green/penlight.webp",
+          "width": 112,
+          "height": 256,
+          "anchor": [0.499, 0.9957]
+        },
+        "stage": {
+          "src": "/map/kawaii/green/stage.webp",
+          "width": 441,
+          "height": 512,
+          "anchor": [0.5, 0.9965]
+        },
+        "castle": {
+          "src": "/map/kawaii/green/castle.webp",
+          "width": 750,
+          "height": 768,
+          "anchor": [0.4996, 0.9958]
+        }
+      },
+      "pink": {
+        "house-member": {
+          "src": "/map/kawaii/pink/house-member.webp",
+          "width": 446,
+          "height": 512,
+          "anchor": [0.4995, 0.9966]
+        },
+        "house-cafe": {
+          "src": "/map/kawaii/pink/house-cafe.webp",
+          "width": 481,
+          "height": 512,
+          "anchor": [0.4996, 0.996]
+        },
+        "house-music": {
+          "src": "/map/kawaii/pink/house-music.webp",
+          "width": 499,
+          "height": 512,
+          "anchor": [0.5, 0.9956]
+        },
+        "house-shop": {
+          "src": "/map/kawaii/pink/house-shop.webp",
+          "width": 414,
+          "height": 512,
+          "anchor": [0.4989, 0.9957]
+        },
+        "house-cottage": {
+          "src": "/map/kawaii/pink/house-cottage.webp",
+          "width": 495,
+          "height": 512,
+          "anchor": [0.4995, 0.9954]
+        },
+        "tree": {
+          "src": "/map/kawaii/pink/tree.webp",
+          "width": 448,
+          "height": 439,
+          "anchor": [0.4988, 0.9958]
+        },
+        "penlight": {
+          "src": "/map/kawaii/pink/penlight.webp",
+          "width": 114,
+          "height": 256,
+          "anchor": [0.499, 0.9965]
+        },
+        "stage": {
+          "src": "/map/kawaii/pink/stage.webp",
+          "width": 442,
+          "height": 512,
+          "anchor": [0.4995, 0.9958]
+        },
+        "castle": {
+          "src": "/map/kawaii/pink/castle.webp",
+          "width": 763,
+          "height": 768,
+          "anchor": [0.5, 0.9967]
+        }
+      },
+      "purple": {
+        "house-member": {
+          "src": "/map/kawaii/purple/house-member.webp",
+          "width": 446,
+          "height": 512,
+          "anchor": [0.4995, 0.9966]
+        },
+        "house-cafe": {
+          "src": "/map/kawaii/purple/house-cafe.webp",
+          "width": 481,
+          "height": 512,
+          "anchor": [0.4996, 0.996]
+        },
+        "house-music": {
+          "src": "/map/kawaii/purple/house-music.webp",
+          "width": 499,
+          "height": 512,
+          "anchor": [0.5, 0.9956]
+        },
+        "house-shop": {
+          "src": "/map/kawaii/purple/house-shop.webp",
+          "width": 414,
+          "height": 512,
+          "anchor": [0.4989, 0.9957]
+        },
+        "house-cottage": {
+          "src": "/map/kawaii/purple/house-cottage.webp",
+          "width": 495,
+          "height": 512,
+          "anchor": [0.4995, 0.9954]
+        },
+        "tree": {
+          "src": "/map/kawaii/purple/tree.webp",
+          "width": 448,
+          "height": 448,
+          "anchor": [0.4996, 0.994]
+        },
+        "penlight": {
+          "src": "/map/kawaii/purple/penlight.webp",
+          "width": 138,
+          "height": 256,
+          "anchor": [0.4984, 0.9957]
+        },
+        "stage": {
+          "src": "/map/kawaii/purple/stage.webp",
+          "width": 401,
+          "height": 512,
+          "anchor": [0.4989, 0.9965]
+        },
+        "castle": {
+          "src": "/map/kawaii/purple/castle.webp",
+          "width": 737,
+          "height": 768,
+          "anchor": [0.4996, 0.9959]
+        }
+      }
+    }
+  },
+  "levels": {
+    "base-01": {
+      "cool": {
+        "2": "/map/levels/base-01/cool/lv2.webp",
+        "3": "/map/levels/base-01/cool/lv3.webp",
+        "4": "/map/levels/base-01/cool/lv4.webp",
+        "5": "/map/levels/base-01/cool/lv5.webp"
+      },
+      "kawaii": {
+        "2": "/map/levels/base-01/kawaii/lv2.webp",
+        "3": "/map/levels/base-01/kawaii/lv3.webp",
+        "4": "/map/levels/base-01/kawaii/lv4.webp",
+        "5": "/map/levels/base-01/kawaii/lv5.webp"
+      }
+    },
+    "base-03": {
+      "cool": {
+        "2": "/map/levels/base-03/cool/lv2.webp",
+        "3": "/map/levels/base-03/cool/lv3.webp",
+        "4": "/map/levels/base-03/cool/lv4.webp",
+        "5": "/map/levels/base-03/cool/lv5.webp"
+      },
+      "kawaii": {
+        "2": "/map/levels/base-03/kawaii/lv2.webp",
+        "3": "/map/levels/base-03/kawaii/lv3.webp",
+        "4": "/map/levels/base-03/kawaii/lv4.webp",
+        "5": "/map/levels/base-03/kawaii/lv5.webp"
+      }
+    },
+    "base-05": {
+      "cool": {
+        "2": "/map/levels/base-05/cool/lv2.webp",
+        "3": "/map/levels/base-05/cool/lv3.webp",
+        "4": "/map/levels/base-05/cool/lv4.webp",
+        "5": "/map/levels/base-05/cool/lv5.webp"
+      },
+      "kawaii": {
+        "2": "/map/levels/base-05/kawaii/lv2.webp",
+        "3": "/map/levels/base-05/kawaii/lv3.webp",
+        "4": "/map/levels/base-05/kawaii/lv4.webp",
+        "5": "/map/levels/base-05/kawaii/lv5.webp"
+      }
+    },
+    "base-07": {
+      "cool": {
+        "2": "/map/levels/base-07/cool/lv2.webp",
+        "3": "/map/levels/base-07/cool/lv3.webp",
+        "4": "/map/levels/base-07/cool/lv4.webp",
+        "5": "/map/levels/base-07/cool/lv5.webp"
+      },
+      "kawaii": {
+        "2": "/map/levels/base-07/kawaii/lv2.webp",
+        "3": "/map/levels/base-07/kawaii/lv3.webp",
+        "4": "/map/levels/base-07/kawaii/lv4.webp",
+        "5": "/map/levels/base-07/kawaii/lv5.webp"
+      }
+    }
+  },
+  "levelFrame": {
+    "top": 0.4,
+    "bottom": 0.1
+  },
+  "backgrounds": {
+    "cool": "/map/background/cool.webp?v=87a0a53c",
+    "kawaii": "/map/background/kawaii.webp?v=54ca7917"
+  },
+  "idols": {
+    "arashi": {
+      "二宮和也": "/map/idols/arashi/22213c9fb3.webp?v=7b3d7039",
+      "大野智": "/map/idols/arashi/8d52f3310b.webp?v=d876b755",
+      "松本潤": "/map/idols/arashi/95decd5fe8.webp?v=275e1b9d",
+      "櫻井翔": "/map/idols/arashi/37780a00ac.webp?v=cc1faace",
+      "相葉雅紀": "/map/idols/arashi/0025540b79.webp?v=bf083e59"
+    },
+    "fruitszipper": {
+      "仲川瑠夏": "/map/idols/fruitszipper/36fab4ce68.webp?v=83db737e",
+      "早瀬ノエル": "/map/idols/fruitszipper/5df0cbf80b.webp?v=9eae4dd6",
+      "月足天音": "/map/idols/fruitszipper/0bb271b905.webp?v=18f51e68",
+      "松本かれん": "/map/idols/fruitszipper/e564607ec3.webp?v=4a28b51d",
+      "櫻井優衣": "/map/idols/fruitszipper/9244cc06d9.webp?v=a46fe090",
+      "真中まな": "/map/idols/fruitszipper/5ed737d92c.webp?v=f514b517",
+      "鎮西寿々歌": "/map/idols/fruitszipper/565c7f0475.webp?v=fd74d2bf"
+    },
+    "mlk": {
+      "佐野勇斗": "/map/idols/mlk/4af296b78a.webp?v=6d443f1f",
+      "吉田仁人": "/map/idols/mlk/0843c78782.webp?v=b8f71a09",
+      "塩崎大智": "/map/idols/mlk/8218a513da.webp?v=69ee620e",
+      "山中柔太朗": "/map/idols/mlk/433760123a.webp?v=19c44e24",
+      "曽野舜太": "/map/idols/mlk/9d55b09d44.webp?v=44cdbd43"
+    },
+    "twice": {
+      "サナ": "/map/idols/twice/c9bd25940b.webp?v=1ba17f06",
+      "ジヒョ": "/map/idols/twice/f3f68abc2f.webp?v=cd941d24",
+      "ジョンヨン": "/map/idols/twice/474d787c59.webp?v=fd47da63",
+      "ダヒョン": "/map/idols/twice/f3fff9dfc6.webp?v=6a726825",
+      "チェヨン": "/map/idols/twice/98a100d361.webp?v=43d0850f",
+      "ツウィ": "/map/idols/twice/d9205a5a0b.webp?v=b49f2f29",
+      "ナヨン": "/map/idols/twice/4ba7ecc0bc.webp?v=9955c720",
+      "ミナ": "/map/idols/twice/3ee31c7a28.webp?v=d498bd9a",
+      "モモ": "/map/idols/twice/eda1b94710.webp?v=9333a72e"
+    }
+  }
+}

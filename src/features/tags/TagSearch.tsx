@@ -1,7 +1,8 @@
 "use client";
 
 import { useParams, useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { setMapSearch } from "@/features/map/searchStore";
 import { normalizeTagName } from "./normalize";
 import { useTagSuggestions } from "./useTagSuggestions";
 
@@ -17,6 +18,10 @@ export function TagSearch() {
   const query = normalizeTagName(value.trim().replace(/^[#＃]/, ""));
   const suggestions = useTagSuggestions(island, query, open && value !== "");
   const items = value === "" ? [] : (suggestions.data ?? []);
+  // 入力中は、島の家を検索結果に入れ替える（マップ側の useMapSearch）
+  useEffect(() => {
+    setMapSearch(query);
+  }, [query]);
 
   const go = (normalizedName: string) => {
     if (!island || normalizedName === "") return;

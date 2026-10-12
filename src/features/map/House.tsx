@@ -1,8 +1,23 @@
-import { HOUSE_SIZE } from "./layout";
-import { houseStyle } from "./shapes";
+import {
+  depthScale,
+  type MapMode,
+  SPRITE_SIZES,
+  type SpriteRole,
+  spriteAsset,
+} from "./assets";
+import { Sprite } from "./Sprite";
+import { hashString } from "./shapes";
 import type { MapHouse } from "./types";
 
 const MAX_LABEL_CHARS = 9;
+
+/** 話題タグの家の種類。タグIDから決めるので、同じタグはいつも同じ家になる */
+const TOPIC_ROLES: readonly SpriteRole[] = [
+  "house-cafe",
+  "house-music",
+  "house-shop",
+  "house-cottage",
+];
 
 function shortLabel(name: string): string {
   const chars = Array.from(name);
@@ -11,42 +26,27 @@ function shortLabel(name: string): string {
     : name;
 }
 
-/** 家の絵。`image_url` があればその画像を優先し、なければSVGで描く */
-function HouseArt({ house }: { house: MapHouse }) {
-  if (house.imageUrl) {
-    return (
-      <image
-        href={house.imageUrl}
-        x={-HOUSE_SIZE / 2}
-        y={-HOUSE_SIZE / 2 - 4}
-        width={HOUSE_SIZE}
-        height={HOUSE_SIZE}
-        preserveAspectRatio="xMidYMid meet"
-      />
-    );
-  }
-  const s = houseStyle(house.tagId);
-  const roof =
-    s.roofShape === "gable" ? (
-      <polygon points="-27,-6 0,-30 27,-6" fill={s.roof} />
-    ) : s.roofShape === "hip" ? (
-      <polygon points="-27,-6 -14,-26 14,-26 27,-6" fill={s.roof} />
-    ) : (
-      <path d="M-26 -6 A26 26 0 0 1 26 -6 Z" fill={s.roof} />
-    );
-  return (
-    <g>
-      <ellipse cx={0} cy={22} rx={28} ry={5} fill="rgba(0,0,0,0.14)" />
-      {s.hasChimney && (
-        <rect x={11} y={-30} width={6} height={12} fill={s.door} />
-      )}
-      <rect x={-22} y={-6} width={44} height={28} rx={2} fill={s.wall} />
-      <rect x={-22} y={14} width={44} height={8} rx={2} fill={s.wallShade} />
-      {roof}
-      <rect x={-5} y={5} width={10} height={17} rx={1.5} fill={s.door} />
-      <rect x={-17} y={2} width={8} height={8} rx={1} fill="#fff7c9" />
-      <rect x={9} y={2} width={8} height={8} rx={1} fill="#fff7c9" />
-    </g>
+/** メンバーは星の家、話題タグは4種類のどれか */
+export function houseRole(house: Pick<MapHouse, "kind" | "tagId">): SpriteRole {
+  if (house.kind === "member") return "house-member";
+  return TOPIC_ROLES[
+    hashString(house.tagId) % TOPIC_ROLES.length
+  ] as SpriteRole;
+}
+
+/** 家の横幅（マップ座標）。手前ほど少し大きく、話題タグの1〜3位は少し大きく。scale は島ごとの倍率 */
+export function houseWidth(house: MapHouse, scale = 1): number {
+  const base =
+    house.kind === "member" ? SPRITE_SIZES["house-member"] : SPRITE_SIZES.house;
+  const top3 = house.rank !== null && house.rank <= 3 ? 1.12 : 1;
+  return base * top3 * scale * depthScale(house.y);
+}
+
+/** ラベルの幅の見積もり（全角は1文字分、半角は0.6文字分） */
+export function textWidth(text: string, fontSize: number): number {
+  return Array.from(text).reduce(
+    (sum, ch) => sum + (ch.charCodeAt(0) < 0x2000 ? 0.6 : 1) * fontSize,
+    0,
   );
 }
 
@@ -54,6 +54,9 @@ export function House({
   house,
   href,
   highlighted,
+  mode,
+  palette,
+  scale = 1,
   onNavigate,
   onHover,
 }: {
@@ -61,16 +64,28 @@ export function House({
   href: string;
   /** いま開いているタグの家 */
   highlighted: boolean;
+  mode: MapMode;
+  /** 島の色（blue / green / pink / purple） */
+  palette: string;
+  /** 島ごとの家の大きさの倍率（houseScale） */
+  scale?: number;
   onNavigate: (href: string) => void;
   onHover: (href: string) => void;
 }) {
-  const label = house.kind === "member" ? house.name : `#${house.name}`;
   const aria =
-    house.postCount === null
+    house.kind === "member"
       ? `${house.name}（メンバー）の投稿を見る`
-      : `#${house.name}、直近7日で${house.postCount}件。投稿を見る`;
+      : house.postCount === null
+        ? `#${house.name}の投稿を見る`
+        : `#${house.name}、直近7日で${house.postCount}件。投稿を見る`;
+  const width = houseWidth(house, scale);
+  const asset = spriteAsset(mode, palette, houseRole(house));
+  const height = (width * asset.height) / asset.width;
+  const { pillH, pillY } = labelLayout(house, width);
+  const pad = width * 0.1;
   return (
-    // 順位が変わったとき、スロットへ滑らかに移動する（CSSのtransition）
+    // 順位が変わったとき、新しい区画へ滑らかに移動する（CSSのtransition）
+    // 原点 (0, 0) は家の接地点。絵はその上に、ラベルはその下に付く
     <g
       className="house-enter"
       style={{
@@ -101,49 +116,111 @@ export function House({
         onFocus={() => onHover(href)}
       >
         <rect
-          x={-HOUSE_SIZE / 2 - 4}
-          y={-HOUSE_SIZE / 2 - 8}
-          width={HOUSE_SIZE + 8}
-          height={HOUSE_SIZE + 44}
-          rx={10}
+          x={-width / 2 - pad}
+          y={-height - pad}
+          width={width + pad * 2}
+          height={height + pillY + pillH + pad * 2}
+          rx={pad * 2}
           fill="transparent"
           className={
             highlighted
               ? "stroke-sky-500"
               : "stroke-transparent group-hover:stroke-sky-300 group-focus-visible:stroke-sky-500"
           }
-          strokeWidth={2.5}
+          strokeWidth={width * 0.04}
         />
         <g className="transition-transform duration-150 group-hover:-translate-y-0.5">
-          <HouseArt house={house} />
+          {house.imageUrl ? (
+            <image
+              href={house.imageUrl}
+              x={-width / 2}
+              y={-width}
+              width={width}
+              height={width}
+              preserveAspectRatio="xMidYMax meet"
+            />
+          ) : (
+            <Sprite asset={asset} x={0} y={0} width={width} interactive />
+          )}
         </g>
-        <text
-          y={HOUSE_SIZE / 2 + 12}
-          textAnchor="middle"
-          fontSize={11}
-          fontWeight={700}
-          fill="#12222e"
-          stroke="#ffffff"
-          strokeWidth={3}
-          paintOrder="stroke"
-          strokeLinejoin="round"
-        >
-          {shortLabel(label)}
-        </text>
-        {house.postCount !== null && (
-          <text
-            y={HOUSE_SIZE / 2 + 24}
-            textAnchor="middle"
-            fontSize={9}
-            fill="#3d5566"
-            stroke="#ffffff"
-            strokeWidth={2.5}
-            paintOrder="stroke"
-          >
-            {house.postCount}件
-          </text>
-        )}
       </a>
+    </g>
+  );
+}
+
+/** 札の大きさ（家の横幅に合わせる） */
+function labelLayout(house: MapHouse, width: number) {
+  const label = house.kind === "member" ? house.name : `#${house.name}`;
+  const fs = width * 0.17;
+  const name = shortLabel(label);
+  const count = house.postCount === null ? "" : String(house.postCount);
+  const pillW =
+    textWidth(name, fs) +
+    (count ? textWidth(count, fs * 0.85) + fs * 0.6 : 0) +
+    fs * 1.4;
+  return { fs, name, count, pillW, pillH: fs * 1.9, pillY: fs * 0.4 };
+}
+
+/**
+ * 家の名前の札（#タグ名 と件数）。家の絵より上の層にまとめて描くので、
+ * 手前の家に隠れない（クリックは下の家へ通す）。
+ */
+export function HouseLabel({
+  house,
+  highlighted,
+  scale = 1,
+}: {
+  house: MapHouse;
+  highlighted: boolean;
+  scale?: number;
+}) {
+  const width = houseWidth(house, scale);
+  const { fs, name, count, pillW, pillH, pillY } = labelLayout(house, width);
+  return (
+    <g
+      aria-hidden
+      pointerEvents="none"
+      style={{
+        transform: `translate(${house.x}px, ${house.y}px)`,
+        transition: "transform 700ms ease-in-out",
+      }}
+    >
+      <rect
+        x={-pillW / 2}
+        y={pillY}
+        width={pillW}
+        height={pillH}
+        rx={pillH / 2}
+        fillOpacity={0.94}
+        strokeWidth={fs * 0.1}
+        // 札の色はデザイン（かわいい / かっこいい）の共通色に合わせる
+        style={{
+          fill: "var(--ui-card,#ffffff)",
+          stroke: highlighted
+            ? "var(--ui-accent,#a63868)"
+            : "var(--ui-border,#efdae2)",
+        }}
+      />
+      <text
+        x={-pillW / 2 + fs * 0.7}
+        y={pillY + pillH * 0.66}
+        fontSize={fs}
+        fontWeight={700}
+        style={{ fill: "var(--ui-title,#553344)" }}
+      >
+        {name}
+      </text>
+      {count && (
+        <text
+          x={pillW / 2 - fs * 0.7}
+          y={pillY + pillH * 0.66}
+          textAnchor="end"
+          fontSize={fs * 0.85}
+          style={{ fill: "var(--ui-accent,#a63868)" }}
+        >
+          {count}
+        </text>
+      )}
     </g>
   );
 }

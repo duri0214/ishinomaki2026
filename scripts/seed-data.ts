@@ -13,11 +13,18 @@ import { parseHashtags } from "../src/features/tags/parse";
 /**
  * シード用のダミーデータを作る（DBには触れない）。
  * 乱数は固定シードなので、同じ `now` なら毎回まったく同じデータになる。
- * 登場するグループ・人物はすべて架空のもの。
+ * 島はファンの島として実在のグループ名とメンバー名を使う（マップの見た目の確認用）。
+ * ユーザー・投稿・いいねはすべて架空のもの。
+ * slug は以前のシードのまま（URL やテストを変えないため）。
  */
 
 export const SEED_USER_PREFIX = "seed_user_";
-export const SEED_ISLAND_SLUGS = ["hoshizora", "shiokaze"] as const;
+export const SEED_ISLAND_SLUGS = [
+  "hoshizora",
+  "shiokaze",
+  "tsukiakari",
+  "nijiiro",
+] as const;
 
 export type SeedData = {
   islands: (typeof islands.$inferInsert)[];
@@ -28,22 +35,61 @@ export type SeedData = {
   likes: (typeof likes.$inferInsert)[];
 };
 
+// base: 島の絵（base-01 青 / base-03 緑 / base-05 ピンク / base-07 黄）。/dev/islands でも変えられる
 const ISLANDS = [
   {
     slug: SEED_ISLAND_SLUGS[0],
-    name: "星空シアター島",
-    description: "架空のアイドルグループ「星空シアター」のファンの島",
+    base: "base-01",
+    name: "ARASHI",
+    description: "ARASHI のファンの島",
     worldX: -430,
-    worldY: -30,
-    members: ["みさき", "ひなた", "かのん", "りお", "つぐみ"],
+    worldY: -400,
+    members: ["大野智", "櫻井翔", "相葉雅紀", "二宮和也", "松本潤"],
   },
   {
     slug: SEED_ISLAND_SLUGS[1],
-    name: "潮風ガールズ島",
-    description: "架空のアイドルグループ「潮風ガールズ」のファンの島",
+    base: "base-05",
+    name: "TWICE",
+    description: "TWICE のファンの島",
     worldX: 430,
-    worldY: 40,
-    members: ["あおい", "ことは", "まりん", "なぎさ", "ゆず"],
+    worldY: -360,
+    members: [
+      "ナヨン",
+      "ジョンヨン",
+      "モモ",
+      "サナ",
+      "ジヒョ",
+      "ミナ",
+      "ダヒョン",
+      "チェヨン",
+      "ツウィ",
+    ],
+  },
+  {
+    slug: SEED_ISLAND_SLUGS[2],
+    base: "base-03",
+    name: "M!LK",
+    description: "M!LK のファンの島",
+    worldX: -430,
+    worldY: 420,
+    members: ["佐野勇斗", "塩崎大智", "曽野舜太", "山中柔太朗", "吉田仁人"],
+  },
+  {
+    slug: SEED_ISLAND_SLUGS[3],
+    base: "base-07",
+    name: "FRUITSZIPPER",
+    description: "FRUITSZIPPER のファンの島",
+    worldX: 430,
+    worldY: 440,
+    members: [
+      "月足天音",
+      "鎮西寿々歌",
+      "櫻井優衣",
+      "仲川瑠夏",
+      "早瀬ノエル",
+      "松本かれん",
+      "真中まな",
+    ],
   },
 ] as const;
 
@@ -169,6 +215,8 @@ export function generateSeed(now: Date): SeedData {
       description: spec.description,
       worldX: spec.worldX,
       worldY: spec.worldY,
+      // マップの土台（島エディタで変えられる）
+      theme: { base: spec.base },
       createdAt: createdBase,
     });
 
@@ -187,7 +235,12 @@ export function generateSeed(now: Date): SeedData {
       tagRows.set(normalizedName, row);
       return row;
     };
-    const members = spec.members.map((m) => addTag(m, "member"));
+    // メンバーの並び（マップの中央の広場のアイコンの順）は登録順。メンバーは作成日時の順に読むので1秒ずつずらす
+    const members = spec.members.map((m, i) => {
+      const row = addTag(m, "member");
+      row.createdAt = new Date(createdBase.getTime() + i * 1000);
+      return row;
+    });
     // 島ごとに少し順番を変えて、上位の顔ぶれが島ごとに違うようにする
     const topicNames = [...TOPIC_TAGS];
     const shift = rnd.int(topicNames.length);

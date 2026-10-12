@@ -27,7 +27,7 @@ for (const viewport of [
     const { profile } = await response.json();
 
     const trigger = page.getByRole("button", {
-      name: "星空シアター島のプロフィールを表示",
+      name: "ARASHIのプロフィールを表示",
     });
     if (viewport.width <= 550) {
       await trigger.click();
@@ -78,7 +78,7 @@ for (const viewport of [
 test("世界とメンバー・話題タグのページにはプロフィールボタンを出さない", async ({
   page,
 }) => {
-  for (const path of ["/", "/i/hoshizora/t/みさき", "/i/hoshizora/t/ライブ"]) {
+  for (const path of ["/", "/i/hoshizora/t/櫻井翔", "/i/hoshizora/t/ライブ"]) {
     await page.goto(path);
     await expect(page.getByTestId("post-card").first()).toBeVisible();
     await expect(
@@ -105,7 +105,7 @@ test("取得失敗から再試行でき、説明未登録と写真の欠落に�
   );
   await page.goto("/i/hoshizora");
   await page
-    .getByRole("button", { name: "星空シアター島のプロフィールを表示" })
+    .getByRole("button", { name: "ARASHIのプロフィールを表示" })
     .click();
   const dialog = page.getByRole("dialog", { name: "アーティスト詳細" });
   await expect(dialog.getByRole("alert")).toBeVisible();
@@ -124,27 +124,18 @@ test("取得失敗から再試行でき、説明未登録と写真の欠落に�
 test("島を切り替えると対応するプロフィールを取得する", async ({ page }) => {
   await page.goto("/i/hoshizora");
   await page
-    .getByRole("button", { name: "星空シアター島のプロフィールを表示" })
+    .getByRole("button", { name: "ARASHIのプロフィールを表示" })
     .click();
   const dialog = page.getByRole("dialog", { name: "アーティスト詳細" });
   await expect(
-    dialog.getByRole("heading", { name: "星空シアター島", exact: true }),
+    dialog.getByRole("heading", { name: "ARASHI", exact: true }),
   ).toBeVisible();
   await page.keyboard.press("Escape");
-  await page
-    .getByRole("link", { name: "潮風ガールズ島", exact: true })
-    .first()
-    .click();
-  await page
-    .getByRole("button", { name: "潮風ガールズ島のプロフィールを表示" })
-    .click();
+  await page.getByRole("link", { name: "TWICE", exact: true }).first().click();
+  await page.getByRole("button", { name: "TWICEのプロフィールを表示" }).click();
   await expect(
-    dialog.getByRole("heading", { name: "潮風ガールズ島", exact: true }),
+    dialog.getByRole("heading", { name: "TWICE", exact: true }),
   ).toBeVisible();
-  await expect(
-    dialog.getByText("架空のアイドルグループ「潮風ガールズ」のファンの島"),
-  ).toBeVisible();
-  await expect(
-    dialog.getByText("架空のアイドルグループ「星空シアター」のファンの島"),
-  ).toHaveCount(0);
+  await expect(dialog.getByText("TWICE のファンの島")).toBeVisible();
+  await expect(dialog.getByText("ARASHI のファンの島")).toHaveCount(0);
 });

@@ -34,8 +34,8 @@ test("投稿に返信すると、スレッドと返信数に反映され、タ�
     dialog(page).getByRole("heading", { name: "推しを選ぶ" }),
   ).toBeVisible();
   await dialog(page).getByLabel("表示名").fill("返信E2Eさん");
-  await dialog(page).getByRole("checkbox", { name: "星空シアター島" }).check();
-  await dialog(page).getByRole("button", { name: "ひなた" }).click();
+  await dialog(page).getByRole("checkbox", { name: "ARASHI" }).check();
+  await dialog(page).getByRole("button", { name: "櫻井翔" }).click();
   await dialog(page).getByRole("button", { name: "保存" }).click();
   await expect(dialog(page)).toHaveCount(0);
 

@@ -17,3 +17,4 @@ test-results
 .claude/launch.json
 
 /public/uploads/
+__pycache__/
