@@ -15,7 +15,7 @@ export default async function DevLayout({
         開発専用の島エディタです（本番では表示されません）
       </div>
       {/* プレビューのマップがタグ検索（TanStack Query）を使うため */}
-      <QueryProvider>{children}</QueryProvider>
+      <QueryProvider viewerId={null}>{children}</QueryProvider>
     </div>
   );
 }
