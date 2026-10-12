@@ -19,6 +19,7 @@
     "db:migrate": "bun scripts/migrate.ts",
     "db:seed": "bun scripts/seed.ts",
     "db:seed-followers": "bun scripts/seed-followers.ts",
+    "db:add-topic-tags": "bun scripts/add-topic-tags.ts",
     "db:arrange-islands": "bun scripts/arrange-islands.ts",
     "db:reset-e2e": "bun scripts/reset-e2e.ts"
   },

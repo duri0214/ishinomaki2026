@@ -26,6 +26,17 @@ export const SEED_ISLAND_SLUGS = [
   "nijiiro",
 ] as const;
 
+/** 島ごとの話題タグ（slug -> タグ名）。シードと db:add-topic-tags の両方が使う */
+export const ISLAND_TOPIC_TAGS = {
+  hoshizora: ["Love so sweet", "5x20", "ARASHI_LIVE", "A.RA.SHI"], // ARASHI
+  shiokaze: ["TT", "ONCE", "Feel Special", "ドームツアー"], // TWICE
+  tsukiakari: ["イイじゃん", "MILK_LIVE", "ミルクティー", "ラジオ"], // M!LK
+  nijiiro: ["わたしの一番かわいいところ", "ジッパー", "KAWAII", "ファンミ"], // FRUITSZIPPER
+} as const satisfies Record<
+  (typeof SEED_ISLAND_SLUGS)[number],
+  readonly string[]
+>;
+
 export type SeedData = {
   islands: (typeof islands.$inferInsert)[];
   users: (typeof users.$inferInsert)[];
@@ -45,7 +56,7 @@ const ISLANDS = [
     worldX: -430,
     worldY: -400,
     members: ["大野智", "櫻井翔", "相葉雅紀", "二宮和也", "松本潤"],
-    topics: ["Love so sweet", "5x20", "ARASHI_LIVE", "A.RA.SHI"],
+    topics: ISLAND_TOPIC_TAGS[SEED_ISLAND_SLUGS[0]],
   },
   {
     slug: SEED_ISLAND_SLUGS[1],
@@ -65,7 +76,7 @@ const ISLANDS = [
       "チェヨン",
       "ツウィ",
     ],
-    topics: ["TT", "ONCE", "Feel Special", "ドームツアー"],
+    topics: ISLAND_TOPIC_TAGS[SEED_ISLAND_SLUGS[1]],
   },
   {
     slug: SEED_ISLAND_SLUGS[2],
@@ -75,7 +86,7 @@ const ISLANDS = [
     worldX: -430,
     worldY: 420,
     members: ["佐野勇斗", "塩崎大智", "曽野舜太", "山中柔太朗", "吉田仁人"],
-    topics: ["イイじゃん", "MILK_LIVE", "ミルクティー", "ラジオ"],
+    topics: ISLAND_TOPIC_TAGS[SEED_ISLAND_SLUGS[2]],
   },
   {
     slug: SEED_ISLAND_SLUGS[3],
@@ -93,7 +104,7 @@ const ISLANDS = [
       "松本かれん",
       "真中まな",
     ],
-    topics: ["わたしの一番かわいいところ", "ジッパー", "KAWAII", "ファンミ"],
+    topics: ISLAND_TOPIC_TAGS[SEED_ISLAND_SLUGS[3]],
   },
 ] as const;
 
