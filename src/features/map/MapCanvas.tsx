@@ -12,8 +12,6 @@ import {
   useRef,
   useState,
 } from "react";
-import { AccountButton } from "@/features/auth/AccountButton";
-import { DesignSwitch } from "@/features/design/DesignSwitch";
 import { useDesign } from "@/features/design/useDesign";
 import { useTagSuggestions } from "@/features/tags/useTagSuggestions";
 import { backgroundImage } from "./assets";
@@ -380,7 +378,7 @@ export function MapCanvas({
       </svg>
 
       {focusedIsland && !preview && (
-        <p className="absolute left-2 top-2 rounded-full bg-white/90 px-3 py-1 text-xs text-[#6a5c7d] shadow">
+        <p className="absolute left-2 top-2 rounded-full bg-[var(--ui-card,#ffffff)]/90 px-3 py-1 text-xs text-[var(--ui-text,#705362)] shadow">
           {focusedIsland.name} ・ 家 {houseCount}/{MAP_TOPIC_HOUSES} ・{" "}
           {searchResults
             ? `「${searchQuery}」の検索結果`
@@ -388,26 +386,18 @@ export function MapCanvas({
         </p>
       )}
 
-      {/* PC では左のツールバーをなくしたので、デザインの切り替えとアカウントはマップの左下に置く */}
-      {!preview && (
-        <div className="absolute bottom-2 left-2 hidden items-center gap-1 rounded-2xl bg-[#2b2140]/90 py-1 pl-1 pr-2 shadow lg:flex">
-          <DesignSwitch />
-          <AccountButton />
-        </div>
-      )}
-
       {islands.length === 0 && (
-        <p className="absolute inset-x-0 top-1/2 -translate-y-1/2 text-center text-sm font-bold text-slate-600">
+        <p className="absolute inset-x-0 top-1/2 -translate-y-1/2 text-center text-sm font-bold text-[var(--ui-muted,#806676)]">
           まだ島がありません
         </p>
       )}
 
-      <div className="absolute right-2 top-2 flex flex-col gap-1">
+      <div className="design-map-controls absolute right-3 top-3 flex flex-col shadow-sm">
         <button
           type="button"
           aria-label="拡大"
           onClick={() => zoomBy(1.6)}
-          className="size-8 rounded-md bg-white/90 text-lg shadow hover:bg-white"
+          className="size-8 text-lg"
         >
           ＋
         </button>
@@ -415,7 +405,7 @@ export function MapCanvas({
           type="button"
           aria-label="縮小"
           onClick={() => zoomBy(1 / 1.6)}
-          className="size-8 rounded-md bg-white/90 text-lg shadow hover:bg-white"
+          className="size-8 text-lg"
         >
           －
         </button>
@@ -425,7 +415,7 @@ export function MapCanvas({
           onClick={() =>
             animateTo(cameraFor(focus, islands, viewRef.current, design), false)
           }
-          className="size-8 rounded-md bg-white/90 text-sm shadow hover:bg-white"
+          className="size-8 text-sm"
         >
           ⌖
         </button>

@@ -18,13 +18,14 @@ SIZES = {"house": 26, "house-member": 28, "tree": 34, "stage": 50, "castle": 130
 
 HOUSE_LOTS = 11      # 家の区画の数（上位10件 or 検索結果10件 + 検索で開いたタグ1）
 TOWN_ASPECT = 1.15   # 島を開いたときに画面に映す「街」の長方形の横:縦
+TOWN_FILL = 0.70     # 街の長方形は、この割合以上が草地なら OK（岩や木が少しかかっても広く取る。家は草地の上だけに置く）
 TOWN_INNER = 0.72    # 家は街の長方形の内側 72% に置く（画面の縦横比が違っても切れないように）
 GROWTH_COUNT = 9     # ステージ・桜・ペンライトはそれぞれ最大9個
 Y_SQUASH = 1.6       # 斜め上から見ているので、画面の縦の距離は地面では長くなる
 GAP = 0.95           # 隣どうしの最小距離 ＝ 横幅の平均 × GAP
 GRID = 6             # 候補点の間隔(px)
-HUB = 0.40           # 輪に並べるとき: 中央の広場（メンバーのアイコン）の半径 ＝ 街の半幅 × HUB
-RING = 0.74          # 輪に並べるとき: 家を並べる輪の半径 ＝ 街の半幅 × RING
+HUB = 0.42           # 輪に並べるとき: 中央の広場（メンバーのアイコン）の半径 ＝ 街の半幅 × HUB
+RING = 0.82          # 輪に並べるとき: 家を並べる輪の半径 ＝ 街の半幅 × RING
 
 
 def px(role, canvas):
@@ -77,7 +78,7 @@ def town_rect(main, cx0, cy0):
         if x0 < 0 or y0 < 0 or x1 >= wd or y1 >= h:
             return False
         total = ii[y1 + 1, x1 + 1] - ii[y0, x1 + 1] - ii[y1 + 1, x0] + ii[y0, x0]
-        return total == (x1 - x0 + 1) * (y1 - y0 + 1)
+        return total >= TOWN_FILL * (x1 - x0 + 1) * (y1 - y0 + 1)
 
     best = (cx0, cy0, 0.0, -1e9)
     ys, xs = np.where(main[::8, ::8])
@@ -118,6 +119,57 @@ def spread_lots(mask, placed, cx, cy, hw, hh, w, rnd):
     chosen.sort(key=lambda p: ((p[0] - cx) ** 2 + ((p[1] - cy) * Y_SQUASH) ** 2) ** 0.5)
     for (x, y) in chosen:
         placed.append((x, y, w))
+    return chosen
+
+
+HOUSE_PER_TOWN = 0.274  # 家の絵の横幅 ≒ 街の半幅 × これ（layout.ts の houseScale ＝ 街の幅 / 190 と同じ大きさ）
+
+
+def scatter_lots(mask, placed, cx, cy, hw, hh, rnd):
+    """街の長方形の中の草地に、家の区画を HOUSE_LOTS 個、できるだけ離してばらばらに置く。
+    中央の広場（メンバーのアイコン）には置かない。家の絵と札が重ならないよう、縦横それぞれの間隔で離す。
+    順番は街の中心に近い順（順位の高い家ほど真ん中寄り）"""
+    hpx = hw * HOUSE_PER_TOWN
+    hub_rx, hub_ry = hw * HUB, hh * HUB
+    iw, ih = hw * 0.95, hh * 0.95
+
+    def clear_of_hub(x, y):
+        # 家の絵（接地点の上）と札（下）の長方形が、広場の楕円にかからない
+        nx = min(max(cx, x - hpx * 0.6), x + hpx * 0.6)
+        ny = min(max(cy, y - hpx * 1.15), y + hpx * 0.5)
+        return ((nx - cx) / hub_rx) ** 2 + ((ny - cy) / hub_ry) ** 2 > 1.05
+
+    # 島の端（崖）に家や札がかからないよう、草地を家の大きさに合わせて内側に縮めてから置く
+    inner = ndi.binary_erosion(mask, iterations=max(1, int(hpx * 0.35)))
+
+    def on_lawn(x, y):
+        # 足元・家の上の方・札（接地点の下）が、どれも縮めた草地の上にあること
+        return fits(inner, x, y, hpx * 0.8) and all(
+            0 <= int(py) < inner.shape[0] and 0 <= int(px_) < inner.shape[1] and inner[int(py), int(px_)]
+            for px_, py in ((x, y + hpx * 0.45), (x - hpx * 0.5, y + hpx * 0.3), (x + hpx * 0.5, y + hpx * 0.3), (x, y - hpx * 0.9))
+        )
+
+    cands = []
+    for _ in range(8000):
+        x, y = cx + rnd.uniform(-iw, iw), cy + rnd.uniform(-ih, ih)
+        if on_lawn(x, y) and clear_of_hub(x, y):
+            cands.append((x, y))
+    if not cands:
+        return []
+    # 家どうしの近さ: 横は札の幅、縦は絵と札の高さで割った距離（1 未満だと重なる）
+    near = lambda p, q: max(abs(p[0] - q[0]) / (hpx * 1.35), abs(p[1] - q[1]) / (hpx * 1.6))
+    # いちばん離れた点を順に選ぶ（島全体に散らばる）。最初の1軒は街の中心にいちばん近い点
+    chosen = [min(cands, key=lambda c: (c[0] - cx) ** 2 + (c[1] - cy) ** 2)]
+    best = [near(c, chosen[0]) for c in cands]
+    while len(chosen) < HOUSE_LOTS:
+        i = max(range(len(cands)), key=lambda k: best[k])
+        if best[i] <= 0:
+            break
+        chosen.append(cands[i])
+        best = [min(best[k], near(cands[k], cands[i])) for k in range(len(cands))]
+    chosen.sort(key=lambda p: (p[0] - cx) ** 2 + (p[1] - cy) ** 2)
+    for (x, y) in chosen:
+        placed.append((x, y, hpx))
     return chosen
 
 
@@ -174,7 +226,7 @@ def build(name, mask, top=None, ring=False):
     top = labels2 == (np.argmax(sizes2) + 1)
     tx, ty, thw, thh = town_rect(top, cx, cy)
     if ring:
-        lots = ring_lots(mask, placed, tx, ty, thw, thh, px("house-member", wd))
+        lots = scatter_lots(mask, placed, tx, ty, thw, thh, rnd)
         placed.append((tx, ty, thw * HUB * 2))  # 広場には城などを置かない
     else:
         lots = spread_lots(mask, placed, tx, ty, thw, thh, px("house-member", wd), rnd)

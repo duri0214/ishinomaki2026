@@ -254,11 +254,11 @@ describe("buildMembers（中央の広場のメンバーのアイコン）", () =
     }
   });
 
-  it("家の倍率は 0.5〜1.3", () => {
+  it("家の倍率は 0.6〜2.2", () => {
     for (const base of BASE_NAMES) {
       const s = houseScale({ ...island("a", 0, 0), base });
-      expect(s).toBeGreaterThanOrEqual(0.5);
-      expect(s).toBeLessThanOrEqual(1.3);
+      expect(s).toBeGreaterThanOrEqual(0.6);
+      expect(s).toBeLessThanOrEqual(2.2);
     }
   });
 });

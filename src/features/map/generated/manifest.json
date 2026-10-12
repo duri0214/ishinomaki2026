@@ -577,5 +577,41 @@
   "backgrounds": {
     "cool": "/map/background/cool.webp?v=87a0a53c",
     "kawaii": "/map/background/kawaii.webp?v=54ca7917"
+  },
+  "idols": {
+    "arashi": {
+      "二宮和也": "/map/idols/arashi/22213c9fb3.webp?v=7b3d7039",
+      "大野智": "/map/idols/arashi/8d52f3310b.webp?v=d876b755",
+      "松本潤": "/map/idols/arashi/95decd5fe8.webp?v=275e1b9d",
+      "櫻井翔": "/map/idols/arashi/37780a00ac.webp?v=cc1faace",
+      "相葉雅紀": "/map/idols/arashi/0025540b79.webp?v=bf083e59"
+    },
+    "fruitszipper": {
+      "仲川瑠夏": "/map/idols/fruitszipper/36fab4ce68.webp?v=83db737e",
+      "早瀬ノエル": "/map/idols/fruitszipper/5df0cbf80b.webp?v=9eae4dd6",
+      "月足天音": "/map/idols/fruitszipper/0bb271b905.webp?v=18f51e68",
+      "松本かれん": "/map/idols/fruitszipper/e564607ec3.webp?v=4a28b51d",
+      "櫻井優衣": "/map/idols/fruitszipper/9244cc06d9.webp?v=a46fe090",
+      "真中まな": "/map/idols/fruitszipper/5ed737d92c.webp?v=f514b517",
+      "鎮西寿々歌": "/map/idols/fruitszipper/565c7f0475.webp?v=fd74d2bf"
+    },
+    "mlk": {
+      "佐野勇斗": "/map/idols/mlk/4af296b78a.webp?v=6d443f1f",
+      "吉田仁人": "/map/idols/mlk/0843c78782.webp?v=b8f71a09",
+      "塩崎大智": "/map/idols/mlk/8218a513da.webp?v=69ee620e",
+      "山中柔太朗": "/map/idols/mlk/433760123a.webp?v=19c44e24",
+      "曽野舜太": "/map/idols/mlk/9d55b09d44.webp?v=44cdbd43"
+    },
+    "twice": {
+      "サナ": "/map/idols/twice/c9bd25940b.webp?v=1ba17f06",
+      "ジヒョ": "/map/idols/twice/f3f68abc2f.webp?v=cd941d24",
+      "ジョンヨン": "/map/idols/twice/474d787c59.webp?v=fd47da63",
+      "ダヒョン": "/map/idols/twice/f3fff9dfc6.webp?v=6a726825",
+      "チェヨン": "/map/idols/twice/98a100d361.webp?v=43d0850f",
+      "ツウィ": "/map/idols/twice/d9205a5a0b.webp?v=b49f2f29",
+      "ナヨン": "/map/idols/twice/4ba7ecc0bc.webp?v=9955c720",
+      "ミナ": "/map/idols/twice/3ee31c7a28.webp?v=d498bd9a",
+      "モモ": "/map/idols/twice/eda1b94710.webp?v=9333a72e"
+    }
   }
 }

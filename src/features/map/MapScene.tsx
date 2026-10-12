@@ -243,14 +243,17 @@ function IslandBody({
         textAnchor="middle"
         fontSize={focused ? 30 : 46}
         fontWeight={800}
-        fill="#12222e"
-        stroke="#ffffff"
         strokeWidth={6}
         paintOrder="stroke"
         strokeLinejoin="round"
         pointerEvents="none"
         aria-hidden
-        style={{ transition: "opacity 300ms" }}
+        // 文字の色はデザイン（かわいい / かっこいい）の共通色に合わせる（globals.css の --ui-*）
+        style={{
+          transition: "opacity 300ms",
+          fill: "var(--ui-title,#553344)",
+          stroke: "var(--ui-panel,#fff9f3)",
+        }}
         opacity={focused ? 0.9 : 1}
       >
         {island.name}
@@ -260,13 +263,15 @@ function IslandBody({
         textAnchor="middle"
         fontSize={focused ? 18 : 28}
         fontWeight={700}
-        fill="#5b4a78"
-        stroke="#ffffff"
         strokeWidth={5}
         paintOrder="stroke"
         strokeLinejoin="round"
         pointerEvents="none"
         aria-hidden
+        style={{
+          fill: "var(--ui-accent,#a63868)",
+          stroke: "var(--ui-panel,#fff9f3)",
+        }}
       >
         {`Lv.${level} ・ 島民 ${population.toLocaleString("ja-JP")}人`}
       </text>

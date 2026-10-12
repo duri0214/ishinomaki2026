@@ -251,7 +251,7 @@ function spotOf(
 export function houseScale(island: MapIslandData, mode?: MapMode): number {
   const width =
     (baseSlots(island.base, mode).town?.size[0] ?? 0.25) * BASE_SIZE;
-  return Math.min(1.3, Math.max(0.5, width / 215));
+  return Math.min(2.2, Math.max(0.6, width / 190));
 }
 
 /** 投稿数の上位が MAP_TOPIC_HOUSES 件に満たないときは、新しいタグで埋める（家が10軒になるように） */

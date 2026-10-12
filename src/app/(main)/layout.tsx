@@ -54,11 +54,8 @@ export default async function MainLayout({
     <QueryProvider>
       <ViewerProvider user={viewer}>
         <AuthDialogProvider profileOptions={profileOptions}>
-          <div className="flex h-dvh flex-col min-[551px]:grid min-[551px]:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] min-[551px]:grid-rows-[auto_minmax(0,1fr)] md:grid-cols-[minmax(0,7fr)_minmax(0,3fr)] lg:grid-rows-1">
-            {/* 左のツールバーは、狭い画面（上のバー）だけ。PC ではマップの左下にデザインとアカウントを置く */}
-            <div className="contents lg:hidden">
-              <Toolbar islands={islandNames} />
-            </div>
+          <div className="flex h-dvh flex-col min-[551px]:grid min-[551px]:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] min-[551px]:grid-rows-[auto_minmax(0,1fr)] md:grid-cols-[minmax(0,7fr)_minmax(0,3fr)] lg:grid-cols-[4.5rem_minmax(0,7fr)_minmax(0,3fr)] lg:grid-rows-1">
+            <Toolbar islands={islandNames} />
             <section
               aria-label="マップ"
               className="h-[38dvh] min-h-[220px] min-w-0 shrink-0 min-[551px]:h-auto min-[551px]:min-h-0 min-[551px]:shrink"

@@ -191,16 +191,22 @@ export function HouseLabel({
         width={pillW}
         height={pillH}
         rx={pillH / 2}
-        fill="rgba(255, 252, 248, 0.94)"
-        stroke={highlighted ? "#8e6bb0" : "#e3d9ec"}
+        fillOpacity={0.94}
         strokeWidth={fs * 0.1}
+        // 札の色はデザイン（かわいい / かっこいい）の共通色に合わせる
+        style={{
+          fill: "var(--ui-card,#ffffff)",
+          stroke: highlighted
+            ? "var(--ui-accent,#a63868)"
+            : "var(--ui-border,#efdae2)",
+        }}
       />
       <text
         x={-pillW / 2 + fs * 0.7}
         y={pillY + pillH * 0.66}
         fontSize={fs}
         fontWeight={700}
-        fill="#3f3158"
+        style={{ fill: "var(--ui-title,#553344)" }}
       >
         {name}
       </text>
@@ -210,7 +216,7 @@ export function HouseLabel({
           y={pillY + pillH * 0.66}
           textAnchor="end"
           fontSize={fs * 0.85}
-          fill="#8e6bb0"
+          style={{ fill: "var(--ui-accent,#a63868)" }}
         >
           {count}
         </text>

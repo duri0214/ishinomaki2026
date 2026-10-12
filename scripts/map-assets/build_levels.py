@@ -379,6 +379,19 @@ def framed(resized, dx, dy):
     return canvas.resize(size, Image.LANCZOS)
 
 
+def top_band(img):
+    """島の上面がある高さの帯（明るい上面の一番上〜一番下）。もう片方のモードの草地を借りるとき、手前の崖を除くのに使う"""
+    top = top_surface_mask(img)
+    band = np.zeros(top.shape, bool)
+    rows = np.where(top.any(axis=1))[0]
+    if len(rows):
+        h = top.shape[0]
+        band[max(0, rows[0] - int(0.03 * h)): rows[-1] + int(0.02 * h)] = True
+    else:
+        band[:] = True
+    return band
+
+
 def make_base(lv1_path, base, suffix, repo, fallback=None):
     """lv1 の絵から土台を作る（suffix は "" か "-cool" など）。(土台の絵, 変換, slots の項目, manifest の絵の項目, 草地マスク)
     fallback: モード専用の土台で草地がうまく見つからない（暗い絵など）ときに使う、もう片方のモードの草地マスク"""
@@ -394,7 +407,7 @@ def make_base(lv1_path, base, suffix, repo, fallback=None):
     alpha = np.array(lv1.getchannel("A")) > 200
     if fallback is not None and mask.sum() < 0.85 * fallback.sum():
         # 両モードの絵は同じ位置・大きさにそろえてあるので、もう片方の草地を、この絵の島の内側に収めて使う
-        mask = fallback & ndi.binary_erosion(alpha, iterations=24)
+        mask = fallback & ndi.binary_erosion(alpha, iterations=24) & top_band(lv1)
         print("  草地が狭く見つかったので、もう片方のモードの草地を使います")
     mask_dir = os.path.join(repo, "scripts", "map-assets", "masks")
     os.makedirs(mask_dir, exist_ok=True)

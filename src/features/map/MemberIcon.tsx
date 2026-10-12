@@ -17,23 +17,19 @@ const PLACEHOLDER_COLORS = [
 ] as const;
 
 /** モードごとのアイコンの色（縁・強調・ハッシュタグの印） */
-const THEME: Record<
-  MapMode,
-  { fill: string; stroke: string; accent: string; label: string }
-> = {
-  kawaii: {
-    fill: "#fffaf6",
-    stroke: "#f6c1d8",
-    accent: "#e8679e",
-    label: "#7a3a5c",
-  },
-  cool: {
-    fill: "#1b2140",
-    stroke: "#5cc8e4",
-    accent: "#3a8fe0",
-    label: "#16324f",
-  },
-};
+const THEME: Record<MapMode, { fill: string; stroke: string; accent: string }> =
+  {
+    kawaii: {
+      fill: "#fffaf6",
+      stroke: "#f6c1d8",
+      accent: "#e8679e",
+    },
+    cool: {
+      fill: "#1b2140",
+      stroke: "#5cc8e4",
+      accent: "#3a8fe0",
+    },
+  };
 
 const themeOf = (mode: MapMode) => THEME[mode] ?? THEME.kawaii;
 
@@ -212,7 +208,8 @@ export function MemberLabel({
     >
       <path
         d={`M ${member.x - tip} ${bottom - 0.5} L ${member.x} ${bottom + tip} L ${member.x + tip} ${bottom - 0.5} Z`}
-        fill="rgba(255, 252, 248, 0.97)"
+        fillOpacity={0.97}
+        style={{ fill: "var(--ui-card,#ffffff)" }}
         stroke={theme.accent}
         strokeWidth={fs * 0.1}
         strokeLinejoin="round"
@@ -223,7 +220,8 @@ export function MemberLabel({
         width={w}
         height={h}
         rx={h / 2}
-        fill="rgba(255, 252, 248, 0.97)"
+        fillOpacity={0.97}
+        style={{ fill: "var(--ui-card,#ffffff)" }}
         stroke={theme.accent}
         strokeWidth={fs * 0.1}
       />
@@ -233,7 +231,7 @@ export function MemberLabel({
         textAnchor="middle"
         fontSize={fs}
         fontWeight={800}
-        fill={theme.label}
+        style={{ fill: "var(--ui-title,#553344)" }}
       >
         {text}
       </text>
