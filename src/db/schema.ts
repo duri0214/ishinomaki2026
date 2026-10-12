@@ -1,5 +1,6 @@
 import { sql } from "drizzle-orm";
 import {
+  type AnyPgColumn,
   check,
   foreignKey,
   index,
@@ -117,10 +118,15 @@ export const posts = pgTable(
       .notNull()
       .references(() => users.id),
     body: text("body").notNull(),
+    /** 返信先の投稿。NULL なら通常の投稿。返信は1段までで、返信への返信も元の投稿に付ける */
+    parentPostId: uuid("parent_post_id").references(
+      (): AnyPgColumn => posts.id,
+    ),
     createdAt: timestamptz("created_at").notNull().defaultNow(),
     deletedAt: timestamptz("deleted_at"),
   },
   (t) => [
+    index("posts_parent_created_idx").on(t.parentPostId, t.createdAt, t.id),
     index("posts_island_created_idx").on(
       t.islandId,
       t.createdAt.desc().nullsFirst(),

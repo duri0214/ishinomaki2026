@@ -46,6 +46,7 @@ export async function insertPost(
     createdAt?: Date;
     id?: string;
     deletedAt?: Date | null;
+    parentPostId?: string | null;
   },
 ) {
   const [row] = await db

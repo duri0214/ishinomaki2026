@@ -30,6 +30,7 @@ const basePost: TimelinePost = {
   island: { slug: "x", name: "X" },
   likeCount: 3,
   likedByMe: false,
+  replyCount: 0,
   isMine: false,
 };
 

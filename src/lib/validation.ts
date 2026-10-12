@@ -82,6 +82,11 @@ export const createPostInputSchema = z.object({
   body: postBodySchema,
 });
 
+export const createReplyInputSchema = z.object({
+  parentPostId: z.uuid(),
+  body: postBodySchema,
+});
+
 export const setLikeInputSchema = z.object({
   postId: z.uuid(),
   liked: z.boolean(),
