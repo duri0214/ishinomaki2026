@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { connection } from "next/server";
 import { getDb } from "@/db";
 import {
+  createAdminTopicsAction,
   saveAdminIslandAction,
   saveAdminIslandTraitsAction,
   saveAdminTopicAction,
@@ -56,6 +57,7 @@ export default async function AdminIslandPage({
           islandSlug={slug}
           initialTopics={topics}
           saveAction={saveAdminTopicAction}
+          createAction={createAdminTopicsAction}
         />
       </div>
       <section className="mt-8 max-w-3xl">

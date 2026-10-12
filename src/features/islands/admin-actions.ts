@@ -10,7 +10,9 @@ import {
 import { type ActionResult, runAction } from "@/lib/action";
 import { requireAdminUser } from "@/lib/admin";
 import {
+  type CreateTopicsInput,
   createIsland,
+  createTopics,
   type SaveIslandInput,
   type SaveTopicInput,
   saveIsland,
@@ -65,5 +67,16 @@ export async function saveAdminIslandTraitsAction(
     const traits = await saveIslandTraits(await getTxDb(), input);
     revalidateManagedData();
     return traits;
+  });
+}
+
+export async function createAdminTopicsAction(
+  input: CreateTopicsInput,
+): Promise<ActionResult<{ topics: { id: string; name: string }[] }>> {
+  return runAction(async () => {
+    await requireAdminUser();
+    const topics = await createTopics(await getTxDb(), input);
+    revalidateManagedData();
+    return { topics: topics.map(({ id, name }) => ({ id, name })) };
   });
 }

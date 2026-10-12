@@ -2,7 +2,12 @@ import { eq } from "drizzle-orm";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import type { Connection } from "@/db/connect";
 import { islands, postTags, tags, userFavoriteMembers } from "@/db/schema";
-import { createIsland, saveIsland, saveTopic } from "@/features/islands/admin";
+import {
+  createIsland,
+  createTopics,
+  saveIsland,
+  saveTopic,
+} from "@/features/islands/admin";
 import { getFavorites, updateProfile } from "@/features/profile/service";
 import { validateTagName } from "@/features/tags/parse";
 import { listMemberTags } from "@/features/tags/queries";
@@ -266,6 +271,40 @@ describe("saveTopic", () => {
     expect(
       await conn.db.select().from(postTags).where(eq(postTags.tagId, topic.id)),
     ).toHaveLength(1);
+  });
+});
+
+describe("createTopics", () => {
+  it("複数の話題タグをまとめて保存する", async () => {
+    const island = await createIsland(conn.db, {
+      slug: "many-topics",
+      name: "複数話題島",
+    });
+
+    const topics = await createTopics(conn.txDb, {
+      islandSlug: island.slug,
+      names: ["ライブ", "新曲", "ツアー"],
+    });
+
+    expect(topics.map((topic) => topic.name)).toEqual([
+      "ライブ",
+      "新曲",
+      "ツアー",
+    ]);
+  });
+
+  it("同じ話題タグをまとめて保存しない", async () => {
+    const island = await createIsland(conn.db, {
+      slug: "duplicate-topics",
+      name: "重複話題島",
+    });
+
+    await expect(
+      createTopics(conn.txDb, {
+        islandSlug: island.slug,
+        names: ["ライブ", "ライブ"],
+      }),
+    ).rejects.toMatchObject({ code: "validation" });
   });
 });
 

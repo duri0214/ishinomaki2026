@@ -54,6 +54,12 @@ export const saveTopicInputSchema = z.object({
 });
 export type SaveTopicInput = z.input<typeof saveTopicInputSchema>;
 
+export const createTopicsInputSchema = z.object({
+  islandSlug: islandSlugSchema,
+  names: z.array(z.string().trim().min(1)).min(1).max(50),
+});
+export type CreateTopicsInput = z.input<typeof createTopicsInputSchema>;
+
 function firstIssue(error: z.ZodError): string {
   return error.issues[0]?.message ?? "入力が不正です";
 }
@@ -252,5 +258,62 @@ export async function saveTopic(txDb: Db, input: SaveTopicInput) {
       }
       throw err;
     }
+  });
+}
+
+/** 空白で区切って入力された複数の話題タグを、すべて検証してから一括で保存する。 */
+export async function createTopics(txDb: Db, input: CreateTopicsInput) {
+  const parsed = createTopicsInputSchema.safeParse(input);
+  if (!parsed.success) {
+    throw new AppError("validation", firstIssue(parsed.error));
+  }
+  const data = parsed.data;
+  const topics = data.names.map((name) => {
+    const topic = validateTagName(name);
+    if (!topic) {
+      throw new AppError(
+        "validation",
+        `「${name}」は有効な話題タグ名ではありません`,
+      );
+    }
+    return topic;
+  });
+  if (
+    new Set(topics.map((topic) => topic.normalizedName)).size !== topics.length
+  ) {
+    throw new AppError("validation", "同じ話題タグが重複しています");
+  }
+
+  return txDb.transaction(async (tx) => {
+    const [island] = await tx
+      .select({ id: islands.id })
+      .from(islands)
+      .where(eq(islands.slug, data.islandSlug))
+      .limit(1);
+    if (!island) throw new AppError("island_not_found", "島が見つかりません");
+
+    const savedTopics = [];
+    for (const topic of topics) {
+      const [saved] = await tx
+        .insert(tags)
+        .values({
+          islandId: island.id,
+          name: topic.name,
+          normalizedName: topic.normalizedName,
+          kind: "topic",
+          position: null,
+        })
+        .onConflictDoUpdate({
+          target: [tags.islandId, tags.normalizedName],
+          set: { name: topic.name, kind: "topic", position: null },
+        })
+        .returning();
+      if (!saved) throw new Error("話題タグを保存できませんでした");
+      await tx
+        .delete(userFavoriteMembers)
+        .where(eq(userFavoriteMembers.tagId, saved.id));
+      savedTopics.push(saved);
+    }
+    return savedTopics;
   });
 }
