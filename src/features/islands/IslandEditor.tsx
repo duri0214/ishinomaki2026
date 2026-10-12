@@ -208,6 +208,7 @@ export function IslandEditor({
       return { key: m.id, name: m.name, x: pos.x, y: pos.y };
     }),
   );
+  const nextDraftMemberId = useRef(0);
   const [newName, setNewName] = useState("");
   const [mode, setMode] = useState<"world" | "island">("island");
   const [status, setStatus] = useState<{ ok: boolean; text: string } | null>(
@@ -255,7 +256,7 @@ export function IslandEditor({
     if (!n) return;
     setMembers((list) => [
       ...list,
-      { key: `new-${crypto.randomUUID()}`, name: n, x: 0, y: 0 },
+      { key: `new-${nextDraftMemberId.current++}`, name: n, x: 0, y: 0 },
     ]);
     setNewName("");
   };
