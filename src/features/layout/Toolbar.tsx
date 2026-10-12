@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { AccountButton } from "@/features/auth/AccountButton";
 import { DesignSwitch } from "@/features/design/DesignSwitch";
+import { MessagesLink } from "@/features/messages/MessagesLink";
 import { AdminLink } from "./AdminLink";
 import { ToolbarIslands } from "./ToolbarIslands";
 
@@ -26,6 +27,7 @@ export function Toolbar({
       />
       <ToolbarIslands islands={islands} />
       <div className="ml-auto flex shrink-0 items-center gap-2 wide:lg:ml-0 wide:lg:mt-auto wide:lg:flex-col">
+        <MessagesLink />
         <AdminLink />
         <DesignSwitch />
         <AccountButton />

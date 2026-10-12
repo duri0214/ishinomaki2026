@@ -64,6 +64,20 @@
       "when": 1791769340117,
       "tag": "0008_add_related_users_indexes",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1791769903355,
+      "tag": "0009_add_direct_messages",
+      "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1791784800000,
+      "tag": "0010_restore_post_images",
+      "breakpoints": true
     }
   ]
 }

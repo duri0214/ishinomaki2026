@@ -7,6 +7,7 @@ import { useProfileOptions } from "@/features/auth/AuthDialog";
 import { useViewer } from "@/features/auth/viewer";
 import { FollowButton } from "@/features/follow/FollowButton";
 import type { FollowStats } from "@/features/follow/service";
+import { MessageButton } from "@/features/messages/MessageButton";
 import { ProfileEditor } from "./ProfileEditor";
 import type { Profile } from "./service";
 
@@ -57,6 +58,8 @@ export function ProfileView({
           />
         )}
       </header>
+
+      {!isMe && <MessageButton userId={profile.id} />}
 
       <p className="mt-3 flex gap-4 text-sm text-[var(--ui-muted)]">
         <Link

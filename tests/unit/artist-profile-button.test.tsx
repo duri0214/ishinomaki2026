@@ -26,7 +26,10 @@ const route = vi.hoisted(() => ({
   island: undefined as string | undefined,
   tag: undefined as string | undefined,
 }));
-vi.mock("next/navigation", () => ({ useParams: () => route }));
+vi.mock("next/navigation", () => ({
+  useParams: () => route,
+  usePathname: () => "/i/hoshizora",
+}));
 vi.mock("@/features/auth/AuthDialog", () => ({
   useAuthDialog: () => vi.fn(),
 }));
