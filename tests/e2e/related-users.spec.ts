@@ -9,15 +9,15 @@ import {
 /**
  * 共通点のあるユーザー: 右側のタイムラインの「関連ユーザー」タブ。
  * 2人のユーザーが同じ推しメンバー・同じ公演を持つと、お互いに共通点のバッジつきで表示される。
- * 他の spec が推しにしていないグループ（潮風ガールズ島）とメンバーを使い、結果が混ざらないようにする。
+ * 他の spec が推しにしていないグループ（TWICE）とメンバーを使い、結果が混ざらないようにする。
  * 使ったフォロー・推し・参戦記録は最後に消す（ユーザーは他の spec と同じく残る）。
  */
 const suffix = Date.now().toString(36);
 const partner = { username: `e2e_rel_p_${suffix}`, name: `相手${suffix}` };
 const viewer = { username: `e2e_rel_v_${suffix}`, name: `自分${suffix}` };
 const password = "e2e-password";
-const ISLAND = { slug: "shiokaze", name: "潮風ガールズ島" };
-const MEMBERS = ["あおい", "ことは"];
+const ISLAND = { slug: "shiokaze", name: "TWICE" };
+const MEMBERS = ["モモ", "サナ"];
 const SIGN_IN_REASON = "共通点のあるユーザーを見るにはアカウントが必要です";
 
 type Account = typeof partner;
@@ -47,7 +47,7 @@ async function clickWhenHydrated(target: Locator) {
   await target.click();
 }
 
-/** 登録して、潮風ガールズ島と2人のメンバーを推しにする */
+/** 登録して、TWICEと2人のメンバーを推しにする */
 async function register(page: Page, account: Account) {
   await page.goto("/");
   await clickWhenHydrated(
@@ -92,7 +92,7 @@ async function openProfile(page: Page) {
   await expect(page.getByLabel("1. フォロー中のアイドル")).toBeVisible();
 }
 
-/** プロフィールの参戦記録で、潮風ガールズ島の最初の公演を記録する */
+/** プロフィールの参戦記録で、TWICEの最初の公演を記録する */
 async function attendFirstLive(page: Page) {
   await openProfile(page);
   await page.getByLabel("1. フォロー中のアイドル").selectOption(ISLAND.slug);
@@ -191,8 +191,8 @@ test("同じ推しメンバー・公演のユーザーが、共通点のバッ�
       card.getByRole("link", { name: partner.name }),
     ).toHaveAttribute("href", `/u/${partner.username}`);
     await expect(card.getByText(`@${partner.username}`)).toBeVisible();
-    await expect(card.getByText("あおいを推しています")).toBeVisible();
-    await expect(card.getByText("ことはを推しています")).toBeVisible();
+    await expect(card.getByText("モモを推しています")).toBeVisible();
+    await expect(card.getByText("サナを推しています")).toBeVisible();
     // 同じグループの推しは、メンバーの共通点に含まれるので別のバッジにしない
     await expect(card.getByText(`${ISLAND.name}を推しています`)).toHaveCount(0);
     await expect(card.getByText(/に参戦しています/)).toHaveCount(0);
