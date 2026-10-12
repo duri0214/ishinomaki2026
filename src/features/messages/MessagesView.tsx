@@ -6,6 +6,7 @@ import { useAuthDialog } from "@/features/auth/AuthDialog";
 import { useViewer } from "@/features/auth/viewer";
 import { MessageComposer } from "./MessageComposer";
 import {
+  NOTIFICATION_INTERVAL_MS,
   NotificationSoundButton,
   useMessageNotifications,
 } from "./MessageNotifications";
@@ -181,18 +182,30 @@ function ConversationView({
   const scroller = useRef<HTMLDivElement>(null);
   const page = query.data?.pages[0];
   const latestId = page?.messages[page.messages.length - 1]?.id;
+  const readVersion = `${latestId}:${page?.messages.length ?? 0}`;
   const marked = useRef<string | null>(null);
   useEffect(() => {
-    if (!visible || !latestId || marked.current === latestId || query.isError)
+    if (
+      !visible ||
+      !latestId ||
+      marked.current === readVersion ||
+      query.isError
+    )
       return;
     let alive = true;
-    void markRead(conversationId, latestId).then((ok) => {
-      if (ok && alive) marked.current = latestId;
-    });
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    const attempt = async () => {
+      const ok = await markRead(conversationId, latestId);
+      if (!alive) return;
+      if (ok) marked.current = readVersion;
+      else timer = setTimeout(() => void attempt(), NOTIFICATION_INTERVAL_MS);
+    };
+    void attempt();
     return () => {
       alive = false;
+      clearTimeout(timer);
     };
-  }, [conversationId, latestId, visible, markRead, query.isError]);
+  }, [conversationId, latestId, readVersion, visible, markRead, query.isError]);
   useEffect(() => {
     if (latestId && scroller.current)
       scroller.current.scrollTop = scroller.current.scrollHeight;

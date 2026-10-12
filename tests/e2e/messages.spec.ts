@@ -346,6 +346,18 @@ test("DMを送受信でき、第三者・未ログインへの漏洩を防ぐ", 
       a.getByTestId("message-item").filter({ hasText: secret }),
     ).toBeVisible();
 
+    // 送信や手動更新でも、読み込み済みの過去のページを表示から落とさない。
+    await a
+      .getByRole("textbox", { name: "メッセージの本文" })
+      .fill("履歴を保持する返信");
+    await a.getByRole("button", { name: "送信", exact: true }).click();
+    await expect(a.getByTestId("message-item")).toHaveCount(25);
+    await a.getByRole("button", { name: "更新", exact: true }).click();
+    await expect(a.getByTestId("message-item")).toHaveCount(25);
+    await expect(
+      a.getByTestId("message-item").filter({ hasText: secret }),
+    ).toHaveCount(1);
+
     // PC・スマートフォン、cool・kawaiiのどちらでもフォームを操作できる。
     for (const viewport of [
       { width: 1280, height: 900 },

@@ -5,6 +5,7 @@ import {
   type QueryClient,
   useInfiniteQuery,
   useQuery,
+  useQueryClient,
 } from "@tanstack/react-query";
 import type { ConversationSummary, MessagePage } from "./types";
 
@@ -41,6 +42,40 @@ export async function readPrivate<T>(
 }
 
 type MessageHistory = InfiniteData<MessagePage, string | null>;
+
+async function fetchLatestMessages(
+  viewerId: string,
+  conversationId: string,
+  first: MessagePage | undefined,
+  signal: AbortSignal,
+): Promise<MessagePage> {
+  const url = `/api/messages/${conversationId}`;
+  let latest = await readPrivate<MessagePage>(url, viewerId, signal);
+  const previousNewest = first?.messages.at(-1);
+  // 復帰までに1ページ以上増えていても、取得済みの履歴まで新着だけをつなぐ。
+  while (previousNewest && latest.nextCursor) {
+    const oldest = latest.messages[0];
+    if (
+      !oldest ||
+      oldest.createdAt < previousNewest.createdAt ||
+      (oldest.createdAt === previousNewest.createdAt &&
+        oldest.id <= previousNewest.id)
+    )
+      break;
+    const params = new URLSearchParams({ cursor: latest.nextCursor });
+    const older = await readPrivate<MessagePage>(
+      `${url}?${params}`,
+      viewerId,
+      signal,
+    );
+    latest = {
+      ...latest,
+      messages: [...older.messages, ...latest.messages],
+      nextCursor: older.nextCursor,
+    };
+  }
+  return latest;
+}
 
 /** 新着を最新1ページから取り込み、取得済みの過去の履歴・カーソルを維持する。 */
 export function mergeLatestMessages(
@@ -85,35 +120,39 @@ export async function refreshActiveConversation(
   viewerId: string,
   conversationId: string,
   expectedLatestId?: string,
+  force = false,
 ) {
   const key = [MESSAGES_KEY, viewerId, conversationId];
   const cached = client.getQueryCache().find({ queryKey: key, exact: true });
-  if (!cached?.isActive() || cached.state.fetchStatus === "fetching") return;
+  if (!cached?.isActive() || cached.state.fetchStatus === "fetching")
+    return false;
   const history = client.getQueryData<MessageHistory>(key);
-  if (!history) return;
+  if (!history) return false;
   if (
+    !force &&
     expectedLatestId &&
     history.pages[0]?.messages.at(-1)?.id === expectedLatestId
   )
-    return;
+    return true;
   try {
     const latest = await client.fetchQuery({
       queryKey: [...key, "latest"],
       queryFn: ({ signal }) =>
-        readPrivate<MessagePage>(
-          `/api/messages/${conversationId}`,
-          viewerId,
-          signal,
-        ),
+        fetchLatestMessages(viewerId, conversationId, history.pages[0], signal),
       staleTime: 0,
       gcTime: 0,
       retry: false,
     });
     // ログアウトや別ページへの移動で破棄されたキャッシュを復活させない。
-    if (client.getQueryCache().find({ queryKey: key, exact: true })?.isActive())
+    if (
+      client.getQueryCache().find({ queryKey: key, exact: true }) === cached &&
+      cached.isActive()
+    ) {
       client.setQueryData<MessageHistory>(key, (old) =>
         mergeLatestMessages(old, latest),
       );
+      return true;
+    }
   } catch (error) {
     if (
       error instanceof PrivateMessageError &&
@@ -121,6 +160,7 @@ export async function refreshActiveConversation(
     )
       await client.resetQueries({ queryKey: key, exact: true });
   }
+  return false;
 }
 
 export function useConversations(viewerId: string) {
@@ -140,16 +180,31 @@ export function useConversations(viewerId: string) {
 }
 
 export function useMessages(viewerId: string, conversationId: string) {
+  const client = useQueryClient();
+  const key = [MESSAGES_KEY, viewerId, conversationId];
   return useInfiniteQuery({
-    queryKey: [MESSAGES_KEY, viewerId, conversationId],
-    queryFn: ({ signal, pageParam }) => {
-      const params = new URLSearchParams();
-      if (pageParam) params.set("cursor", pageParam);
-      return readPrivate<MessagePage>(
-        `/api/messages/${conversationId}?${params}`,
+    queryKey: key,
+    queryFn: async ({ signal, pageParam }) => {
+      const old = client.getQueryData<MessageHistory>(key);
+      if (pageParam) {
+        // Infinite Queryの再取得でも、読み込み済みの過去のページは維持する。
+        const index = old?.pageParams.indexOf(pageParam) ?? -1;
+        const cached = old?.pages[index];
+        if (cached) return cached;
+        const params = new URLSearchParams({ cursor: pageParam });
+        return readPrivate<MessagePage>(
+          `/api/messages/${conversationId}?${params}`,
+          viewerId,
+          signal,
+        );
+      }
+      const latest = await fetchLatestMessages(
         viewerId,
+        conversationId,
+        old?.pages[0],
         signal,
       );
+      return mergeLatestMessages(old, latest).pages[0] ?? latest;
     },
     initialPageParam: null as string | null,
     getNextPageParam: (last) => last.nextCursor,

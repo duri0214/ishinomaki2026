@@ -55,6 +55,7 @@ export function changedNotifications(
     return (
       !before ||
       before.latestMessageId !== row.latestMessageId ||
+      before.latestIncomingId !== row.latestIncomingId ||
       before.unreadCount !== row.unreadCount
     );
   });
@@ -88,6 +89,7 @@ export function MessageNotificationsProvider({
     viewerId: string;
     rows: MessageNotification[];
   } | null>(null);
+  const pendingIncoming = useRef(new Map<string, MessageNotification>());
   const key = [MESSAGES_KEY, viewerId, "notifications"];
   const query = useQuery({
     queryKey: key,
@@ -113,7 +115,10 @@ export function MessageNotificationsProvider({
   });
 
   useEffect(() => {
-    if (previous.current?.viewerId !== viewerId) previous.current = null;
+    if (previous.current?.viewerId !== viewerId) {
+      previous.current = null;
+      pendingIncoming.current.clear();
+    }
   }, [viewerId]);
 
   useEffect(() => {
@@ -198,14 +203,33 @@ export function MessageNotificationsProvider({
         exact: true,
       });
     }
-    // 一時的な取得失敗でも、次回の確認で表示中の会話を追いつかせる。
-    for (const row of current.conversations)
+    const old = new Map(before?.map((row) => [row.conversationId, row]));
+    for (const row of current.conversations) {
+      const prior = old.get(row.conversationId);
+      if (
+        row.latestIncomingId &&
+        (!prior ||
+          prior.latestIncomingId !== row.latestIncomingId ||
+          row.unreadCount > prior.unreadCount)
+      )
+        pendingIncoming.current.set(row.conversationId, row);
+      // 同時送信の確定順により最新IDが変わらない受信も取り込む。
+      // 失敗・履歴取得中の場合は保留し、次の確認で再試行する。
+      const pending = pendingIncoming.current.get(row.conversationId);
       void refreshActiveConversation(
         client,
         viewerId,
         row.conversationId,
         row.latestMessageId,
-      );
+        Boolean(pending),
+      ).then((refreshed) => {
+        if (
+          refreshed &&
+          pendingIncoming.current.get(row.conversationId) === pending
+        )
+          pendingIncoming.current.delete(row.conversationId);
+      });
+    }
   }, [
     query.data,
     query.dataUpdatedAt,
