@@ -31,8 +31,8 @@ for (const device of ["desktop", "phone", "tablet"] as const) {
       auth.getByRole("heading", { name: "推しを選ぶ" }),
     ).toBeVisible();
     await auth.getByLabel("表示名").fill("画像E2Eさん");
-    await auth.getByRole("checkbox", { name: "星空シアター島" }).check();
-    await auth.getByRole("button", { name: "ひなた" }).click();
+    await auth.getByRole("checkbox", { name: "ARASHI" }).check();
+    await auth.getByRole("button", { name: "櫻井翔" }).click();
     await auth.getByRole("button", { name: "保存" }).click();
     await expect(auth).toHaveCount(0);
 

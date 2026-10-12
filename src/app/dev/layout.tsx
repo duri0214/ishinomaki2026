@@ -14,8 +14,8 @@ export default async function DevLayout({
       <div className="bg-amber-100 px-4 py-1 text-center text-xs text-amber-900">
         開発専用の島エディタです（本番では表示されません）
       </div>
-      {/* プレビューのマップがタグ検索（TanStack Query）を使うため */}
-      <QueryProvider>{children}</QueryProvider>
+      {/* プレビューのマップがタグ検索（TanStack Query）を使うため。島エディタではDMを使わないので viewerId は null */}
+      <QueryProvider viewerId={null}>{children}</QueryProvider>
     </div>
   );
 }
