@@ -5,7 +5,6 @@ import { select } from "d3-selection";
 import { type ZoomBehavior, zoom, zoomIdentity, zoomTransform } from "d3-zoom";
 import { useParams, useRouter } from "next/navigation";
 import {
-  type CSSProperties,
   useCallback,
   useEffect,
   useLayoutEffect,
@@ -113,13 +112,6 @@ export function MapCanvas({
   const [camera, setCamera] = useState<Camera>(() =>
     cameraFor(focus, islands, DEFAULT_VIEW, design),
   );
-  // 家・札・メンバーのアイコンは、拡大・縮小に「ゆっくり」ついていく（House.tsx の ZOOM_COMP）。
-  // いま開いている場所の既定の拡大率のときに 1。そこから寄ると小さめ、引くと大きめにして、見た目の変化を半分くらいにする
-  const baseK = useMemo(
-    () => cameraFor(focus, islands, view, design).k,
-    [focus, islands, view, design],
-  );
-  const zoomComp = Math.min(1.6, Math.max(0.6, Math.sqrt(baseK / camera.k)));
 
   const cancelAnimation = useCallback(() => {
     if (frameRef.current !== null) {
@@ -373,10 +365,7 @@ export function MapCanvas({
             if (focus.kind === "house") onNavigate(`/i/${focus.slug}`);
           }}
         />
-        <g
-          transform={`translate(${camera.x} ${camera.y}) scale(${camera.k})`}
-          style={{ "--zoom-comp": zoomComp.toFixed(3) } as CSSProperties}
-        >
+        <g transform={`translate(${camera.x} ${camera.y}) scale(${camera.k})`}>
           <MapScene
             islands={islands}
             focus={focus}

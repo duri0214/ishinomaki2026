@@ -11,13 +11,6 @@ import type { MapHouse } from "./types";
 
 const MAX_LABEL_CHARS = 9;
 
-/**
- * 家・札・メンバーのアイコンにかける拡大率。MapCanvas がカメラの拡大率から --zoom-comp を決める
- * （近づいても大きくなりすぎず、離れても小さくなりすぎないよう、地図より「ゆっくり」拡大・縮小する）。
- * 原点（家なら接地点、アイコンなら中心）を中心に拡大する
- */
-export const ZOOM_COMP = { transform: "scale(var(--zoom-comp, 1))" };
-
 /** 話題タグの家の種類。タグIDから決めるので、同じタグはいつも同じ家になる */
 const TOPIC_ROLES: readonly SpriteRole[] = [
   "house-cafe",
@@ -100,59 +93,57 @@ export function House({
         transition: "transform 700ms ease-in-out",
       }}
     >
-      <g style={ZOOM_COMP}>
-        <a
-          href={href}
-          aria-label={aria}
-          data-testid={`house-${house.normalizedName}`}
-          className="group cursor-pointer outline-none"
-          onClick={(e) => {
-            // 新しいタブで開く操作などはブラウザに任せる
-            if (
-              e.metaKey ||
-              e.ctrlKey ||
-              e.shiftKey ||
-              e.altKey ||
-              e.button !== 0
-            ) {
-              return;
-            }
-            e.preventDefault();
-            onNavigate(href);
-          }}
-          onPointerEnter={() => onHover(href)}
-          onFocus={() => onHover(href)}
-        >
-          <rect
-            x={-width / 2 - pad}
-            y={-height - pad}
-            width={width + pad * 2}
-            height={height + pillY + pillH + pad * 2}
-            rx={pad * 2}
-            fill="transparent"
-            className={
-              highlighted
-                ? "stroke-sky-500"
-                : "stroke-transparent group-hover:stroke-sky-300 group-focus-visible:stroke-sky-500"
-            }
-            strokeWidth={width * 0.04}
-          />
-          <g className="transition-transform duration-150 group-hover:-translate-y-0.5">
-            {house.imageUrl ? (
-              <image
-                href={house.imageUrl}
-                x={-width / 2}
-                y={-width}
-                width={width}
-                height={width}
-                preserveAspectRatio="xMidYMax meet"
-              />
-            ) : (
-              <Sprite asset={asset} x={0} y={0} width={width} interactive />
-            )}
-          </g>
-        </a>
-      </g>
+      <a
+        href={href}
+        aria-label={aria}
+        data-testid={`house-${house.normalizedName}`}
+        className="group cursor-pointer outline-none"
+        onClick={(e) => {
+          // 新しいタブで開く操作などはブラウザに任せる
+          if (
+            e.metaKey ||
+            e.ctrlKey ||
+            e.shiftKey ||
+            e.altKey ||
+            e.button !== 0
+          ) {
+            return;
+          }
+          e.preventDefault();
+          onNavigate(href);
+        }}
+        onPointerEnter={() => onHover(href)}
+        onFocus={() => onHover(href)}
+      >
+        <rect
+          x={-width / 2 - pad}
+          y={-height - pad}
+          width={width + pad * 2}
+          height={height + pillY + pillH + pad * 2}
+          rx={pad * 2}
+          fill="transparent"
+          className={
+            highlighted
+              ? "stroke-sky-500"
+              : "stroke-transparent group-hover:stroke-sky-300 group-focus-visible:stroke-sky-500"
+          }
+          strokeWidth={width * 0.04}
+        />
+        <g className="transition-transform duration-150 group-hover:-translate-y-0.5">
+          {house.imageUrl ? (
+            <image
+              href={house.imageUrl}
+              x={-width / 2}
+              y={-width}
+              width={width}
+              height={width}
+              preserveAspectRatio="xMidYMax meet"
+            />
+          ) : (
+            <Sprite asset={asset} x={0} y={0} width={width} interactive />
+          )}
+        </g>
+      </a>
     </g>
   );
 }
@@ -194,44 +185,42 @@ export function HouseLabel({
         transition: "transform 700ms ease-in-out",
       }}
     >
-      <g style={ZOOM_COMP}>
-        <rect
-          x={-pillW / 2}
-          y={pillY}
-          width={pillW}
-          height={pillH}
-          rx={pillH / 2}
-          fillOpacity={0.94}
-          strokeWidth={fs * 0.1}
-          // 札の色はデザイン（かわいい / かっこいい）の共通色に合わせる
-          style={{
-            fill: "var(--ui-card,#ffffff)",
-            stroke: highlighted
-              ? "var(--ui-accent,#a63868)"
-              : "var(--ui-border,#efdae2)",
-          }}
-        />
+      <rect
+        x={-pillW / 2}
+        y={pillY}
+        width={pillW}
+        height={pillH}
+        rx={pillH / 2}
+        fillOpacity={0.94}
+        strokeWidth={fs * 0.1}
+        // 札の色はデザイン（かわいい / かっこいい）の共通色に合わせる
+        style={{
+          fill: "var(--ui-card,#ffffff)",
+          stroke: highlighted
+            ? "var(--ui-accent,#a63868)"
+            : "var(--ui-border,#efdae2)",
+        }}
+      />
+      <text
+        x={-pillW / 2 + fs * 0.7}
+        y={pillY + pillH * 0.66}
+        fontSize={fs}
+        fontWeight={700}
+        style={{ fill: "var(--ui-title,#553344)" }}
+      >
+        {name}
+      </text>
+      {count && (
         <text
-          x={-pillW / 2 + fs * 0.7}
+          x={pillW / 2 - fs * 0.7}
           y={pillY + pillH * 0.66}
-          fontSize={fs}
-          fontWeight={700}
-          style={{ fill: "var(--ui-title,#553344)" }}
+          textAnchor="end"
+          fontSize={fs * 0.85}
+          style={{ fill: "var(--ui-accent,#a63868)" }}
         >
-          {name}
+          {count}
         </text>
-        {count && (
-          <text
-            x={pillW / 2 - fs * 0.7}
-            y={pillY + pillH * 0.66}
-            textAnchor="end"
-            fontSize={fs * 0.85}
-            style={{ fill: "var(--ui-accent,#a63868)" }}
-          >
-            {count}
-          </text>
-        )}
-      </g>
+      )}
     </g>
   );
 }
