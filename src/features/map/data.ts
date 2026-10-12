@@ -23,16 +23,30 @@ const getCachedTopTags = unstable_cache(
   { revalidate: TOP_TAGS_REVALIDATE_SECONDS, tags: ["top-tags"] },
 );
 
+/** 島民数のキャッシュのタグ。推しグループを保存したら updateTag で消す */
+export const ISLAND_FOLLOWERS_CACHE_TAG = "island-followers";
+/** 新しい話題タグのキャッシュのタグ。島エディタで家を建てたら updateTag で消す */
+export const NEW_TOPIC_TAGS_CACHE_TAG = "new-topic-tags";
+
 /** 島ごとの島民数（その島を推しグループにしているユーザーの数） */
-export async function countIslandFollowers(
+async function countIslandFollowers(
   db: Db,
-): Promise<Map<string, number>> {
-  const rows = await db
+): Promise<{ islandId: string; followers: number }[]> {
+  return db
     .select({ islandId: userFavoriteIslands.islandId, followers: count() })
     .from(userFavoriteIslands)
     .groupBy(userFavoriteIslands.islandId);
-  return new Map(rows.map((r) => [r.islandId, r.followers]));
 }
+
+/** 島民数は全島まとめて5分キャッシュする（Map は JSON にできないので、配列のまま保存する） */
+const getCachedIslandFollowers = unstable_cache(
+  async () => countIslandFollowers(await getDb()),
+  ["island-followers"],
+  {
+    revalidate: TOP_TAGS_REVALIDATE_SECONDS,
+    tags: [ISLAND_FOLLOWERS_CACHE_TAG],
+  },
+);
 
 /** 新しく作られた話題タグ（投稿がまだなくても家を建てるため） */
 async function listNewTopicTags(
@@ -54,6 +68,17 @@ async function listNewTopicTags(
   return rows.map((r) => ({ ...r, postCount: 0 }));
 }
 
+/** 新しい話題タグも、上位と同じく島ごとに5分キャッシュする */
+const getCachedNewTopicTags = unstable_cache(
+  async (islandId: string, limit: number) =>
+    listNewTopicTags(await getDb(), islandId, limit),
+  ["new-topic-tags"],
+  {
+    revalidate: TOP_TAGS_REVALIDATE_SECONDS,
+    tags: [NEW_TOPIC_TAGS_CACHE_TAG],
+  },
+);
+
 /** 島エディタで選んだ土台（islands.theme.base）。なければ作成順に割り当てる */
 function baseOf(theme: unknown, index: number): string {
   const chosen = (theme as { base?: unknown } | null)?.base;
@@ -68,10 +93,11 @@ function baseOf(theme: unknown, index: number): string {
  */
 export async function getMapData(): Promise<MapIslandData[]> {
   const db = await getDb();
-  const [islands, followers] = await Promise.all([
+  const [islands, followerRows] = await Promise.all([
     listIslands(db),
-    countIslandFollowers(db),
+    getCachedIslandFollowers(),
   ]);
+  const followers = new Map(followerRows.map((r) => [r.islandId, r.followers]));
   return Promise.all(
     islands.map(async (island, index) => {
       const [members, ranked] = await Promise.all([
@@ -83,7 +109,7 @@ export async function getMapData(): Promise<MapIslandData[]> {
           ? ranked
           : fillTopTags(
               ranked,
-              await listNewTopicTags(db, island.id, MAP_TOPIC_HOUSES),
+              await getCachedNewTopicTags(island.id, MAP_TOPIC_HOUSES),
             );
       return {
         id: island.id,

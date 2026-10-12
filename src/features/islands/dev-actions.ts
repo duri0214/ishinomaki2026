@@ -1,7 +1,8 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
+import { revalidatePath, updateTag } from "next/cache";
 import { getDb, getTxDb } from "@/db";
+import { NEW_TOPIC_TAGS_CACHE_TAG } from "@/features/map/data";
 import { type ActionResult, runAction } from "@/lib/action";
 import { assertDevEditor } from "@/lib/dev-only";
 import {
@@ -59,6 +60,8 @@ export async function createTopicTagAction(
   return runAction(async () => {
     assertDevEditor();
     const tag = await createTopicTag(await getDb(), slug, name);
+    // 建てた家がすぐマップに出るように、新しい話題タグのキャッシュを消す
+    updateTag(NEW_TOPIC_TAGS_CACHE_TAG);
     revalidatePath("/", "layout");
     return tag;
   });
