@@ -5,7 +5,7 @@ import { MessagesLink } from "@/features/messages/MessagesLink";
 import { AdminLink } from "./AdminLink";
 import { ToolbarIslands } from "./ToolbarIslands";
 
-/** 左端のツールバー（狭い画面では上端の横並び）。世界へ戻る・島の切り替え・デザイン・アカウント */
+/** 左端のツールバー（狭い画面では上端の横並び）。世界へ戻る・島の切り替え（モバイルでは非表示）・デザイン・アカウント */
 export function Toolbar({
   islands,
 }: {
